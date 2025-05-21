@@ -222,12 +222,12 @@
 >
     <section class="w-full flex flex-row gap-2 justify-center rounded">
         <button
-            disabled={sessie?.status == SessieStatus.Actief &&
-                sessie?.pomo_type != PomoType.Pomo}
+            disabled={sessie?.status == SessieStatus.Actief}
             class={[
                 "btn",
-                { "btn-primary": sessie?.pomo_type == PomoType.Pomo },
+                { "btn-primary disabled:bg-primary": sessie?.pomo_type == PomoType.Pomo },
                 { "btn-neutral": sessie?.pomo_type != PomoType.Pomo },
+                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.Pomo },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {
@@ -241,12 +241,12 @@
             Pomodoro
         </button>
         <button
-            disabled={sessie?.status == SessieStatus.Actief &&
-                sessie?.pomo_type != PomoType.KortePauze}
+            disabled={sessie?.status == SessieStatus.Actief}
             class={[
                 "btn",
                 { "btn-primary": sessie?.pomo_type == PomoType.KortePauze },
                 { "btn-neutral": sessie?.pomo_type != PomoType.KortePauze },
+                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.KortePauze },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {
@@ -260,12 +260,12 @@
             Pauze
         </button>
         <button
-            disabled={sessie?.status == SessieStatus.Actief &&
-                sessie?.pomo_type != PomoType.LangePauze}
+            disabled={sessie?.status == SessieStatus.Actief}
             class={[
                 "btn",
                 { "btn-primary": sessie?.pomo_type == PomoType.LangePauze },
                 { "btn-neutral": sessie?.pomo_type != PomoType.LangePauze },
+                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.LangePauze },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {
