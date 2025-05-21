@@ -5,6 +5,10 @@
     import Play from "lucide-svelte/icons/play";
     import Settings from "lucide-svelte/icons/settings";
     import SkipForward from "lucide-svelte/icons/skip-forward";
+    import Volume from "lucide-svelte/icons/volume";
+    import Volume1 from "lucide-svelte/icons/volume-1";
+    import Volume2 from "lucide-svelte/icons/volume-2";
+    import VolumeX from "lucide-svelte/icons/volume-x";
     import { onMount } from "svelte";
     import { sound } from "svelte-sound";
     import {
@@ -14,7 +18,9 @@
         set_lange_pauze_tijd,
         set_pomo_tijd,
         set_tick_geluid,
+        set_tick_geluid_volume,
         set_ui_geluiden,
+        set_ui_geluiden_volume,
     } from "../state/instellingen.svelte";
     import { PomoType, Sessie, SessieStatus } from "../state/sessie.svelte";
     import "../style.css";
@@ -102,7 +108,9 @@
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
         <h3 class="text-lg font-bold">Instellingen</h3>
-        <fieldset class="fieldset">
+        <fieldset
+            class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
+        >
             <legend class="fieldset-legend">Focustijden</legend>
             <div class="flex flex-row gap-2">
                 <div class="flex flex-col">
@@ -168,32 +176,90 @@
                         }}
                     />
                 </div>
-                
             </div>
         </fieldset>
         <fieldset
-                    class="fieldset bg-base-100 border-base-300 rounded-box w-64 border p-4"
-                >
-                    <legend class="fieldset-legend">Geluid</legend>
-                    <label class="label">
-                        <input
-                            type="checkbox"
-                            checked={get_instellingen().ui_geluiden}
-                            onchange={(e) => set_ui_geluiden((e.target as HTMLInputElement).checked)}
-                            class="toggle"
-                        />
-                        UI-geluiden
-                    </label>
-                    <label class="label">
-                        <input
-                            type="checkbox"
-                            checked={get_instellingen().tick_geluid}
-                            onchange={(e) => set_tick_geluid((e.target as HTMLInputElement).checked)}
-                            class="toggle"
-                        />
-                        Tick-geluid
-                    </label>
-                </fieldset>
+            class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
+        >
+            <legend class="fieldset-legend">Geluid</legend>
+            <div class="flex flex-row justify-evenly items-center">
+                <label class="label">
+                    <input
+                        type="checkbox"
+                        checked={get_instellingen().ui_geluiden}
+                        onchange={(e) =>
+                            set_ui_geluiden(
+                                (e.target as HTMLInputElement).checked,
+                            )}
+                        class="toggle"
+                    />
+                    UI-geluiden
+                </label>
+                 <button class="btn btn-primary btn-circle">
+                        {#if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume < 25}
+                            <Volume class="size-[1.2em]" />
+                        {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 25 && get_instellingen().ui_geluiden_volume < 75}
+                            <Volume1 class="size-[1.2em]" />
+                        {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 75}
+                            <Volume2 class="size-[1.2em]" />
+                        {:else}
+                            <VolumeX class="size-[1.2em]" />
+                        {/if}
+                    </button>
+                   
+
+                    <input
+                        disabled={!get_instellingen().ui_geluiden}
+                        type="range"
+                        min="0"
+                        max="100"
+                        onchange={(e) =>
+                            set_ui_geluiden_volume(
+                                parseInt((e.target as HTMLInputElement).value),
+                            )}
+                        value={get_instellingen().ui_geluiden_volume}
+                        class="range w-[30%]"
+                    />
+            </div>
+            <div class="divider"></div>
+            <div class="flex flex-row justify-evenly items-center">
+                <label class="label">
+                    <input
+                        type="checkbox"
+                        checked={get_instellingen().tick_geluid}
+                        onchange={(e) =>
+                            set_tick_geluid(
+                                (e.target as HTMLInputElement).checked,
+                            )}
+                        class="toggle"
+                    />
+                    Tick-geluid
+                </label>
+                <button class="btn btn-primary btn-circle">
+                        {#if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume < 25}
+                            <Volume class="size-[1.2em]" />
+                        {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 25 && get_instellingen().tick_geluid_volume < 75}
+                            <Volume1 class="size-[1.2em]" />
+                        {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 75}
+                            <Volume2 class="size-[1.2em]" />
+                        {:else}
+                            <VolumeX class="size-[1.2em]" />
+                        {/if}
+                    </button>
+                <input
+                    disabled={!get_instellingen().tick_geluid}
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={get_instellingen().tick_geluid_volume}
+                    onchange={(e) =>
+                        set_tick_geluid_volume(
+                            parseInt((e.target as HTMLInputElement).value),
+                        )}
+                    class="range w-[30%]"
+                />
+            </div>
+        </fieldset>
     </div>
     <form method="dialog" class="modal-backdrop">
         <button>close</button>
@@ -225,9 +291,15 @@
             disabled={sessie?.status == SessieStatus.Actief}
             class={[
                 "btn",
-                { "btn-primary disabled:bg-primary": sessie?.pomo_type == PomoType.Pomo },
+                {
+                    "btn-primary disabled:bg-primary":
+                        sessie?.pomo_type == PomoType.Pomo,
+                },
                 { "btn-neutral": sessie?.pomo_type != PomoType.Pomo },
-                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.Pomo },
+                {
+                    "disabled:!bg-primary disabled:text-neutral":
+                        sessie?.pomo_type == PomoType.Pomo,
+                },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {
@@ -246,7 +318,10 @@
                 "btn",
                 { "btn-primary": sessie?.pomo_type == PomoType.KortePauze },
                 { "btn-neutral": sessie?.pomo_type != PomoType.KortePauze },
-                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.KortePauze },
+                {
+                    "disabled:!bg-primary disabled:text-neutral":
+                        sessie?.pomo_type == PomoType.KortePauze,
+                },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {
@@ -265,7 +340,10 @@
                 "btn",
                 { "btn-primary": sessie?.pomo_type == PomoType.LangePauze },
                 { "btn-neutral": sessie?.pomo_type != PomoType.LangePauze },
-                { "disabled:!bg-primary disabled:text-neutral": sessie?.pomo_type == PomoType.LangePauze },
+                {
+                    "disabled:!bg-primary disabled:text-neutral":
+                        sessie?.pomo_type == PomoType.LangePauze,
+                },
             ]}
             onclick={() => {
                 if (sessie?.status != SessieStatus.Actief) {

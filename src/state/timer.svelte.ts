@@ -1,4 +1,4 @@
-import { get_instellingen } from "./instellingen.svelte";
+import { tick_sound } from "./sessie.svelte";
 
 export enum TimerStatus {
     ACTIEF = "ACTIEF",
@@ -47,8 +47,6 @@ export class Timer {
 
         this.status = TimerStatus.ACTIEF;
 
-        const tick_geluid = get_instellingen().tick_geluid;
-        const geluid = new Audio("sounds/tick.wav");
         const timer_geluid = new Audio("sounds/timer.wav");
 
         this.countdown = setInterval(() => {
@@ -57,10 +55,7 @@ export class Timer {
             this.minuten = Math.floor(seconden_over / 60)
             this.seconden = seconden_over % 60;
 
-            if (tick_geluid) {
-                geluid.currentTime = 0;
-                geluid.play();
-            }
+            tick_sound();
 
             document.title = `${this.minuten}:${this.seconden < 10 ? '0' : ''}${this.seconden} | Kairos`;
 

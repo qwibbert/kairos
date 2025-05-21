@@ -43,9 +43,7 @@ export class Sessie {
     }
 
     start = () => {
-        if (get_instellingen().ui_geluiden) {
-            (new Audio("sounds/click.mp3")).play();
-        }
+        click_sound();
 
         if (this.status == SessieStatus.Voltooid) {
             return;
@@ -67,9 +65,7 @@ export class Sessie {
     }
 
     pauzeer = () => {
-        if (get_instellingen().ui_geluiden) {
-            (new Audio("sounds/click.mp3")).play();
-        }
+        click_sound();
 
         if (this.status == SessieStatus.Voltooid) {
             return;
@@ -84,9 +80,8 @@ export class Sessie {
     }
 
     hervat = () => {
-        if (get_instellingen().ui_geluiden) {
-            (new Audio("sounds/click.mp3")).play();
-        }
+        click_sound();
+
         if (this.status == SessieStatus.Voltooid) {
             return;
         }
@@ -238,5 +233,21 @@ export class Sessie {
         } else {
             return 0;
         }
+    }
+}
+
+export const click_sound = () => {
+    if (get_instellingen().ui_geluiden) {
+        const audio = new Audio("sounds/click.mp3");
+        audio.volume = get_instellingen().ui_geluiden_volume / 100;
+        audio.play();
+    }
+}
+
+export const tick_sound = () => {
+    if (get_instellingen().tick_geluid) {
+        const audio = new Audio("sounds/tick.wav");
+        audio.volume = get_instellingen().tick_geluid_volume / 100;
+        audio.play();
     }
 }
