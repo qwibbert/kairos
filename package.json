@@ -1,7 +1,7 @@
 {
 	"name": "chronos",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -12,12 +12,24 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@svelte-put/shortcut": "^4.1.0",
 		"@sveltejs/adapter-auto": "^4.0.0",
+		"@sveltejs/enhanced-img": "^0.6.0",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"typescript": "^5.0.0",
-		"vite": "^6.2.5"
+		"vite": "^6.2.5",
+		"vitest": "^3.1.3"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.1.5",
+		"bits-ui": "^1.5.0",
+		"daisyui": "^5.0.35",
+		"dayjs": "^1.11.13",
+		"lucide-svelte": "^0.511.0",
+		"svelte-sound": "^0.6.0",
+		"tailwindcss": "^4.1.5"
 	}
 }
