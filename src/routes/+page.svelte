@@ -11,6 +11,7 @@
     import VolumeX from "lucide-svelte/icons/volume-x";
     import { onMount } from "svelte";
     import { sound } from "svelte-sound";
+    import KairosLogo from "../kairos.svelte";
     import {
         get_instellingen,
         restore_instellingen,
@@ -195,31 +196,30 @@
                     />
                     UI-geluiden
                 </label>
-                 <button class="btn btn-primary btn-circle">
-                        {#if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume < 25}
-                            <Volume class="size-[1.2em]" />
-                        {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 25 && get_instellingen().ui_geluiden_volume < 75}
-                            <Volume1 class="size-[1.2em]" />
-                        {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 75}
-                            <Volume2 class="size-[1.2em]" />
-                        {:else}
-                            <VolumeX class="size-[1.2em]" />
-                        {/if}
-                    </button>
-                   
+                <button class="btn btn-primary btn-circle">
+                    {#if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume < 25}
+                        <Volume class="size-[1.2em]" />
+                    {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 25 && get_instellingen().ui_geluiden_volume < 75}
+                        <Volume1 class="size-[1.2em]" />
+                    {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 75}
+                        <Volume2 class="size-[1.2em]" />
+                    {:else}
+                        <VolumeX class="size-[1.2em]" />
+                    {/if}
+                </button>
 
-                    <input
-                        disabled={!get_instellingen().ui_geluiden}
-                        type="range"
-                        min="0"
-                        max="100"
-                        onchange={(e) =>
-                            set_ui_geluiden_volume(
-                                parseInt((e.target as HTMLInputElement).value),
-                            )}
-                        value={get_instellingen().ui_geluiden_volume}
-                        class="range w-[30%]"
-                    />
+                <input
+                    disabled={!get_instellingen().ui_geluiden}
+                    type="range"
+                    min="0"
+                    max="100"
+                    onchange={(e) =>
+                        set_ui_geluiden_volume(
+                            parseInt((e.target as HTMLInputElement).value),
+                        )}
+                    value={get_instellingen().ui_geluiden_volume}
+                    class="range w-[30%]"
+                />
             </div>
             <div class="divider"></div>
             <div class="flex flex-row justify-evenly items-center">
@@ -236,16 +236,16 @@
                     Tick-geluid
                 </label>
                 <button class="btn btn-primary btn-circle">
-                        {#if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume < 25}
-                            <Volume class="size-[1.2em]" />
-                        {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 25 && get_instellingen().tick_geluid_volume < 75}
-                            <Volume1 class="size-[1.2em]" />
-                        {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 75}
-                            <Volume2 class="size-[1.2em]" />
-                        {:else}
-                            <VolumeX class="size-[1.2em]" />
-                        {/if}
-                    </button>
+                    {#if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume < 25}
+                        <Volume class="size-[1.2em]" />
+                    {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 25 && get_instellingen().tick_geluid_volume < 75}
+                        <Volume1 class="size-[1.2em]" />
+                    {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 75}
+                        <Volume2 class="size-[1.2em]" />
+                    {:else}
+                        <VolumeX class="size-[1.2em]" />
+                    {/if}
+                </button>
                 <input
                     disabled={!get_instellingen().tick_geluid}
                     type="range"
@@ -266,8 +266,10 @@
     </form>
 </dialog>
 
-<header class="h-[10vh] p-5 flex flex-row justify-around">
-    <span class="text-4xl font-bold">Kairos</span>
+<header class="h-[10vh] flex flex-row justify-around items-center">
+    <div class="flex flex-row gap-2 items-center">
+        <KairosLogo /><span class="text-4xl text-primary font-bold">Kairos</span>
+    </div>
     <button
         class="btn btn-ghost"
         onclick={() => statistieken_modal.showModal()}
