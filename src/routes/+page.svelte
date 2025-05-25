@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Statsmodal from "$lib/components/statsmodal.svelte";
     import { shortcut } from "@svelte-put/shortcut";
     import ChartLine from "lucide-svelte/icons/chart-line";
     import Pause from "lucide-svelte/icons/pause";
@@ -30,13 +31,11 @@
     let session = $state<Session>();
 
     let stats_manager = $state<StatsManager>();
-    let stats_today = $derived(stats_manager?.get_todayStats());
 
     onMount(() => {
         restore_instellingen();
 
         const local_session = Session.restore_local();
-        stats_manager = new StatsManager();
 
         if (local_session) {
             session = local_session;
@@ -53,7 +52,7 @@
 
     const reload_stats = () => {
         stats_manager = new StatsManager();
-    }
+    };
 
     const click_geluid_url = new URL("/click.mp3", import.meta.url);
 
@@ -76,25 +75,7 @@
     }}
 />
 
-<dialog bind:this={statistieken_modal} id="statistieken" class="modal">
-    <div class="modal-box">
-        <h3 class="text-lg font-bold">Statistieken</h3>
-
-        <div class="stats shadow">
-            <div class="stat">
-                <div class="stat-title">Studietijd (vandaag)</div>
-                <div class="stat-value">
-                    {#if stats_manager}
-                        {stats_today?.time_focus}
-                    {/if}
-                </div>
-            </div>
-        </div>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-    </form>
-</dialog>
+<Statsmodal bind:statistieken_modal {stats_manager} />
 
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
@@ -263,7 +244,10 @@
     </div>
     <button
         class="btn btn-ghost"
-        onclick={() => {reload_stats(); statistieken_modal.showModal()}}
+        onclick={() => {
+            reload_stats();
+            statistieken_modal.showModal();
+        }}
     >
         <ChartLine class="size-[1.2em]" />
         Statistieken
