@@ -11,7 +11,6 @@
     import Volume2 from "lucide-svelte/icons/volume-2";
     import VolumeX from "lucide-svelte/icons/volume-x";
     import { onMount } from "svelte";
-    import { sound } from "svelte-sound";
     import KairosLogo from "../kairos-logo.svelte";
     import {
         get_instellingen,
