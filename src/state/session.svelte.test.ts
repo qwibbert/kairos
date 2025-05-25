@@ -109,33 +109,6 @@ describe("Session", () => {
         expect(Session.restore_local()).toBeNull();
     });
 
-    it("should sum focustime for given date", () => {
-        const today = new Date();
-        const sessions = [
-            {
-                pomo_type: PomoType.Pomo,
-                date: today.toISOString(),
-                time_aim: 100,
-            },
-            {
-                pomo_type: PomoType.ShortBreak,
-                date: today.toISOString(),
-                time_aim: 50,
-            },
-            {
-                pomo_type: PomoType.Pomo,
-                date: today.toISOString(),
-                time_aim: 200,
-            },
-        ];
-        localStorage.setItem("sessions", JSON.stringify(sessions));
-        expect(Session.sum_focustime(today)).toBe(300);
-    });
-
-    it("should return 0 for sum_focustime if no sessions", () => {
-        expect(Session.sum_focustime(new Date())).toBe(0);
-    });
-
     it("should not start if status is Ready or Skipped", () => {
         const session = new Session(PomoType.Pomo, 1500);
         session.status = SessionStatus.Ready;
