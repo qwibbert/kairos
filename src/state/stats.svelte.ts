@@ -1,3 +1,4 @@
+import { DateTime, Interval } from 'luxon';
 import { PomoType, type Session } from "../state/session.svelte";
 
 interface Stats {
@@ -152,6 +153,25 @@ export class StatsManager {
         };
     }
 
+    public get_week_focus_time(earlier_weeks: number = 0) {
+        const today = DateTime.now();
+        const weekStart = today.startOf('week').minus({ weeks: earlier_weeks });
+        const weekEnd = today.endOf('week').minus({ weeks: earlier_weeks });
+        const weekInterval = Interval.fromDateTimes(weekStart, weekEnd.plus({ days: 1 }));
+
+        let days = [];
+        for (let i = 0; i < 7; i++) {
+            const day = weekStart.plus({ days: i });
+            days.push(day.toLocaleString({ weekday: 'short', day: '2-digit' }));
+        }
+
+        return [days, days.map(day => {
+            const dayKey = weekStart.plus({ days: days.indexOf(day) }).toJSDate().toDateString();
+            const dayStats = this.stats.per_day.find(d => d.date == dayKey);
+
+            return dayStats ? dayStats.time_focus / 3600 : 0;
+        })];
+    }
     public get_stats() {
         return this.stats;
     }

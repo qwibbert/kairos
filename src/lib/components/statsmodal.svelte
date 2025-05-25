@@ -12,7 +12,7 @@
     import * as echarts from "echarts/core";
     import { LabelLayout, UniversalTransition } from "echarts/features";
     import { CanvasRenderer } from "echarts/renderers";
-    import { onMount } from "svelte";
+    import { DateTime } from "luxon";
     import type { StatsManager } from "../../state/stats.svelte";
 
     interface Props {
@@ -58,10 +58,19 @@
 
     let myChart = undefined;
 
-    onMount(() => {});
+    const today = DateTime.now();
+    let delta_weeks = $state(0);
+    const weekStart = $derived(
+        today.startOf("week").minus({ weeks: delta_weeks }),
+    );
+    const weekEnd = $derived(today.endOf("week").minus({ weeks: delta_weeks }));
 
     $effect(() => {
         if (statistieken_modal && stats_manager && window) {
+            if (myChart) {
+                myChart.dispose();
+            }
+
             data.color = [
                 formatHex(
                     window
@@ -75,18 +84,9 @@
                 width: "auto",
             });
 
-            const laatste_week = stats_manager.get_stats().per_day.slice(-7);
+            [data.xAxis.data, data.series[0].data] =
+                stats_manager.get_week_focus_time(delta_weeks);
 
-            laatste_week.forEach((item) => {
-                data.xAxis.data.push(
-                    new Date(item.date).toLocaleDateString("nl-NL", {
-                        weekday: "short",
-                        day: "numeric",
-                    }),
-                );
-
-                data.series[0].data.push((item.time_focus / 3600).toFixed(1));
-            });
             myChart.setOption(data);
             myChart.resize();
         }
@@ -98,12 +98,12 @@
 <svelte:window on:resize={() => myChart.resize()} />
 
 <dialog bind:this={statistieken_modal} id="statistieken" class="modal">
-    <div class="modal-box">
+    <div class="modal-box h-[80vh] flex flex-col items-center justify-between">
         <h3 class="text-lg font-bold">Statistieken</h3>
 
         {#if stats_manager}
             <div
-                class="stats text-primary stats-vertical lg:stats-horizontal shadow w-full"
+                class="stats text-primary shadow w-full"
             >
                 <div class="stat">
                     <div class="stat-title">Focustijd</div>
@@ -127,7 +127,33 @@
                 </div>
             </div>
         {/if}
-        <div id="stats" class="w-full h-[50vh]"></div>
+        <div class="w-full flex flex-col">
+            <div class="flex flex-row items-center justify-between">
+                <button
+                    class="btn btn-xs btn-primary"
+                    onclick={() => (delta_weeks += 1)}>Vorige week</button
+                >
+                {#if weekStart && weekEnd}
+                    <span class="mx-2 text-sm">
+                        {weekStart.toLocaleString({
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                        })} - {weekEnd.toLocaleString({
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                        })}
+                    </span>
+                {/if}
+                <button
+                    class="btn btn-xs btn-primary"
+                    disabled={delta_weeks <= 0}
+                    onclick={() => (delta_weeks -= 1)}>Volgende week</button
+                >
+            </div>
+            <div id="stats" class="w-full h-[50vh]"></div>
+        </div>
     </div>
     <form method="dialog" class="modal-backdrop">
         <button>close</button>
