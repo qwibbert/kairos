@@ -23,35 +23,35 @@
         set_ui_geluiden,
         set_ui_geluiden_volume,
     } from "../state/instellingen.svelte";
-    import { PomoType, Sessie, SessieStatus } from "../state/sessie.svelte";
+    import { PomoType, Session, SessionStatus } from "../state/session.svelte";
     import "../style.css";
 
-    let sessie = $state<Sessie>();
-    let studietijd_vandaag = $state<number>(0);
-    let studietijd_gisteren = $state<number>(0);
-    let verschil_vandaag_gisteren = $derived(
-        studietijd_vandaag - studietijd_gisteren,
+    let session = $state<Session>();
+    let focustime_today = $state<number>(0);
+    let focustime_yesterday = $state<number>(0);
+    let delta_today_yesterday = $derived(
+        focustime_today - focustime_yesterday,
     );
 
     onMount(() => {
         restore_instellingen();
-        studietijd_vandaag = Sessie.sommeer_studietijd(new Date());
-        studietijd_gisteren = Sessie.sommeer_studietijd(
+        focustime_today = Session.sum_focustime(new Date());
+        focustime_yesterday= Session.sum_focustime(
             new Date(new Date().setDate(new Date().getDate() - 1)),
         );
 
-        const lokale_sessie = Sessie.restore_lokaal();
+        const local_session = Session.restore_local();
 
-        if (lokale_sessie) {
-            sessie = lokale_sessie;
-            if (sessie.status == SessieStatus.Actief) {
-                sessie.timer.start(() => {
-                    sessie.status = SessieStatus.Voltooid;
-                    sessie.sla_lokaal_op();
-                });
+        if (local_session) {
+            session = local_session;
+
+            if (session.status == SessionStatus.Active) {
+                session.status = SessionStatus.Interrupted;
+                session.time_end = Date.now() + ((session.time_aim - session.time_real) * 1000);
+                
             }
         } else {
-            sessie = new Sessie(PomoType.Pomo, get_instellingen().pomo_tijd);
+            session = new Session(PomoType.Pomo, get_instellingen().pomo_tijd);
         }
     });
 
@@ -62,9 +62,11 @@
     let start_knop = $state<HTMLButtonElement>();
 </script>
 
+<svelte:head>
+    <title>Kairos</title>
+</svelte:head>
+
 <svelte:window
-    on:beforeunload={(e) =>
-        sessie?.status == SessieStatus.Actief ? e.preventDefault() : false}
     use:shortcut={{
         trigger: {
             key: " ",
@@ -82,19 +84,19 @@
             <div class="stat">
                 <div class="stat-title">Studietijd (vandaag)</div>
                 <div class="stat-value">
-                    {new Date(studietijd_vandaag * 1000)
+                    {new Date(focustime_today * 1000)
                         .toISOString()
                         .substring(11, 16)}
                 </div>
                 <div
-                    class={`stat-desc ${verschil_vandaag_gisteren > 0 ? "text-success" : "text-error"}`}
+                    class={`stat-desc ${delta_today_yesterday > 0 ? "text-success" : "text-error"}`}
                 >
-                    {Math.abs(verschil_vandaag_gisteren) > 3600
-                        ? `${Math.floor(Math.abs(verschil_vandaag_gisteren) / 3600)} uren ${Math.floor(
-                              (Math.abs(verschil_vandaag_gisteren) % 3600) / 60,
-                          )} minuten`
-                        : `${Math.floor(Math.abs(verschil_vandaag_gisteren) / 60)} minuten`}
-                    {verschil_vandaag_gisteren > 0
+                    {Math.abs(delta_today_yesterday) > 3600
+                        ? `${Math.floor(Math.abs(delta_today_yesterday) / 3600)} uren ${Math.floor(
+                              (Math.abs(delta_today_yesterday) % 3600) / 60,
+                          )} minutes`
+                        : `${Math.floor(Math.abs(delta_today_yesterday) / 60)} minutes`}
+                    {delta_today_yesterday > 0
                         ? `meer dan gisteren`
                         : `minder dan gisteren`}
                 </div>
@@ -127,7 +129,7 @@
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
                             );
-                            sessie = new Sessie(
+                            session = new Session(
                                 PomoType.Pomo,
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
@@ -148,8 +150,8 @@
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
                             );
-                            sessie = new Sessie(
-                                PomoType.KortePauze,
+                            session = new Session(
+                                PomoType.ShortBreak,
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
                             );
@@ -169,8 +171,8 @@
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
                             );
-                            sessie = new Sessie(
-                                PomoType.LangePauze,
+                            session = new Session(
+                                PomoType.LongBreak,
                                 parseInt((e.target as HTMLInputElement).value) *
                                     60,
                             );
@@ -290,22 +292,22 @@
 >
     <section class="w-full flex flex-row gap-2 justify-center rounded">
         <button
-            disabled={sessie?.status == SessieStatus.Actief}
+            disabled={session?.status == SessionStatus.Active}
             class={[
                 "btn",
                 {
                     "btn-primary disabled:bg-primary":
-                        sessie?.pomo_type == PomoType.Pomo,
+                        session?.pomo_type == PomoType.Pomo,
                 },
-                { "btn-neutral": sessie?.pomo_type != PomoType.Pomo },
+                { "btn-neutral": session?.pomo_type != PomoType.Pomo },
                 {
                     "disabled:!bg-primary disabled:text-neutral":
-                        sessie?.pomo_type == PomoType.Pomo,
+                        session?.pomo_type == PomoType.Pomo,
                 },
             ]}
             onclick={() => {
-                if (sessie?.status != SessieStatus.Actief) {
-                    sessie = new Sessie(
+                if (session?.status != SessionStatus.Active) {
+                    session = new Session(
                         PomoType.Pomo,
                         get_instellingen().pomo_tijd,
                     );
@@ -315,20 +317,20 @@
             Pomodoro
         </button>
         <button
-            disabled={sessie?.status == SessieStatus.Actief}
+            disabled={session?.status == SessionStatus.Active}
             class={[
                 "btn",
-                { "btn-primary": sessie?.pomo_type == PomoType.KortePauze },
-                { "btn-neutral": sessie?.pomo_type != PomoType.KortePauze },
+                { "btn-primary": session?.pomo_type == PomoType.ShortBreak },
+                { "btn-neutral": session?.pomo_type != PomoType.ShortBreak },
                 {
                     "disabled:!bg-primary disabled:text-neutral":
-                        sessie?.pomo_type == PomoType.KortePauze,
+                        session?.pomo_type == PomoType.ShortBreak,
                 },
             ]}
             onclick={() => {
-                if (sessie?.status != SessieStatus.Actief) {
-                    sessie = new Sessie(
-                        PomoType.KortePauze,
+                if (session?.status != SessionStatus.Active) {
+                    session = new Session(
+                        PomoType.ShortBreak,
                         get_instellingen().korte_pauze_tijd,
                     );
                 }
@@ -337,20 +339,20 @@
             Pauze
         </button>
         <button
-            disabled={sessie?.status == SessieStatus.Actief}
+            disabled={session?.status == SessionStatus.Active}
             class={[
                 "btn",
-                { "btn-primary": sessie?.pomo_type == PomoType.LangePauze },
-                { "btn-neutral": sessie?.pomo_type != PomoType.LangePauze },
+                { "btn-primary": session?.pomo_type == PomoType.LongBreak },
+                { "btn-neutral": session?.pomo_type != PomoType.LongBreak },
                 {
                     "disabled:!bg-primary disabled:text-neutral":
-                        sessie?.pomo_type == PomoType.LangePauze,
+                        session?.pomo_type == PomoType.LongBreak,
                 },
             ]}
             onclick={() => {
-                if (sessie?.status != SessieStatus.Actief) {
-                    sessie = new Sessie(
-                        PomoType.LangePauze,
+                if (session?.status != SessionStatus.Active) {
+                    session = new Session(
+                        PomoType.LongBreak,
                         get_instellingen().lange_pauze_tijd,
                     );
                 }
@@ -361,52 +363,52 @@
     </section>
     <section>
         <span class="countdown font-mono text-8xl rounded w-full">
-            {#if sessie}
+            {#if session}
                 <span
-                    style={`--value:${sessie.get_minuten()};`}
+                    style={`--value:${session.minutes};`}
                     aria-live="polite"
-                    aria-label={sessie.get_minuten()}
-                    >{sessie.get_minuten()}</span
+                    aria-label={session.minutes}
+                    >{session.minutes}</span
                 >
                 :
                 <span
-                    style={`--value:${sessie.get_seconden()};`}
+                    style={`--value:${session.seconds};`}
                     aria-live="polite"
-                    aria-label={sessie.get_seconden()}
-                    >{sessie.get_seconden()}</span
+                    aria-label={session.seconds}
+                    >{session.seconds}</span
                 >
             {/if}
         </span>
     </section>
     <section class="flex flex-row gap-2 justify-center">
-        {#if sessie}
-            {#if sessie.status == SessieStatus.Actief}
+        {#if session}
+            {#if session.status == SessionStatus.Active}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide"
-                    onclick={() => sessie?.pauzeer()}
+                    onclick={() => session?.pause()}
                 >
                     <Pause class="size-[1.2em]" />
                     Pauzeer
                 </button>
                 <button
                     class="btn btn-secondary"
-                    onclick={() => sessie?.sla_over()}
+                    onclick={() => session?.skip()}
                     ><SkipForward class="size-[1.2em]" />Sla over</button
                 >
-            {:else if sessie.status == SessieStatus.Gepauzeerd}
+            {:else if session.status == SessionStatus.Paused}
                 <button
                     bind:this={start_knop}
                     use:sound={{ src: click_geluid_url, events: ["click"] }}
                     class="btn btn-primary btn-wide"
-                    onclick={() => sessie?.hervat()}
+                    onclick={() => session?.start()}
                 >
                     <Play class="size-[1.2em]" />
                     Hervat</button
                 >
                 <button
                     class="btn btn-secondary"
-                    onclick={() => sessie?.sla_over()}
+                    onclick={() => session?.skip()}
                     ><SkipForward class="size-[1.2em]" /> Sla over</button
                 >
             {:else}
@@ -414,7 +416,7 @@
                     bind:this={start_knop}
                     use:sound={{ src: click_geluid_url, events: ["click"] }}
                     class="btn btn-primary btn-wide"
-                    onclick={() => sessie?.start()}
+                    onclick={() => session?.start()}
                     ><Play class="size-[1.2em]" />Start</button
                 >
             {/if}
