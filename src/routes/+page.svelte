@@ -24,36 +24,36 @@
         set_ui_geluiden_volume,
     } from "../state/instellingen.svelte";
     import { PomoType, Session, SessionStatus } from "../state/session.svelte";
+    import { StatsManager } from "../state/stats.svelte";
     import "../style.css";
 
     let session = $state<Session>();
-    let focustime_today = $state<number>(0);
-    let focustime_yesterday = $state<number>(0);
-    let delta_today_yesterday = $derived(
-        focustime_today - focustime_yesterday,
-    );
+
+    let stats_manager = $state<StatsManager>();
+    let stats_today = $derived(stats_manager?.get_todayStats());
 
     onMount(() => {
         restore_instellingen();
-        focustime_today = Session.sum_focustime(new Date());
-        focustime_yesterday= Session.sum_focustime(
-            new Date(new Date().setDate(new Date().getDate() - 1)),
-        );
 
         const local_session = Session.restore_local();
+        stats_manager = new StatsManager();
 
         if (local_session) {
             session = local_session;
 
             if (session.status == SessionStatus.Active) {
                 session.status = SessionStatus.Interrupted;
-                session.time_end = Date.now() + ((session.time_aim - session.time_real) * 1000);
-                
+                session.time_end =
+                    Date.now() + (session.time_aim - session.time_real) * 1000;
             }
         } else {
             session = new Session(PomoType.Pomo, get_instellingen().pomo_tijd);
         }
     });
+
+    const reload_stats = () => {
+        stats_manager = new StatsManager();
+    }
 
     const click_geluid_url = new URL("/click.mp3", import.meta.url);
 
@@ -84,21 +84,9 @@
             <div class="stat">
                 <div class="stat-title">Studietijd (vandaag)</div>
                 <div class="stat-value">
-                    {new Date(focustime_today * 1000)
-                        .toISOString()
-                        .substring(11, 16)}
-                </div>
-                <div
-                    class={`stat-desc ${delta_today_yesterday > 0 ? "text-success" : "text-error"}`}
-                >
-                    {Math.abs(delta_today_yesterday) > 3600
-                        ? `${Math.floor(Math.abs(delta_today_yesterday) / 3600)} uren ${Math.floor(
-                              (Math.abs(delta_today_yesterday) % 3600) / 60,
-                          )} minutes`
-                        : `${Math.floor(Math.abs(delta_today_yesterday) / 60)} minutes`}
-                    {delta_today_yesterday > 0
-                        ? `meer dan gisteren`
-                        : `minder dan gisteren`}
+                    {#if stats_manager}
+                        {stats_today?.time_focus}
+                    {/if}
                 </div>
             </div>
         </div>
@@ -270,11 +258,12 @@
 
 <header class="h-[10vh] flex flex-row justify-around items-center">
     <div class="flex flex-row gap-2 items-center">
-        <KairosLogo /><span class="text-4xl text-primary font-bold">Kairos</span>
+        <KairosLogo /><span class="text-4xl text-primary font-bold">Kairos</span
+        >
     </div>
     <button
         class="btn btn-ghost"
-        onclick={() => statistieken_modal.showModal()}
+        onclick={() => {reload_stats(); statistieken_modal.showModal()}}
     >
         <ChartLine class="size-[1.2em]" />
         Statistieken
@@ -367,15 +356,13 @@
                 <span
                     style={`--value:${session.minutes};`}
                     aria-live="polite"
-                    aria-label={session.minutes}
-                    >{session.minutes}</span
+                    aria-label={session.minutes}>{session.minutes}</span
                 >
                 :
                 <span
                     style={`--value:${session.seconds};`}
                     aria-live="polite"
-                    aria-label={session.seconds}
-                    >{session.seconds}</span
+                    aria-label={session.seconds}>{session.seconds}</span
                 >
             {/if}
         </span>
