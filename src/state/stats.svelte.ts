@@ -84,7 +84,7 @@ export class StatsManager {
                 pause_sessions: 0,
                 total_sessions: 0,
                 time_total: elapsedTime,
-                time_focus: session.pomo_type ? elapsedTime : 0,
+                time_focus: session.pomo_type == PomoType.Pomo ? elapsedTime : 0,
                 time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? elapsedTime: 0
             });
         }
@@ -132,8 +132,8 @@ export class StatsManager {
                 pause_sessions: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? 1 : 0,
                 total_sessions: 1,
                 time_total: time_real,
-                time_focus: session.pomo_type ? time_real : 0,
-                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? time_aim : 0
+                time_focus: session.pomo_type == PomoType.Pomo ? time_real : 0,
+                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? session.time_aim : 0
             });
         }
 

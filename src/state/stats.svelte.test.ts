@@ -1,20 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Session } from "../state/session.svelte";
+import { PomoType } from "../state/session.svelte";
 import { StatsManager } from "./stats.svelte";
 
-// Mock dependencies
-const PomoType = {
-    Pomo: "Pomo",
-    ShortBreak: "ShortBreak",
-    LongBreak: "LongBreak"
-};
-
 type Pause = { tijdstip: number; duur: number };
-type Session = {
-    pomo_type: string;
-    time_real: number;
-    pauses: Pause[];
-    date: Date;
-};
 
 // Mock $state and $state.snapshot
 (globalThis as any).$state = function <T>(val: T) {
@@ -74,11 +63,13 @@ describe("StatsManager", () => {
         const session: Session = {
             pomo_type: PomoType.Pomo,
             time_real: 1500,
+            time_aim: 1500,
             pauses: [],
             date: new Date("2024-01-01T10:00:00Z")
         };
         statsManager.add_session(session);
         const stats = statsManager.get_stats();
+        console.log(stats);
         expect(stats.focus_sessions).toBe(1);
         expect(stats.pause_sessions).toBe(0);
         expect(stats.total_sessions).toBe(1);
@@ -99,6 +90,7 @@ describe("StatsManager", () => {
         const session: Session = {
             pomo_type: PomoType.ShortBreak,
             time_real: 300,
+            time_aim: 300,
             pauses: [],
             date: new Date("2024-01-01T10:00:00Z")
         };

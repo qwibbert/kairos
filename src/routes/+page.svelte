@@ -1,6 +1,8 @@
 <script lang="ts">
     import Statsmodal from "$lib/components/statsmodal.svelte";
+    import ThemeSample from "$lib/components/theme-sample.svelte";
     import { shortcut } from "@svelte-put/shortcut";
+    import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
     import ChartLine from "lucide-svelte/icons/chart-line";
     import Pause from "lucide-svelte/icons/pause";
     import Play from "lucide-svelte/icons/play";
@@ -15,6 +17,8 @@
     import {
         get_instellingen,
         restore_instellingen,
+        set_active_theme,
+        set_inactive_theme,
         set_korte_pauze_tijd,
         set_lange_pauze_tijd,
         set_pomo_tijd,
@@ -22,6 +26,7 @@
         set_tick_geluid_volume,
         set_ui_geluiden,
         set_ui_geluiden_volume,
+        Theme,
     } from "../state/instellingen.svelte";
     import { PomoType, Session, SessionStatus } from "../state/session.svelte";
     import { StatsManager } from "../state/stats.svelte";
@@ -58,6 +63,17 @@
     let instellingen_modal: HTMLDialogElement;
     let statistieken_modal: HTMLDialogElement;
     let start_knop = $state<HTMLButtonElement>();
+
+    let theme_inactive = $derived(get_instellingen().theme_inactive);
+    let theme_active = $derived(get_instellingen().theme_active);
+
+    $effect(() => {
+        if (session?.status == SessionStatus.Active) {
+            document.documentElement.setAttribute("data-theme", theme_active);
+        } else {
+            document.documentElement.setAttribute("data-theme", theme_inactive);
+        }
+    });
 </script>
 
 <svelte:head>
@@ -230,6 +246,71 @@
                 />
             </div>
         </fieldset>
+        <fieldset
+            class="fieldset flex flex-row justify-evenly bg-base-100 border-base-300 rounded-box w-full border p-4"
+        >
+            <legend class="fieldset-legend">Uiterlijk</legend>
+            <div class="flex flex-col gap-2 items-center">
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend">Inactief</legend>
+                    <select
+                        class="select"
+                        onchange={(e) => {
+                            if (session?.status != SessionStatus.Active) {
+                                document.documentElement.setAttribute(
+                                    "data-theme",
+                                    e.target.value,
+                                );
+                            }
+
+                            set_inactive_theme(e.target.value as Theme);
+                        }}
+                    >
+                        {#each Object.values(Theme) as theme}
+                            <option
+                                value={theme}
+                                selected={get_instellingen().theme_inactive ==
+                                    theme}
+                            >
+                                {theme}
+                            </option>
+                        {/each}
+                    </select>
+                </fieldset>
+                <ThemeSample theme={theme_inactive} />
+            </div>
+            <ArrowRightLeft class="size-[2.5em] self-center" />
+            <div class="flex flex-col gap-2 items-center">
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend">Tijdens sessie</legend>
+                    <select
+                        class="select"
+                        onchange={(e) => {
+                            if (session?.status == SessionStatus.Active) {
+                                document.documentElement.setAttribute(
+                                    "data-theme",
+                                    e.target.value,
+                                );
+                            }
+
+                            set_active_theme(e.target.value as Theme);
+                        }}
+                    >
+                        {#each Object.values(Theme) as theme}
+                            <option
+                                value={theme}
+                                selected={get_instellingen().theme_active ==
+                                    theme}
+                            >
+                                {theme}
+                            </option>
+                        {/each}
+                    </select>
+                </fieldset>
+
+                <ThemeSample theme={theme_active} />
+            </div>
+        </fieldset>
     </div>
     <form method="dialog" class="modal-backdrop">
         <button>close</button>
@@ -369,7 +450,6 @@
             {:else if session.status == SessionStatus.Paused}
                 <button
                     bind:this={start_knop}
-                    use:sound={{ src: click_geluid_url, events: ["click"] }}
                     class="btn btn-primary btn-wide"
                     onclick={() => session?.start()}
                 >
@@ -384,7 +464,6 @@
             {:else}
                 <button
                     bind:this={start_knop}
-                    use:sound={{ src: click_geluid_url, events: ["click"] }}
                     class="btn btn-primary btn-wide"
                     onclick={() => session?.start()}
                     ><Play class="size-[1.2em]" />Start</button
