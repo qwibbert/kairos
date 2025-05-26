@@ -322,7 +322,7 @@
     </form>
 </dialog>
 
-<header class="h-[10vh] flex flex-row justify-evenly items-center mt-2">
+<header class="flex flex-row justify-evenly items-center mt-5">
     <div class="flex flex-row gap-2 items-center">
         <KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold">Kairos</span
         >
