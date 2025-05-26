@@ -162,7 +162,7 @@ export class StatsManager {
         let days = [];
         for (let i = 0; i < 7; i++) {
             const day = weekStart.plus({ days: i });
-            days.push(day.toLocaleString({ weekday: 'short', day: '2-digit' }));
+            days.push(day.toISODate());
         }
 
         return [days, days.map(day => {

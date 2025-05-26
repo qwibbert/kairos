@@ -12,6 +12,8 @@
     import * as echarts from "echarts/core";
     import { LabelLayout, UniversalTransition } from "echarts/features";
     import { CanvasRenderer } from "echarts/renderers";
+    import ChevronLeft from "lucide-svelte/icons/chevron-left";
+    import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
     import type { StatsManager } from "../../state/stats.svelte";
 
@@ -36,15 +38,39 @@
     ]);
 
     let data = {
-        xAxis: { type: "category", name: "Datum", data: [] },
+        datazoom: [],
+        xAxis: {
+            type: "category",
+            name: "Datum",
+            nameLocation: "middle",
+            nameGap: 30,
+            data: [],
+            axisTick: { interval: 0 },
+            axisLabel: {
+                interval: 0,
+                formatter: (value: string) =>
+                    DateTime.fromISO(value).toLocaleString({
+                        day: "2-digit",
+                        weekday: "short",
+                    }),
+            }, // Remove year from date
+        },
         dataset: {
             source: [],
         },
         yAxis: {
             type: "value",
             name: "Focustijd (uren)",
+            nameLocation: "end",
+            nameTextStyle: {
+                padding: [0, 0, 0, 30],
+            },
+            minInterval: 0.5,
+            nameGap: 30,
             axisLabel: {
                 formatter: "{value} h",
+                margin: 2,
+                showMinLabel: false,
             },
             min: 0,
         },
@@ -54,9 +80,17 @@
                 data: [],
             },
         ],
+        tooltip: {
+            formatter: (params) => {
+                return `${DateTime.fromISO(params.name).toLocaleString(DateTime.DATE_FULL)}<br />
+                        Focustijd: ${params.value < 1 ? Math.floor(params.value * 60) + ' min' : Math.floor(params.value) + ' h ' + Math.floor(
+                            (params.value % 1) * 60,
+                        ) + ' min'}`;
+            }
+        },
     };
 
-    let myChart = undefined;
+    let stats_graph = undefined;
 
     const today = DateTime.now();
     let delta_weeks = $state(0);
@@ -67,8 +101,8 @@
 
     $effect(() => {
         if (statistieken_modal && stats_manager && window) {
-            if (myChart) {
-                myChart.dispose();
+            if (stats_graph) {
+                stats_graph.dispose();
             }
 
             data.color = [
@@ -79,7 +113,7 @@
                 ),
             ];
 
-            myChart = echarts.init(document.getElementById("stats"), null, {
+            stats_graph = echarts.init(document.getElementById("stats"), null, {
                 height: "auto",
                 width: "auto",
             });
@@ -87,27 +121,34 @@
             [data.xAxis.data, data.series[0].data] =
                 stats_manager.get_week_focus_time(delta_weeks);
 
-            myChart.setOption(data);
-            myChart.resize();
+            stats_graph.setOption(data);
+            stats_graph.resize();
         }
     });
 
     let stats_today = $derived(stats_manager?.get_todayStats());
 </script>
 
-<svelte:window on:resize={() => myChart.resize()} />
+<svelte:window on:resize={() => stats_graph.resize()} />
 
-<dialog bind:this={statistieken_modal} id="statistieken" class="modal">
-    <div class="modal-box h-[80vh] flex flex-col items-center justify-between">
-        <h3 class="text-lg font-bold">Statistieken</h3>
+<dialog
+    bind:this={statistieken_modal}
+    id="statistieken"
+    class="modal overflow-y-auto"
+>
+    <div class="modal-box">
+        <div class="flex flex-row items-center justify-between mb-2">
+            <h3 class="text-lg font-bold">Statistieken</h3>
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+            </form>
+        </div>
 
         {#if stats_manager}
-            <div
-                class="stats text-primary shadow w-full"
-            >
+            <div class="stats text-primary shadow w-full">
                 <div class="stat">
                     <div class="stat-title">Focustijd</div>
-                    <div class="stat-value">
+                    <div class="stat-value text-md md:text-3xl">
                         {#if stats_today?.time_focus < 3600}
                             {Math.floor(stats_today?.time_focus / 60)} min
                         {:else}
@@ -117,6 +158,7 @@
                             )} min
                         {/if}
                     </div>
+                    <div class="stat-desc">vandaag</div>
                 </div>
 
                 <div class="stat">
@@ -124,14 +166,16 @@
                     <div class="stat-value">
                         {stats_today?.focus_sessions}
                     </div>
+                    <div class="stat-desc">vandaag</div>
                 </div>
             </div>
         {/if}
-        <div class="w-full flex flex-col">
-            <div class="flex flex-row items-center justify-between">
+        <div class="w-full flex flex-col mt-5">
+            <div class="flex flex-row items-center justify-between mb-2">
                 <button
                     class="btn btn-xs btn-primary"
-                    onclick={() => (delta_weeks += 1)}>Vorige week</button
+                    onclick={() => (delta_weeks += 1)}
+                    ><ChevronLeft class="size-[1.5em]" /></button
                 >
                 {#if weekStart && weekEnd}
                     <span class="mx-2 text-sm">
@@ -149,7 +193,8 @@
                 <button
                     class="btn btn-xs btn-primary"
                     disabled={delta_weeks <= 0}
-                    onclick={() => (delta_weeks -= 1)}>Volgende week</button
+                    onclick={() => (delta_weeks -= 1)}
+                    ><ChevronRight class="size-[1.5em]" /></button
                 >
             </div>
             <div id="stats" class="w-full h-[50vh]"></div>

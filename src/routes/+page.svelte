@@ -94,7 +94,12 @@
 
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
-        <h3 class="text-lg font-bold">Instellingen</h3>
+        <div class="flex flex-row items-center justify-between mb-2">
+            <h3 class="text-lg font-bold">Instellingen</h3>
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+            </form>
+        </div>
         <fieldset
             class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
         >
@@ -317,28 +322,32 @@
     </form>
 </dialog>
 
-<header class="h-[10vh] flex flex-row justify-around items-center">
+<header class="h-[10vh] flex flex-row justify-evenly items-center mt-2">
     <div class="flex flex-row gap-2 items-center">
-        <KairosLogo /><span class="text-4xl text-primary font-bold">Kairos</span
+        <KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold">Kairos</span
         >
     </div>
-    <button
-        class="btn btn-ghost"
-        onclick={() => {
-            reload_stats();
-            statistieken_modal.showModal();
-        }}
-    >
-        <ChartLine class="size-[1.2em]" />
-        Statistieken
-    </button>
-    <button
-        class="btn btn-primary"
-        onclick={() => instellingen_modal.showModal()}
-    >
-        <Settings class="size-[1.2em]" />
-        Instellingen
-    </button>
+    {#if session?.status != SessionStatus.Active}
+        <div class="join">
+            <button
+                class="btn btn-soft md:btn-md join-item"
+                onclick={() => {
+                    reload_stats();
+                    statistieken_modal.showModal();
+                }}
+            >
+                <ChartLine class="size-[1.2em]" />
+                <span class="hidden md:block">Statistieken</span>
+            </button>
+            <button
+                class="btn btn-soft join-item"
+                onclick={() => instellingen_modal.showModal()}
+            >
+                <Settings class="size-[1.2em]" />
+                <span class="hidden md:block">Instellingen</span>
+            </button>
+        </div>
+    {/if}
 </header>
 <main
     class="h-[90vh] w-[100vw] flex flex-col justify-around items-center py-10"
@@ -347,7 +356,7 @@
         <button
             disabled={session?.status == SessionStatus.Active}
             class={[
-                "btn",
+                "btn btn-sm md:btn-md",
                 {
                     "btn-primary disabled:bg-primary":
                         session?.pomo_type == PomoType.Pomo,
@@ -372,7 +381,7 @@
         <button
             disabled={session?.status == SessionStatus.Active}
             class={[
-                "btn",
+                "btn btn-sm md:btn-md",
                 { "btn-primary": session?.pomo_type == PomoType.ShortBreak },
                 { "btn-neutral": session?.pomo_type != PomoType.ShortBreak },
                 {
@@ -394,7 +403,7 @@
         <button
             disabled={session?.status == SessionStatus.Active}
             class={[
-                "btn",
+                "btn btn-sm md:btn-md",
                 { "btn-primary": session?.pomo_type == PomoType.LongBreak },
                 { "btn-neutral": session?.pomo_type != PomoType.LongBreak },
                 {
@@ -436,35 +445,35 @@
             {#if session.status == SessionStatus.Active}
                 <button
                     bind:this={start_knop}
-                    class="btn btn-primary btn-wide"
+                    class="btn btn-primary btn-wide btn-sm md:btn-md"
                     onclick={() => session?.pause()}
                 >
                     <Pause class="size-[1.2em]" />
                     Pauzeer
                 </button>
                 <button
-                    class="btn btn-secondary"
+                    class="btn btn-secondary btn-sm md:btn-md"
                     onclick={() => session?.skip()}
                     ><SkipForward class="size-[1.2em]" />Sla over</button
                 >
             {:else if session.status == SessionStatus.Paused}
                 <button
                     bind:this={start_knop}
-                    class="btn btn-primary btn-wide"
+                    class="btn btn-primary btn-wide btn-sm md:btn-md"
                     onclick={() => session?.start()}
                 >
                     <Play class="size-[1.2em]" />
                     Hervat</button
                 >
                 <button
-                    class="btn btn-secondary"
+                    class="btn btn-secondary btn-sm md:btn-md"
                     onclick={() => session?.skip()}
                     ><SkipForward class="size-[1.2em]" /> Sla over</button
                 >
             {:else}
                 <button
                     bind:this={start_knop}
-                    class="btn btn-primary btn-wide"
+                    class="btn btn-primary btn-wide btn-sm md:btn-md"
                     onclick={() => session?.start()}
                     ><Play class="size-[1.2em]" />Start</button
                 >

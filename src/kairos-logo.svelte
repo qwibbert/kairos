@@ -1,4 +1,4 @@
-<svg class="size-[4.5em]" version="1.0" xmlns="http://www.w3.org/2000/svg"
+<svg class="size-[3em] md:size-[3.5em] xl:size-[4em]" version="1.0" xmlns="http://www.w3.org/2000/svg"
  width="1431.000000pt" height="1392.000000pt" viewBox="0 0 1431.000000 1392.000000"
  preserveAspectRatio="xMidYMid meet">
 <g transform="translate(0.000000,1392.000000) scale(0.100000,-0.100000)"
