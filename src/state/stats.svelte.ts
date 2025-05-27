@@ -1,5 +1,5 @@
 import { DateTime, Interval } from 'luxon';
-import { PomoType, type Session } from "../state/session.svelte";
+import { PomoType, SessionStatus, type Session } from "../state/session.svelte";
 
 interface Stats {
     focus_sessions: number;
@@ -85,7 +85,7 @@ export class StatsManager {
                 total_sessions: 0,
                 time_total: elapsedTime,
                 time_focus: session.pomo_type == PomoType.Pomo ? elapsedTime : 0,
-                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? elapsedTime: 0
+                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? elapsedTime : 0
             });
         }
 
@@ -100,9 +100,15 @@ export class StatsManager {
         const pauses = $state.snapshot(session.pauses);
 
         if (pauses.length > 0) {
-            // If there are pauses, we need to adjust the real time
-            const lastPause = pauses[pauses.length - 1];
-            time_real = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000); // Convert milliseconds to seconds
+            // If there are pauses and we are not currently paused (eg. a paused session can be skipped), we need to adjust the real time
+            if (session.status != SessionStatus.Paused) {
+                const lastPause = pauses[pauses.length - 1];
+                time_real = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000); // Convert milliseconds to seconds
+            } else {
+                // Because this function is called on a pause and we are currently paused, the stats should already have been updated
+                time_real = 0;
+            }
+
         }
 
         this.stats.time_total += time_real;
