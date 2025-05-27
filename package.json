@@ -9,7 +9,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
 		"@svelte-put/shortcut": "^4.1.0",
@@ -23,7 +24,9 @@
 		"svelte-check": "^4.0.0",
 		"typescript": "^5.0.0",
 		"vite": "^6.2.5",
-		"vitest": "^3.1.3"
+		"vitest": "^3.1.3",
+		"@inlang/paraglide-js": "2.0.13",
+		"@inlang/cli": "^3.0.0"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.5",

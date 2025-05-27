@@ -15,6 +15,7 @@
     import ChevronLeft from "lucide-svelte/icons/chevron-left";
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
+    import { m } from "../../paraglide/messages";
     import type { StatsManager } from "../../state/stats.svelte";
 
     interface Props {
@@ -41,7 +42,7 @@
         datazoom: [],
         xAxis: {
             type: "category",
-            name: "Datum",
+            name: m.date(),
             nameLocation: "middle",
             nameGap: 30,
             data: [],
@@ -60,7 +61,7 @@
         },
         yAxis: {
             type: "value",
-            name: "Focustijd (uren)",
+            name: m.focus_time_hours(),
             nameLocation: "end",
             nameTextStyle: {
                 padding: [0, 0, 0, 30],
@@ -83,7 +84,7 @@
         tooltip: {
             formatter: (params) => {
                 return `${DateTime.fromISO(params.name).toLocaleString(DateTime.DATE_FULL)}<br />
-                        Focustijd: ${params.value < 1 ? Math.floor(params.value * 60) + ' min' : Math.floor(params.value) + ' h ' + Math.floor(
+                        ${m.focus_time()}: ${params.value < 1 ? Math.floor(params.value * 60) + ' min' : Math.floor(params.value) + ' h ' + Math.floor(
                             (params.value % 1) * 60,
                         ) + ' min'}`;
             }
@@ -138,7 +139,7 @@
 >
     <div class="modal-box">
         <div class="flex flex-row items-center justify-between mb-2">
-            <h3 class="text-lg font-bold">Statistieken</h3>
+            <h3 class="text-lg font-bold">{m.statistics()}</h3>
             <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost">✕</button>
             </form>
@@ -147,7 +148,7 @@
         {#if stats_manager}
             <div class="stats text-primary shadow w-full">
                 <div class="stat">
-                    <div class="stat-title">Focustijd</div>
+                    <div class="stat-title">{m.focus_time()}</div>
                     <div class="stat-value text-md md:text-3xl">
                         {#if stats_today?.time_focus < 3600}
                             {Math.floor(stats_today?.time_focus / 60)} min
@@ -158,15 +159,15 @@
                             )} min
                         {/if}
                     </div>
-                    <div class="stat-desc">vandaag</div>
+                    <div class="stat-desc">{m.today()}</div>
                 </div>
 
                 <div class="stat">
-                    <div class="stat-title">Focus-sessies</div>
+                    <div class="stat-title">{m.focus_sessions()}</div>
                     <div class="stat-value">
                         {stats_today?.focus_sessions}
                     </div>
-                    <div class="stat-desc">vandaag</div>
+                    <div class="stat-desc">{m.today()}</div>
                 </div>
             </div>
         {/if}

@@ -14,6 +14,7 @@
     import VolumeX from "lucide-svelte/icons/volume-x";
     import { onMount } from "svelte";
     import KairosLogo from "../kairos-logo.svelte";
+    import * as m from "../paraglide/messages";
     import {
         get_instellingen,
         restore_instellingen,
@@ -95,7 +96,7 @@
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
         <div class="flex flex-row items-center justify-between mb-2">
-            <h3 class="text-lg font-bold">Instellingen</h3>
+            <h3 class="text-lg font-bold">{m.settings()}</h3>
             <form method="dialog">
                 <button class="btn btn-sm btn-circle btn-ghost">✕</button>
             </form>
@@ -103,10 +104,10 @@
         <fieldset
             class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
         >
-            <legend class="fieldset-legend">Focustijden</legend>
+            <legend class="fieldset-legend">{m.focus_times()}</legend>
             <div class="flex flex-row gap-2">
                 <div class="flex flex-col">
-                    <label for="pomo" class="label">Pomodoro</label>
+                    <label for="pomo" class="label">{m.pomodoro()}</label>
                     <input
                         id="pomo"
                         type="number"
@@ -127,7 +128,7 @@
                     />
                 </div>
                 <div class="flex flex-col">
-                    <label for="korte_pauze" class="label">Korte pauze</label>
+                    <label for="korte_pauze" class="label">{m.break()}</label>
                     <input
                         id="korte_pauze"
                         type="number"
@@ -148,7 +149,7 @@
                     />
                 </div>
                 <div class="flex flex-col">
-                    <label for="lange_pauze" class="label">Lange pauze</label>
+                    <label for="lange_pauze" class="label">{m.long_break()}</label>
                     <input
                         id="lange_pauze"
                         type="number"
@@ -173,7 +174,7 @@
         <fieldset
             class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
         >
-            <legend class="fieldset-legend">Geluid</legend>
+            <legend class="fieldset-legend">{m.sound()}</legend>
             <div class="flex flex-row justify-evenly items-center">
                 <label class="label">
                     <input
@@ -185,7 +186,7 @@
                             )}
                         class="toggle"
                     />
-                    UI-geluiden
+                    {m.ui_sounds()}
                 </label>
                 <button class="btn btn-primary btn-circle">
                     {#if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume < 25}
@@ -224,7 +225,7 @@
                             )}
                         class="toggle"
                     />
-                    Tick-geluid
+                    {m.tick_sound()}
                 </label>
                 <button class="btn btn-primary btn-circle">
                     {#if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume < 25}
@@ -254,10 +255,10 @@
         <fieldset
             class="fieldset flex flex-row justify-evenly bg-base-100 border-base-300 rounded-box w-full border p-4"
         >
-            <legend class="fieldset-legend">Uiterlijk</legend>
+            <legend class="fieldset-legend">{m.appearance()}</legend>
             <div class="flex flex-col gap-2 items-center">
                 <fieldset class="fieldset w-full">
-                    <legend class="fieldset-legend">Inactief</legend>
+                    <legend class="fieldset-legend">{m.inactive()}</legend>
                     <select
                         class="select"
                         onchange={(e) => {
@@ -287,7 +288,7 @@
             <ArrowRightLeft class="size-[2.5em] self-center" />
             <div class="flex flex-col gap-2 items-center">
                 <fieldset class="fieldset w-full">
-                    <legend class="fieldset-legend">Tijdens sessie</legend>
+                    <legend class="fieldset-legend">{m.active()}</legend>
                     <select
                         class="select"
                         onchange={(e) => {
@@ -337,14 +338,14 @@
                 }}
             >
                 <ChartLine class="size-[1.2em]" />
-                <span class="hidden md:block">Statistieken</span>
+                <span class="hidden md:block">{m.statistics()}</span>
             </button>
             <button
                 class="btn btn-soft join-item"
                 onclick={() => instellingen_modal.showModal()}
             >
                 <Settings class="size-[1.2em]" />
-                <span class="hidden md:block">Instellingen</span>
+                <span class="hidden md:block">{m.settings()}</span>
             </button>
         </div>
     {/if}
@@ -381,7 +382,7 @@
                 
             }}
         >
-            Pomodoro
+            {m.pomodoro()}
         </button>
         <button
             disabled={session?.status == SessionStatus.Active}
@@ -409,7 +410,7 @@
                 
             }}
         >
-            Pauze
+            {m.break()}
         </button>
         <button
             disabled={session?.status == SessionStatus.Active}
@@ -437,7 +438,7 @@
                 
             }}
         >
-            Lange pauze
+            {m.long_break()}
         </button>
     </section>
     <section>
@@ -466,12 +467,12 @@
                     onclick={() => session?.pause()}
                 >
                     <Pause class="size-[1.2em]" />
-                    Pauzeer
+                    {m.pause()}
                 </button>
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
                     onclick={() => session?.skip()}
-                    ><SkipForward class="size-[1.2em]" />Sla over</button
+                    ><SkipForward class="size-[1.2em]" />{m.skip()}</button
                 >
             {:else if session.status == SessionStatus.Paused}
                 <button
@@ -480,19 +481,19 @@
                     onclick={() => session?.start()}
                 >
                     <Play class="size-[1.2em]" />
-                    Hervat</button
+                    {m.resume()}</button
                 >
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
                     onclick={() => session?.skip()}
-                    ><SkipForward class="size-[1.2em]" /> Sla over</button
+                    ><SkipForward class="size-[1.2em]" /> {m.skip()}</button
                 >
             {:else}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
                     onclick={() => session?.start()}
-                    ><Play class="size-[1.2em]" />Start</button
+                    ><Play class="size-[1.2em]" />{m.start()}</button
                 >
             {/if}
         {/if}
