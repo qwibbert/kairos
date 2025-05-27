@@ -56,8 +56,7 @@ export class StatsManager {
             // On the first pause, we can just add the elapsed time
             elapsedTime = session.time_real;
         } else {
-            // If there are any previous pauses, we just need to update the time elaspsed since the last pause
-
+            // If there are any previous pauses, we just need to update the time elapsed since the last pause
             const lastPause = pauses[pauses.length - 1];
             elapsedTime = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000) - 1; // Substract 1 second to account for the pause itself
         }
@@ -100,15 +99,16 @@ export class StatsManager {
         const pauses = $state.snapshot(session.pauses);
 
         if (pauses.length > 0) {
-            // If there are pauses and we are not currently paused (eg. a paused session can be skipped), we need to adjust the real time
+            // If there are pauses, we need to adjust the real time
             if (session.status != SessionStatus.Paused) {
                 const lastPause = pauses[pauses.length - 1];
                 time_real = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000); // Convert milliseconds to seconds
             } else {
-                // Because this function is called on a pause and we are currently paused, the stats should already have been updated
+                // Since the session is paused, we can assume that the time has already been added to the stats
+                // and we should not add it again.
+                // This is to prevent double counting when the session is paused.
                 time_real = 0;
             }
-
         }
 
         this.stats.time_total += time_real;
@@ -139,7 +139,7 @@ export class StatsManager {
                 total_sessions: 1,
                 time_total: time_real,
                 time_focus: session.pomo_type == PomoType.Pomo ? time_real : 0,
-                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? session.time_aim : 0
+                time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? time_real : 0
             });
         }
 

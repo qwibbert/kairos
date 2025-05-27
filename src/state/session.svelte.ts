@@ -125,11 +125,15 @@ export class Session {
             return;
         }
 
+        if (this.status == SessionStatus.Paused) {
+            this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((Date.now() - this.pause_timestamp) / 1000) });
+        }
+
         clearInterval(this.interval);
-        this.status = SessionStatus.Skipped;
 
         const stats_manager = new StatsManager();
         stats_manager.add_session(this);
+        this.status = SessionStatus.Skipped;
 
         this.next();
     }
