@@ -368,7 +368,12 @@
                 },
             ]}
             onclick={() => {
-                if (session?.status != SessionStatus.Active) {
+                // Check if there is already an active session with a non-zero time_real
+                // If so, skip this session
+                if (session && session.time_real != 0) {
+                    session.skip();
+                } else {
+                    // If there is no active session or time_real is zero, start a new session
                     session = new Session(
                         PomoType.Pomo,
                         get_instellingen().pomo_tijd,
@@ -390,7 +395,12 @@
                 },
             ]}
             onclick={() => {
-                if (session?.status != SessionStatus.Active) {
+                // Check if there is already an active session with a non-zero time_real
+                // If so, skip this session
+                if (session && session.time_real != 0) {
+                    session.skip();
+                } else {
+                    // If there is no active session or time_real is zero, start a new session
                     session = new Session(
                         PomoType.ShortBreak,
                         get_instellingen().korte_pauze_tijd,
@@ -412,7 +422,12 @@
                 },
             ]}
             onclick={() => {
-                if (session?.status != SessionStatus.Active) {
+                // Check if there is already an active session with a non-zero time_real
+                // If so, skip this session
+                if (session && session.time_real != 0) {
+                    session.skip();
+                } else {
+                    // If there is no active session or time_real is zero, start a new session
                     session = new Session(
                         PomoType.LongBreak,
                         get_instellingen().lange_pauze_tijd,
