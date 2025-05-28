@@ -6,7 +6,7 @@
   "start": "Start",
   "resume": "Hervat",
   "pause": "Pauzeer",
-  "skip": "Skip",
+  "skip": "Sla over",
   "statistics": "Statistieken",
   "settings": "Instellingen",
   "focus_times": "Focustijden",
@@ -18,7 +18,7 @@
   "active": "Actief",
   "focus_time": "Focustijd",
   "today": "Vandaag",
-  "focus_sessions": "Focustijden",
+  "focus_sessions": "Focus-sessies",
   "focus_time_hours": "Focustijd (uren)",
   "date": "Datum"
 }
