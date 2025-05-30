@@ -36,25 +36,27 @@
     let session = $state<Session>();
 
     onMount(() => {
+        console.debug("App mounted, restoring state...");
         restore_instellingen();
         restore_stats();
-
         const local_session = Session.restore_local();
+        console.debug("State restored.");
 
         if (local_session) {
+            console.debug("Restored session from local storage:", local_session.uuid);
             session = local_session;
 
             if (session.status == SessionStatus.Active) {
+                console.debug("Session was previously active, correcting time_end.");
                 session.status = SessionStatus.Interrupted;
                 session.time_end =
                     Date.now() + (session.time_aim - session.time_real) * 1000;
             }
         } else {
+            console.debug("No previous session found, starting a new one.");
             session = new Session(PomoType.Pomo, get_instellingen().pomo_tijd);
         }
     });
-
-    const click_geluid_url = new URL("/click.mp3", import.meta.url);
 
     let instellingen_modal: HTMLDialogElement;
     let statistieken_modal = $state<HTMLDialogElement>();
@@ -65,8 +67,10 @@
 
     $effect(() => {
         if (session?.status == SessionStatus.Active) {
+            console.debug("Switch theme to active:", theme_active);
             document.documentElement.setAttribute("data-theme", theme_active);
         } else {
+            console.debug("Switch theme to inactive:", theme_inactive);
             document.documentElement.setAttribute("data-theme", theme_inactive);
         }
     });

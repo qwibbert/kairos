@@ -61,41 +61,50 @@ let instellingen = $state<Instellingen>({
 });
 
 export const set_pomo_tijd = (tijd: number) => {
+    console.debug("Setting pomodoro time to", tijd);
     instellingen.pomo_tijd = tijd;
     save_instellingen();
 }
 export const set_korte_pauze_tijd = (tijd: number) => {
+    console.debug("Setting short break time to", tijd);    
     instellingen.korte_pauze_tijd = tijd;
     save_instellingen();
 }
 export const set_lange_pauze_tijd = (tijd: number) => {
+    console.debug("Setting long break time to", tijd);
     instellingen.lange_pauze_tijd = tijd;
     save_instellingen();
 }
 export const set_ui_geluiden = (geluiden: boolean) => {
+    console.debug("Setting UI sounds toggle to", geluiden);
     instellingen.ui_geluiden = geluiden;
     save_instellingen();
 }
 export const set_tick_geluid = (geluid: boolean) => {
+    console.debug("Setting tick sound toggle to", geluid);
     instellingen.tick_geluid = geluid;
     save_instellingen();
 }
 
 export const set_ui_geluiden_volume = (volume: number) => {
+    console.debug("Setting UI sounds volume to", volume);
     instellingen.ui_geluiden_volume = volume;
     save_instellingen();
 }
-export const set_tick_geluid_volume = (volume: number) => { 
+export const set_tick_geluid_volume = (volume: number) => {
+    console.debug("Setting tick sound volume to", volume); 
     instellingen.tick_geluid_volume = volume;
     save_instellingen();
 }
 
 export const set_inactive_theme = (theme: Theme) => {
+    console.debug("Setting inactive theme to", theme);
     instellingen.theme_inactive = theme;
     save_instellingen();
 }
 
 export const set_active_theme = (theme: Theme) => {
+    console.debug("Setting active theme to", theme);
     instellingen.theme_active = theme;
     save_instellingen();
 }
@@ -105,6 +114,7 @@ export const get_instellingen = () => {
 }
 
 export const save_instellingen = () => {
+    console.debug("Save settings.");
     localStorage.setItem("instellingen", JSON.stringify(instellingen));
 }
 
@@ -112,6 +122,7 @@ export const restore_instellingen = () => {
     const lokale_instellingen = localStorage.getItem("instellingen");
 
     if (lokale_instellingen) {
+        console.debug("Restore settings from localStorage.");
         const lokale_instellingen_parsed = JSON.parse(lokale_instellingen) as Instellingen;
 
         instellingen.pomo_tijd = lokale_instellingen_parsed.pomo_tijd;
@@ -124,6 +135,7 @@ export const restore_instellingen = () => {
         instellingen.theme_inactive = lokale_instellingen_parsed.theme_inactive;
         instellingen.theme_active = lokale_instellingen_parsed.theme_active;
     } else {
+        console.debug("No settings found in localStorage, using default settings.");
         localStorage.setItem("instellingen", JSON.stringify(instellingen));
     }
 }

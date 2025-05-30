@@ -38,9 +38,10 @@ export class Session {
     seconds = $state<number>(0);
 
     constructor(pomo_type: PomoType, time: number) {
+        console.debug(`Instantiated new ${pomo_type} session with ${time} time value.`)
         this.uuid = crypto.randomUUID();
         this.pomo_type = pomo_type;
-        this.time_aim= time;
+        this.time_aim = time;
         this.minutes = Math.floor(time / 60)
         this.seconds = time % 60;
     }
@@ -49,7 +50,11 @@ export class Session {
         click_sound();
         const now = Date.now();
 
-        if (this.status == SessionStatus.Ready || this.status == SessionStatus.Skipped) {
+        if (this.status == SessionStatus.Ready) {
+            console.warn('Tried to start a session which is already active.');
+            return;
+        } else if (this.status == SessionStatus.Skipped) {
+            console.warn('Tried to restart a skipped session');
             return;
         }
 
@@ -58,9 +63,11 @@ export class Session {
         if (this.interval != 0) clearInterval(this.interval);
 
         if (this.status == SessionStatus.Paused) {
+            console.debug('Paused session detected, saving pause duration and adjusting end time.')
             this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((now - this.pause_timestamp) / 1000) });
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else if (this.status == SessionStatus.Interrupted) {
+            console.debug('Interrupted session detected, adjusting end time.')
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else {
             this.time_end = now + (this.time_aim * 1000);
@@ -68,6 +75,7 @@ export class Session {
 
         if (this.pomo_type == PomoType.Pomo) {
             this.cycle += 1;
+            console.debug(`Adjusting Pomo cycle: ${this.cycle}`)
         }
 
         this.status = SessionStatus.Active;
@@ -85,6 +93,7 @@ export class Session {
             document.title = `${this.minutes}:${this.seconds < 10 ? '0' : ''}${this.seconds} | Kairos`;
 
             if (seconds_left < 1) {
+                console.debug(`Session ${this.uuid} finished.`)
                 timer_sound.currentTime = 0;
                 timer_sound.play();
                 this.status = SessionStatus.Ready;
@@ -105,6 +114,7 @@ export class Session {
         clearInterval(this.interval);
 
         if (this.status == SessionStatus.Ready) {
+            console.warn(`Tried to pause a session which has already finished.`)
             return;
         }
 
@@ -119,10 +129,12 @@ export class Session {
 
     skip = () => {
         if (this.status == SessionStatus.Ready) {
+            console.warn(`Tried to skip a session which has already finished.`);
             return;
         }
 
         if (this.status == SessionStatus.Paused) {
+            console.warn(`Skipping a paused session.`);
             this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((Date.now() - this.pause_timestamp) / 1000) });
         }
 
@@ -135,6 +147,7 @@ export class Session {
     }
 
     next = () => {
+        console.debug('Preparing next session.');
         this.save_history();
         this.clear_local();
 
@@ -147,14 +160,16 @@ export class Session {
 
         if (this.pomo_type == PomoType.Pomo) {
             if (this.cycle > 0 && (this.cycle % 4) == 0) {
-                console.log(this.cycle % 4)
+                console.debug('Long break cycle.');
                 this.pomo_type = PomoType.LongBreak;
                 this.time_aim = get_instellingen().lange_pauze_tijd;
             } else {
+                console.debug('Short break cycle.');
                 this.pomo_type = PomoType.ShortBreak;
                 this.time_aim = get_instellingen().korte_pauze_tijd;
             }
         } else if (this.pomo_type == PomoType.ShortBreak || this.pomo_type == PomoType.LongBreak) {
+            console.debug('Pomo cycle.');
             this.pomo_type = PomoType.Pomo;
             this.time_aim = get_instellingen().pomo_tijd;
         }
@@ -164,14 +179,18 @@ export class Session {
     }
 
     update_local_storage = () => {
+        console.debug('Updating local session storage.')
         localStorage.setItem('session', svelteStringify(this));
     }
 
     clear_local = () => {
+        console.debug('Clearing local session storage.')
         localStorage.removeItem('session');
     }
 
     save_history = () => {
+        console.debug('Saving history to local storage.');
+
         const history = localStorage.getItem('history') as Session[] | null;
         const session = {
             uuid: this.uuid,
@@ -186,10 +205,12 @@ export class Session {
         }
 
         if (history) {
+            console.debug('History key exists, adding this session.')
             const history_parsed = JSON.parse(history) as Session[];
 
             localStorage.setItem('history', JSON.stringify([...history_parsed, session]));
         } else {
+            console.debug('History key does not exist, adding key.')
             localStorage.setItem('history', JSON.stringify([session]));
         }
     }
@@ -199,7 +220,6 @@ export class Session {
 
         if (local_session) {
             const parsed_session = JSON.parse(local_session) as Session;
-
 
             let session = new Session(parsed_session.pomo_type, parsed_session.time_aim - parsed_session.time_real);
 
@@ -221,9 +241,12 @@ export class Session {
 
 export const click_sound = () => {
     if (get_instellingen().ui_geluiden) {
+        console.debug('Playing Click sound.');
         const audio = new Audio("sounds/click.mp3");
         audio.volume = get_instellingen().ui_geluiden_volume / 100;
         audio.play();
+    } else {
+        console.debug('Skipped playing Click sound, user disabled this function');
     }
 }
 

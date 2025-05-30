@@ -60,11 +60,13 @@ class StatsManager {
     public load() {
         const storedStats = localStorage.getItem('stats');
         if (storedStats) {
+            console.debug("Restoring stats from local storage.");
             this.stats = JSON.parse(storedStats);
         }
     }
 
     private save() {
+        console.debug("Saving stats to local storage.");
         localStorage.setItem('stats', JSON.stringify(this.stats));
     }
 
@@ -74,9 +76,11 @@ class StatsManager {
         const pauses = $state.snapshot(session.pauses);
 
         if (pauses.length == 0) {
+            console.debug("No pauses found, adding elapsed time from session.");
             // On the first pause, we can just add the elapsed time
             elapsedTime = session.time_real;
         } else {
+            console.debug("Pauses found, calculating elapsed time since last pause.");
             // If there are any previous pauses, we just need to update the time elapsed since the last pause
             const lastPause = pauses[pauses.length - 1];
             elapsedTime = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000) - 1; // Substract 1 second to account for the pause itself
@@ -94,10 +98,12 @@ class StatsManager {
         const dayStats = this.stats.per_day.find(d => d.date == dayKey);
 
         if (dayStats) {
+            console.debug("Updating existing day stats for", dayKey);
             dayStats.time_total += elapsedTime;
             dayStats.time_focus += session.pomo_type == PomoType.Pomo ? elapsedTime : 0;
             dayStats.time_pause += session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? elapsedTime : 0;
         } else {
+            console.debug("Creating new day stats for", dayKey);
             this.stats.per_day.push({
                 date: dayKey,
                 focus_sessions: 0,
@@ -120,11 +126,14 @@ class StatsManager {
         const pauses = $state.snapshot(session.pauses);
 
         if (pauses.length > 0) {
+            console.debug("Session has pauses, calculating real time.");
             // If there are pauses, we need to adjust the real time
             if (session.status != SessionStatus.Paused) {
+                console.debug("Session is not paused, calculating time since last pause.");
                 const lastPause = pauses[pauses.length - 1];
                 time_real = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000); // Convert milliseconds to seconds
             } else {
+                console.debug("Session is paused, setting real time to 0.");
                 // Since the session is paused, we can assume that the time has already been added to the stats
                 // and we should not add it again.
                 // This is to prevent double counting when the session is paused.
@@ -135,9 +144,11 @@ class StatsManager {
         this.stats.time_total += time_real;
 
         if (session.pomo_type == PomoType.Pomo) {
+            console.debug("Adding focus session.");
             this.stats.focus_sessions += 1;
             this.stats.time_focus += time_real;
         } else if (session.pomo_type == PomoType.LongBreak || session.pomo_type == PomoType.ShortBreak) {
+            console.debug("Adding pause session.");
             this.stats.pause_sessions += 1;
             this.stats.time_pause += time_real;
         }
@@ -146,6 +157,7 @@ class StatsManager {
         const dayStats = this.stats.per_day.find(d => d.date == dayKey);
 
         if (dayStats) {
+            console.debug("Updating existing day stats for", dayKey);
             dayStats.focus_sessions += session.pomo_type == PomoType.Pomo ? 1 : 0;
             dayStats.pause_sessions += session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? 1 : 0;
             dayStats.total_sessions += 1;
@@ -153,6 +165,7 @@ class StatsManager {
             dayStats.time_focus += session.pomo_type == PomoType.Pomo ? time_real : 0;
             dayStats.time_pause += session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? time_real : 0;
         } else {
+            console.debug("Creating new day stats for", dayKey);
             this.stats.per_day.push({
                 date: dayKey,
                 focus_sessions: session.pomo_type == PomoType.Pomo ? 1 : 0,
