@@ -21,7 +21,32 @@ interface Stats {
     }>;
 }
 
-export class StatsManager {
+let stats_manager = $state<StatsManager>();
+
+export const restore_stats = () => {
+    if (!stats_manager) {
+        stats_manager = new StatsManager();
+        stats_manager.load();
+    }
+};
+
+export const update_on_pause = (session: Session) =>
+    stats_manager?.update_on_pause(session);
+
+export const add_session = (session: Session) =>
+    stats_manager?.add_session(session);
+
+export const get_todayStats = () =>
+    stats_manager?.get_todayStats()
+
+export const get_week_focus_time = (earlier_weeks: number = 0) =>
+    stats_manager?.get_week_focus_time(earlier_weeks);
+
+export const get_stats = () =>
+    stats_manager?.get_stats();
+
+
+class StatsManager {
     private stats = $state<Stats>({
         focus_sessions: 0,
         pause_sessions: 0,
@@ -32,11 +57,7 @@ export class StatsManager {
         per_day: []
     });
 
-    constructor() {
-        this.load();
-    }
-
-    private load() {
+    public load() {
         const storedStats = localStorage.getItem('stats');
         if (storedStats) {
             this.stats = JSON.parse(storedStats);

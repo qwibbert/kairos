@@ -16,14 +16,13 @@
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
     import { m } from "../../paraglide/messages";
-    import type { StatsManager } from "../../state/stats.svelte";
+    import { get_stats, get_todayStats, get_week_focus_time } from "../../state/stats.svelte";
 
     interface Props {
-        stats_manager: StatsManager;
         statistieken_modal?: HTMLDialogElement; // Optional dialog element
     }
 
-    let { stats_manager, statistieken_modal = $bindable() }: Props = $props();
+    let { statistieken_modal = $bindable() }: Props = $props();
 
     echarts.use([
         BarChart,
@@ -84,10 +83,15 @@
         tooltip: {
             formatter: (params) => {
                 return `${DateTime.fromISO(params.name).toLocaleString(DateTime.DATE_FULL)}<br />
-                        ${m.focus_time()}: ${params.value < 1 ? Math.floor(params.value * 60) + ' min' : Math.floor(params.value) + ' h ' + Math.floor(
-                            (params.value % 1) * 60,
-                        ) + ' min'}`;
-            }
+                        ${m.focus_time()}: ${
+                            params.value < 1
+                                ? Math.floor(params.value * 60) + " min"
+                                : Math.floor(params.value) +
+                                  " h " +
+                                  Math.floor((params.value % 1) * 60) +
+                                  " min"
+                        }`;
+            },
         },
     };
 
@@ -101,7 +105,7 @@
     const weekEnd = $derived(today.endOf("week").minus({ weeks: delta_weeks }));
 
     $effect(() => {
-        if (statistieken_modal && stats_manager && window) {
+        if (statistieken_modal && get_stats() && window) {
             if (stats_graph) {
                 stats_graph.dispose();
             }
@@ -120,14 +124,14 @@
             });
 
             [data.xAxis.data, data.series[0].data] =
-                stats_manager.get_week_focus_time(delta_weeks);
+                get_week_focus_time(delta_weeks);
 
             stats_graph.setOption(data);
             stats_graph.resize();
         }
     });
 
-    let stats_today = $derived(stats_manager?.get_todayStats());
+    let stats_today = $derived(get_todayStats());
 </script>
 
 <svelte:window on:resize={() => stats_graph.resize()} />
@@ -145,7 +149,7 @@
             </form>
         </div>
 
-        {#if stats_manager}
+        {#if stats_today}
             <div class="stats text-primary shadow w-full">
                 <div class="stat">
                     <div class="stat-title">{m.focus_time()}</div>
@@ -153,6 +157,7 @@
                         {#if stats_today?.time_focus < 3600}
                             {Math.floor(stats_today?.time_focus / 60)} min
                         {:else}
+                            {console.log('joe', stats_today?.time_focus)}
                             {Math.floor(stats_today?.time_focus / 3600)}
                             h {Math.floor(
                                 (stats_today?.time_focus % 3600) / 60,

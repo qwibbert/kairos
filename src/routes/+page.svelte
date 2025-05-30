@@ -30,15 +30,14 @@
         Theme,
     } from "../state/instellingen.svelte";
     import { PomoType, Session, SessionStatus } from "../state/session.svelte";
-    import { StatsManager } from "../state/stats.svelte";
+    import { restore_stats } from "../state/stats.svelte";
     import "../style.css";
 
     let session = $state<Session>();
 
-    let stats_manager = $state<StatsManager>();
-
     onMount(() => {
         restore_instellingen();
+        restore_stats();
 
         const local_session = Session.restore_local();
 
@@ -55,14 +54,10 @@
         }
     });
 
-    const reload_stats = () => {
-        stats_manager = new StatsManager();
-    };
-
     const click_geluid_url = new URL("/click.mp3", import.meta.url);
 
     let instellingen_modal: HTMLDialogElement;
-    let statistieken_modal: HTMLDialogElement;
+    let statistieken_modal = $state<HTMLDialogElement>();
     let start_knop = $state<HTMLButtonElement>();
 
     let theme_inactive = $derived(get_instellingen().theme_inactive);
@@ -91,7 +86,7 @@
     }}
 />
 
-<Statsmodal bind:statistieken_modal {stats_manager} />
+<Statsmodal bind:statistieken_modal />
 
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
@@ -149,7 +144,9 @@
                     />
                 </div>
                 <div class="flex flex-col">
-                    <label for="lange_pauze" class="label">{m.long_break()}</label>
+                    <label for="lange_pauze" class="label"
+                        >{m.long_break()}</label
+                    >
                     <input
                         id="lange_pauze"
                         type="number"
@@ -325,17 +322,16 @@
 
 <header class="flex flex-row justify-evenly items-center mt-5">
     <div class="flex flex-row gap-2 items-center">
-        <KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold">Kairos</span
+        <KairosLogo /><span
+            class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
+            >Kairos</span
         >
     </div>
     {#if session?.status != SessionStatus.Active}
         <div class="join">
             <button
                 class="btn btn-soft md:btn-md join-item"
-                onclick={() => {
-                    reload_stats();
-                    statistieken_modal.showModal();
-                }}
+                onclick={() => statistieken_modal.showModal()}
             >
                 <ChartLine class="size-[1.2em]" />
                 <span class="hidden md:block">{m.statistics()}</span>
@@ -379,7 +375,6 @@
                     PomoType.Pomo,
                     get_instellingen().pomo_tijd,
                 );
-                
             }}
         >
             {m.pomodoro()}
@@ -407,7 +402,6 @@
                     PomoType.ShortBreak,
                     get_instellingen().korte_pauze_tijd,
                 );
-                
             }}
         >
             {m.break()}
@@ -435,7 +429,6 @@
                     PomoType.LongBreak,
                     get_instellingen().lange_pauze_tijd,
                 );
-                
             }}
         >
             {m.long_break()}

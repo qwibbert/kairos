@@ -1,6 +1,6 @@
 import { svelteStringify } from "$lib/utils";
 import { get_instellingen } from "./instellingen.svelte";
-import { StatsManager } from "./stats.svelte";
+import { add_session, update_on_pause } from "./stats.svelte";
 
 export enum PomoType {
     Pomo = "POMO",
@@ -72,8 +72,6 @@ export class Session {
 
         this.status = SessionStatus.Active;
 
-        const stats_manager = new StatsManager();
-
         this.interval = setInterval(() => {
             const seconds_left = Math.max(0, Math.round((this.time_end - Date.now()) / 1000));
 
@@ -93,7 +91,7 @@ export class Session {
                 this.time_real = this.time_aim;
                 clearInterval(this.interval);
                 document.title = `Kairos`;
-                stats_manager.add_session(this);
+                add_session(this);
                 this.next();
             }
 
@@ -113,9 +111,8 @@ export class Session {
         const now = Date.now()
         this.pause_timestamp = now;
         this.status = SessionStatus.Paused;
-
-        const stats_manager = new StatsManager();
-        stats_manager.update_on_pause(this);
+        
+        update_on_pause(this);
 
         this.update_local_storage();
     }
@@ -131,8 +128,7 @@ export class Session {
 
         clearInterval(this.interval);
 
-        const stats_manager = new StatsManager();
-        stats_manager.add_session(this);
+        add_session(this);
         this.status = SessionStatus.Skipped;
 
         this.next();
