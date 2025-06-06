@@ -1,5 +1,6 @@
 <script lang="ts">
     import Statsmodal from "$lib/components/statsmodal.svelte";
+    import Taskselector from "$lib/components/taskselector.svelte";
     import ThemeSample from "$lib/components/theme-sample.svelte";
     import { shortcut } from "@svelte-put/shortcut";
     import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
@@ -8,6 +9,8 @@
     import Play from "lucide-svelte/icons/play";
     import Settings from "lucide-svelte/icons/settings";
     import SkipForward from "lucide-svelte/icons/skip-forward";
+    import Square from "lucide-svelte/icons/square";
+    import SquareCheck from "lucide-svelte/icons/square-check";
     import Volume from "lucide-svelte/icons/volume";
     import Volume1 from "lucide-svelte/icons/volume-1";
     import Volume2 from "lucide-svelte/icons/volume-2";
@@ -31,6 +34,7 @@
     } from "../state/instellingen.svelte";
     import { PomoType, Session, SessionStatus } from "../state/session.svelte";
     import { restore_stats } from "../state/stats.svelte";
+    import { get_task_in_progress } from "../state/tasks.svelte";
     import "../style.css";
 
     let session = $state<Session>();
@@ -43,11 +47,16 @@
         console.debug("State restored.");
 
         if (local_session) {
-            console.debug("Restored session from local storage:", local_session.uuid);
+            console.debug(
+                "Restored session from local storage:",
+                local_session.uuid,
+            );
             session = local_session;
 
             if (session.status == SessionStatus.Active) {
-                console.debug("Session was previously active, correcting time_end.");
+                console.debug(
+                    "Session was previously active, correcting time_end.",
+                );
                 session.status = SessionStatus.Interrupted;
                 session.time_end =
                     Date.now() + (session.time_aim - session.time_real) * 1000;
@@ -58,9 +67,12 @@
         }
     });
 
-    let instellingen_modal: HTMLDialogElement;
+    let instellingen_modal = $state<HTMLDialogElement>();
     let statistieken_modal = $state<HTMLDialogElement>();
+    let taskselector_modal = $state<HTMLDialogElement>();
     let start_knop = $state<HTMLButtonElement>();
+
+    let task_in_progress = $derived(get_task_in_progress());
 
     let theme_inactive = $derived(get_instellingen().theme_inactive);
     let theme_active = $derived(get_instellingen().theme_active);
@@ -74,6 +86,17 @@
             document.documentElement.setAttribute("data-theme", theme_inactive);
         }
     });
+
+    $effect(() => {
+        if (session && session?.task_id != task_in_progress?.id) {
+            console.debug(
+                "Active task changed or new session was created, updating session task_id to:",
+                task_in_progress?.id,
+            );
+
+            session.switch_task(task_in_progress?.id ?? null);
+        }
+    });
 </script>
 
 <svelte:head>
@@ -85,12 +108,18 @@
         trigger: {
             key: " ",
             modifier: false,
-            callback: () => start_knop.click(),
+            callback: () =>
+                instellingen_modal?.open ||
+                statistieken_modal?.open ||
+                taskselector_modal?.open
+                    ? null
+                    : start_knop?.click(),
         },
     }}
 />
 
 <Statsmodal bind:statistieken_modal />
+<Taskselector bind:taskselector_modal {session}/>
 
 <dialog bind:this={instellingen_modal} id="instellingen" class="modal">
     <div class="modal-box">
@@ -324,6 +353,48 @@
     </form>
 </dialog>
 
+{#snippet type_control(type: PomoType)}
+    <button
+        disabled={session?.status == SessionStatus.Active}
+        class={[
+            "btn btn-sm md:btn-md",
+            {
+                "btn-primary disabled:bg-primary": session?.pomo_type == type,
+            },
+            { "btn-neutral": session?.pomo_type != type },
+            {
+                "disabled:!bg-primary disabled:text-neutral":
+                    session?.pomo_type == type,
+            },
+        ]}
+        onclick={() => {
+            // Check if there is already an active session with a non-zero time_real
+            // If so, skip this session
+            if (session && session.time_real != 0) {
+                session.skip();
+            }
+
+            // If there is no active session or time_real is zero, start a new session
+            session = new Session(
+                type,
+                type == PomoType.Pomo
+                    ? get_instellingen().pomo_tijd
+                    : type == PomoType.ShortBreak
+                      ? get_instellingen().korte_pauze_tijd
+                      : get_instellingen().lange_pauze_tijd,
+            );
+        }}
+    >
+        {#if type == PomoType.Pomo}
+            {m.pomodoro()}
+        {:else if type == PomoType.ShortBreak}
+            {m.break()}
+        {:else}
+            {m.long_break()}
+        {/if}</button
+    >
+{/snippet}
+
 <header class="flex flex-row justify-evenly items-center mt-5">
     <div class="flex flex-row gap-2 items-center">
         <KairosLogo /><span
@@ -335,7 +406,14 @@
         <div class="join">
             <button
                 class="btn btn-soft md:btn-md join-item"
-                onclick={() => statistieken_modal.showModal()}
+                onclick={() => taskselector_modal?.showModal()}
+            >
+                <SquareCheck class="size-[1.2em]" />
+                <span class="hidden md:block">Taken</span>
+            </button>
+            <button
+                class="btn btn-soft md:btn-md join-item"
+                onclick={() => statistieken_modal?.showModal()}
             >
                 <ChartLine class="size-[1.2em]" />
                 <span class="hidden md:block">{m.statistics()}</span>
@@ -353,90 +431,19 @@
 <main
     class="h-[90vh] w-[100vw] flex flex-col justify-around items-center py-10"
 >
-    <section class="w-full flex flex-row gap-2 justify-center rounded">
-        <button
-            disabled={session?.status == SessionStatus.Active}
-            class={[
-                "btn btn-sm md:btn-md",
-                {
-                    "btn-primary disabled:bg-primary":
-                        session?.pomo_type == PomoType.Pomo,
-                },
-                { "btn-neutral": session?.pomo_type != PomoType.Pomo },
-                {
-                    "disabled:!bg-primary disabled:text-neutral":
-                        session?.pomo_type == PomoType.Pomo,
-                },
-            ]}
-            onclick={() => {
-                // Check if there is already an active session with a non-zero time_real
-                // If so, skip this session
-                if (session && session.time_real != 0) {
-                    session.skip();
-                }
-
-                session = new Session(
-                    PomoType.Pomo,
-                    get_instellingen().pomo_tijd,
-                );
-            }}
-        >
-            {m.pomodoro()}
-        </button>
-        <button
-            disabled={session?.status == SessionStatus.Active}
-            class={[
-                "btn btn-sm md:btn-md",
-                { "btn-primary": session?.pomo_type == PomoType.ShortBreak },
-                { "btn-neutral": session?.pomo_type != PomoType.ShortBreak },
-                {
-                    "disabled:!bg-primary disabled:text-neutral":
-                        session?.pomo_type == PomoType.ShortBreak,
-                },
-            ]}
-            onclick={() => {
-                // Check if there is already an active session with a non-zero time_real
-                // If so, skip this session
-                if (session && session.time_real != 0) {
-                    session.skip();
-                }
-
-                // If there is no active session or time_real is zero, start a new session
-                session = new Session(
-                    PomoType.ShortBreak,
-                    get_instellingen().korte_pauze_tijd,
-                );
-            }}
-        >
-            {m.break()}
-        </button>
-        <button
-            disabled={session?.status == SessionStatus.Active}
-            class={[
-                "btn btn-sm md:btn-md",
-                { "btn-primary": session?.pomo_type == PomoType.LongBreak },
-                { "btn-neutral": session?.pomo_type != PomoType.LongBreak },
-                {
-                    "disabled:!bg-primary disabled:text-neutral":
-                        session?.pomo_type == PomoType.LongBreak,
-                },
-            ]}
-            onclick={() => {
-                // Check if there is already an active session with a non-zero time_real
-                // If so, skip this session
-                if (session && session.time_real != 0) {
-                    session.skip();
-                }
-
-                // If there is no active session or time_real is zero, start a new session
-                session = new Session(
-                    PomoType.LongBreak,
-                    get_instellingen().lange_pauze_tijd,
-                );
-            }}
-        >
-            {m.long_break()}
-        </button>
+    <section class="flex flex-col gap-5 items-center">
+        <div class="flex flex-row justify-center gap-2">
+            {@render type_control(PomoType.Pomo)}
+            {@render type_control(PomoType.ShortBreak)}
+            {@render type_control(PomoType.LongBreak)}
+        </div>
+        {#if session?.task_id != "NO_TASK" && task_in_progress}
+            <span class="btn btn-primary btn-sm">
+                <SquareCheck class="size-[1.2em]"/>{task_in_progress.title}
+            </span>
+        {:else}
+            <span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]"/>Geen taak</span>
+        {/if}
     </section>
     <section>
         <span class="countdown font-mono text-8xl rounded w-full">
@@ -455,6 +462,7 @@
             {/if}
         </span>
     </section>
+
     <section class="flex flex-row gap-2 justify-center">
         {#if session}
             {#if session.status == SessionStatus.Active}

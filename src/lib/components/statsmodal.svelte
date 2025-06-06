@@ -16,7 +16,11 @@
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
     import { m } from "../../paraglide/messages";
-    import { get_stats, get_todayStats, get_week_focus_time } from "../../state/stats.svelte";
+    import {
+        get_stats,
+        get_todayStats,
+        get_week_focus_time,
+    } from "../../state/stats.svelte";
 
     interface Props {
         statistieken_modal?: HTMLDialogElement; // Optional dialog element
@@ -38,13 +42,16 @@
     ]);
 
     let data = {
+        legend: {
+            padding: [0,0, 0, 0],
+            type: "scroll",
+        },
         datazoom: [],
         xAxis: {
             type: "category",
             name: m.date(),
             nameLocation: "middle",
             nameGap: 30,
-            data: [],
             axisTick: { interval: 0 },
             axisLabel: {
                 interval: 0,
@@ -74,23 +81,56 @@
             },
             min: 0,
         },
-        series: [
-            {
-                type: "bar",
-                data: [],
-            },
-        ],
+        series: [],
         tooltip: {
+            trigger: "axis",
             formatter: (params) => {
-                return `${DateTime.fromISO(params.name).toLocaleString(DateTime.DATE_FULL)}<br />
-                        ${m.focus_time()}: ${
-                            params.value < 1
-                                ? Math.floor(params.value * 60) + " min"
-                                : Math.floor(params.value) +
-                                  " h " +
-                                  Math.floor((params.value % 1) * 60) +
-                                  " min"
-                        }`;
+                let htmlString = "";
+                if (params.length > 1) {
+                    htmlString += `<div><strong>${params[0].axisValue}</strong></div>`;
+                }
+
+                let total_time = 0;
+
+                params.forEach((param) => {
+                    const focusTime = param.value[param.encode.y[0]];
+                    total_time += focusTime;
+
+                    if (focusTime === undefined) return;
+
+                    if (focusTime < 1) {
+                        htmlString += `
+                                <div>
+                        ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
+                            focusTime * 60,
+                        )} min
+                                </div>
+                            `;
+                        return;
+                    } else {
+                        htmlString += `
+                                <div>
+                                   ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
+                                        focusTime,
+                                    )} h ${Math.floor((focusTime % 1) * 60)} min
+                                </div>
+                            `;
+                    }
+                });
+
+                if (Number.isNaN(total_time)) {
+                    return htmlString;
+                }
+                if (total_time < 1) {
+                    htmlString += `<div><strong>Totale tijd: ${Math.floor(
+                        total_time * 60,
+                    )} min</strong></div>`;
+                } else {
+                    htmlString += `<div><strong>Totale tijd: ${Math.floor(
+                        total_time,
+                    )} h ${Math.floor((total_time % 1) * 60)} min</strong></div>`;
+                }
+                return htmlString;
             },
         },
     };
@@ -123,7 +163,7 @@
                 width: "auto",
             });
 
-            [data.xAxis.data, data.series[0].data] =
+            [data.dataset.source, data.series] =
                 get_week_focus_time(delta_weeks);
 
             stats_graph.setOption(data);
@@ -157,7 +197,6 @@
                         {#if stats_today?.time_focus < 3600}
                             {Math.floor(stats_today?.time_focus / 60)} min
                         {:else}
-                            {console.log('joe', stats_today?.time_focus)}
                             {Math.floor(stats_today?.time_focus / 3600)}
                             h {Math.floor(
                                 (stats_today?.time_focus % 3600) / 60,

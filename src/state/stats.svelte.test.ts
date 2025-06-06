@@ -69,7 +69,6 @@ describe("StatsManager", () => {
         };
         statsManager.add_session(session);
         const stats = statsManager.get_stats();
-        console.log(stats);
         expect(stats.focus_sessions).toBe(1);
         expect(stats.pause_sessions).toBe(0);
         expect(stats.total_sessions).toBe(1);
