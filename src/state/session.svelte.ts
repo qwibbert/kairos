@@ -36,6 +36,7 @@ export class Session {
     time_end = $state<number>(0);
     minutes = $state<number>(0);
     seconds = $state<number>(0);
+    task_id = $state<string | null>(null);
 
     constructor(pomo_type: PomoType, time: number) {
         console.debug(`Instantiated new ${pomo_type} session with ${time} time value.`)
@@ -65,6 +66,7 @@ export class Session {
         if (this.status == SessionStatus.Paused) {
             console.debug('Paused session detected, saving pause duration and adjusting end time.')
             this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((now - this.pause_timestamp) / 1000) });
+            this.pause_timestamp = 0;
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else if (this.status == SessionStatus.Interrupted) {
             console.debug('Interrupted session detected, adjusting end time.')
@@ -140,8 +142,8 @@ export class Session {
 
         clearInterval(this.interval);
 
-        add_session(this);
         this.status = SessionStatus.Skipped;
+        add_session(this);
 
         this.next();
     }
@@ -153,6 +155,7 @@ export class Session {
 
         this.uuid = crypto.randomUUID();
         this.status = SessionStatus.Inactive;
+        this.time_real = 0;
         this.time_aim = 0;
         this.date = new Date();
         this.pause_timestamp = 0;
@@ -181,6 +184,12 @@ export class Session {
     update_local_storage = () => {
         console.debug('Updating local session storage.')
         localStorage.setItem('session', svelteStringify(this));
+    }
+
+    switch_task = (task_id: string | null) => {
+        console.debug(`Switching task to ${task_id}`);
+        this.task_id = task_id;
+        this.update_local_storage();
     }
 
     clear_local = () => {
