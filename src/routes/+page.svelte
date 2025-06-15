@@ -23,7 +23,7 @@
     import Square from "lucide-svelte/icons/square";
     import SquareCheck from "lucide-svelte/icons/square-check";
     import { onMount, setContext } from "svelte";
-    import * as m from "../lib/paraglide/messages";
+    import * as m from "../paraglide/messages";
 
     // Initialize state
     let session = $state<Session>();
