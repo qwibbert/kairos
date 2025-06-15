@@ -1,4 +1,5 @@
-export function svelteDeepCopy<T>(obj: any, asObject: boolean): T {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function svelteDeepCopy<T>(obj: object, asObject: boolean): T {
   // Handle null, undefined and primitive types
   if (obj === null || typeof obj !== 'object') {
     return obj;
@@ -32,7 +33,7 @@ export function svelteDeepCopy<T>(obj: any, asObject: boolean): T {
   if (!asObject && constructor && constructor.name && constructor.name !== 'Object') {
     if (constructor.length === 0) {
       clone = new constructor();
-      Object.assign(clone, $state.snapshot(obj));
+      Object.assign(clone, obj);
     } else {
       console.warn(
         'Cannot deep copy object with constructor with arguments. Using Object.assign instead.',

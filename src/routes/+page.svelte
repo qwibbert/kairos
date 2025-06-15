@@ -1,9 +1,20 @@
 <script lang="ts">
-    import Statsmodal from "$lib/components/statsmodal.svelte";
-    import Taskselector from "$lib/components/taskselector.svelte";
-    import ThemeSample from "$lib/components/theme-sample.svelte";
+    import "$components/style.css";
+    import KairosLogo from "$components/ui/kairos-logo.svelte";
+    import SettingsModal from "$features/settings/components/settings-modal.svelte";
+    import { setSettingsContext } from "$features/settings/context";
+    import { DEFAULT_SETTINGS, retrieve_settings } from "$features/settings/db";
+    import type { SettingsContext } from "$features/settings/types";
+    import Statsmodal from "$features/stats/components/stats-modal.svelte";
+    import { setStatsContext } from "$features/stats/context";
+    import { StatsManager } from "$features/stats/db.svelte";
+    import Taskmodal from "$features/tasks/components/task-modal.svelte";
+    import { setTaskContext } from "$features/tasks/context";
+    import { ensure_no_task_exists, retrieve_active_task, retrieve_all_tasks } from "$features/tasks/db";
+    import type { TasksContext } from "$features/tasks/types";
+    import { Session } from "$lib/session/session.svelte";
+    import { PomoType, SessionStatus } from "$lib/session/types";
     import { shortcut } from "@svelte-put/shortcut";
-    import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
     import ChartLine from "lucide-svelte/icons/chart-line";
     import Pause from "lucide-svelte/icons/pause";
     import Play from "lucide-svelte/icons/play";
@@ -11,39 +22,37 @@
     import SkipForward from "lucide-svelte/icons/skip-forward";
     import Square from "lucide-svelte/icons/square";
     import SquareCheck from "lucide-svelte/icons/square-check";
-    import Volume from "lucide-svelte/icons/volume";
-    import Volume1 from "lucide-svelte/icons/volume-1";
-    import Volume2 from "lucide-svelte/icons/volume-2";
-    import VolumeX from "lucide-svelte/icons/volume-x";
-    import { onMount } from "svelte";
-    import KairosLogo from "../kairos-logo.svelte";
-    import * as m from "../paraglide/messages";
-    import {
-        get_instellingen,
-        restore_instellingen,
-        set_active_theme,
-        set_inactive_theme,
-        set_korte_pauze_tijd,
-        set_lange_pauze_tijd,
-        set_pomo_tijd,
-        set_tick_geluid,
-        set_tick_geluid_volume,
-        set_ui_geluiden,
-        set_ui_geluiden_volume,
-        Theme,
-    } from "../state/instellingen.svelte";
-    import { PomoType, Session, SessionStatus } from "../state/session.svelte";
-    import { restore_stats } from "../state/stats.svelte";
-    import { get_task_in_progress } from "../state/tasks.svelte";
-    import "../style.css";
+    import { onMount, setContext } from "svelte";
+    import * as m from "../lib/paraglide/messages";
 
+    // Initialize state
     let session = $state<Session>();
+    
+    let settings_context = $state<SettingsContext>({settings: DEFAULT_SETTINGS});
+    let task_context = $state<TasksContext>({
+        tasks: [],
+        active_task: 'NO_TASK',
+    });
+    let stats_context = $state({
+        stats: new StatsManager()
+    });
+    setContext("session", () => session);
+    setSettingsContext(settings_context);
+    setTaskContext(task_context);
+    setStatsContext(stats_context);
 
-    onMount(() => {
+    onMount(async () => {
         console.debug("App mounted, restoring state...");
-        restore_instellingen();
-        restore_stats();
         const local_session = Session.restore_local();
+
+        task_context.tasks = await retrieve_all_tasks();
+        ensure_no_task_exists(task_context.tasks);
+        task_context.active_task = retrieve_active_task(task_context.tasks);
+
+        settings_context.settings = retrieve_settings();
+
+        stats_context.stats.load();
+
         console.debug("State restored.");
 
         if (local_session) {
@@ -63,19 +72,17 @@
             }
         } else {
             console.debug("No previous session found, starting a new one.");
-            session = new Session(PomoType.Pomo, get_instellingen().pomo_tijd);
+            session = new Session(PomoType.Pomo, settings_context.settings.pomo_time);
         }
     });
 
-    let instellingen_modal = $state<HTMLDialogElement>();
+    let settings_modal = $state<HTMLDialogElement>();
     let statistieken_modal = $state<HTMLDialogElement>();
     let taskselector_modal = $state<HTMLDialogElement>();
     let start_knop = $state<HTMLButtonElement>();
 
-    let task_in_progress = $derived(get_task_in_progress());
-
-    let theme_inactive = $derived(get_instellingen().theme_inactive);
-    let theme_active = $derived(get_instellingen().theme_active);
+    let theme_inactive = $derived(settings_context.settings.theme_inactive);
+    let theme_active = $derived(settings_context.settings.theme_active);
 
     $effect(() => {
         if (session?.status == SessionStatus.Active) {
@@ -84,17 +91,6 @@
         } else {
             console.debug("Switch theme to inactive:", theme_inactive);
             document.documentElement.setAttribute("data-theme", theme_inactive);
-        }
-    });
-
-    $effect(() => {
-        if (session && session?.task_id != task_in_progress?.id) {
-            console.debug(
-                "Active task changed or new session was created, updating session task_id to:",
-                task_in_progress?.id,
-            );
-
-            session.switch_task(task_in_progress?.id ?? null);
         }
     });
 </script>
@@ -109,7 +105,7 @@
             key: " ",
             modifier: false,
             callback: () =>
-                instellingen_modal?.open ||
+                settings_modal?.open ||
                 statistieken_modal?.open ||
                 taskselector_modal?.open
                     ? null
@@ -119,239 +115,9 @@
 />
 
 <Statsmodal bind:statistieken_modal />
-<Taskselector bind:taskselector_modal {session}/>
+<Taskmodal bind:taskselector_modal />
+<SettingsModal bind:settings_modal {session} />
 
-<dialog bind:this={instellingen_modal} id="instellingen" class="modal">
-    <div class="modal-box">
-        <div class="flex flex-row items-center justify-between mb-2">
-            <h3 class="text-lg font-bold">{m.settings()}</h3>
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost">✕</button>
-            </form>
-        </div>
-        <fieldset
-            class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
-        >
-            <legend class="fieldset-legend">{m.focus_times()}</legend>
-            <div class="flex flex-row gap-2">
-                <div class="flex flex-col">
-                    <label for="pomo" class="label">{m.pomodoro()}</label>
-                    <input
-                        id="pomo"
-                        type="number"
-                        class="input"
-                        placeholder="25"
-                        value={get_instellingen().pomo_tijd / 60}
-                        onchange={(e) => {
-                            set_pomo_tijd(
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                            session = new Session(
-                                PomoType.Pomo,
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                        }}
-                    />
-                </div>
-                <div class="flex flex-col">
-                    <label for="korte_pauze" class="label">{m.break()}</label>
-                    <input
-                        id="korte_pauze"
-                        type="number"
-                        class="input"
-                        placeholder="5"
-                        value={get_instellingen().korte_pauze_tijd / 60}
-                        onchange={(e) => {
-                            set_korte_pauze_tijd(
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                            session = new Session(
-                                PomoType.ShortBreak,
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                        }}
-                    />
-                </div>
-                <div class="flex flex-col">
-                    <label for="lange_pauze" class="label"
-                        >{m.long_break()}</label
-                    >
-                    <input
-                        id="lange_pauze"
-                        type="number"
-                        class="input"
-                        placeholder="15"
-                        value={get_instellingen().lange_pauze_tijd / 60}
-                        onchange={(e) => {
-                            set_lange_pauze_tijd(
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                            session = new Session(
-                                PomoType.LongBreak,
-                                parseInt((e.target as HTMLInputElement).value) *
-                                    60,
-                            );
-                        }}
-                    />
-                </div>
-            </div>
-        </fieldset>
-        <fieldset
-            class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
-        >
-            <legend class="fieldset-legend">{m.sound()}</legend>
-            <div class="flex flex-row justify-evenly items-center">
-                <label class="label">
-                    <input
-                        type="checkbox"
-                        checked={get_instellingen().ui_geluiden}
-                        onchange={(e) =>
-                            set_ui_geluiden(
-                                (e.target as HTMLInputElement).checked,
-                            )}
-                        class="toggle"
-                    />
-                    {m.ui_sounds()}
-                </label>
-                <button class="btn btn-primary btn-circle">
-                    {#if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume < 25}
-                        <Volume class="size-[1.2em]" />
-                    {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 25 && get_instellingen().ui_geluiden_volume < 75}
-                        <Volume1 class="size-[1.2em]" />
-                    {:else if get_instellingen().ui_geluiden && get_instellingen().ui_geluiden_volume >= 75}
-                        <Volume2 class="size-[1.2em]" />
-                    {:else}
-                        <VolumeX class="size-[1.2em]" />
-                    {/if}
-                </button>
-
-                <input
-                    disabled={!get_instellingen().ui_geluiden}
-                    type="range"
-                    min="0"
-                    max="100"
-                    onchange={(e) =>
-                        set_ui_geluiden_volume(
-                            parseInt((e.target as HTMLInputElement).value),
-                        )}
-                    value={get_instellingen().ui_geluiden_volume}
-                    class="range w-[30%]"
-                />
-            </div>
-            <div class="divider"></div>
-            <div class="flex flex-row justify-evenly items-center">
-                <label class="label">
-                    <input
-                        type="checkbox"
-                        checked={get_instellingen().tick_geluid}
-                        onchange={(e) =>
-                            set_tick_geluid(
-                                (e.target as HTMLInputElement).checked,
-                            )}
-                        class="toggle"
-                    />
-                    {m.tick_sound()}
-                </label>
-                <button class="btn btn-primary btn-circle">
-                    {#if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume < 25}
-                        <Volume class="size-[1.2em]" />
-                    {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 25 && get_instellingen().tick_geluid_volume < 75}
-                        <Volume1 class="size-[1.2em]" />
-                    {:else if get_instellingen().tick_geluid && get_instellingen().tick_geluid_volume >= 75}
-                        <Volume2 class="size-[1.2em]" />
-                    {:else}
-                        <VolumeX class="size-[1.2em]" />
-                    {/if}
-                </button>
-                <input
-                    disabled={!get_instellingen().tick_geluid}
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={get_instellingen().tick_geluid_volume}
-                    onchange={(e) =>
-                        set_tick_geluid_volume(
-                            parseInt((e.target as HTMLInputElement).value),
-                        )}
-                    class="range w-[30%]"
-                />
-            </div>
-        </fieldset>
-        <fieldset
-            class="fieldset flex flex-row justify-evenly bg-base-100 border-base-300 rounded-box w-full border p-4"
-        >
-            <legend class="fieldset-legend">{m.appearance()}</legend>
-            <div class="flex flex-col gap-2 items-center">
-                <fieldset class="fieldset w-full">
-                    <legend class="fieldset-legend">{m.inactive()}</legend>
-                    <select
-                        class="select"
-                        onchange={(e) => {
-                            if (session?.status != SessionStatus.Active) {
-                                document.documentElement.setAttribute(
-                                    "data-theme",
-                                    e.target.value,
-                                );
-                            }
-
-                            set_inactive_theme(e.target.value as Theme);
-                        }}
-                    >
-                        {#each Object.values(Theme) as theme}
-                            <option
-                                value={theme}
-                                selected={get_instellingen().theme_inactive ==
-                                    theme}
-                            >
-                                {theme}
-                            </option>
-                        {/each}
-                    </select>
-                </fieldset>
-                <ThemeSample theme={theme_inactive} />
-            </div>
-            <ArrowRightLeft class="size-[2.5em] self-center" />
-            <div class="flex flex-col gap-2 items-center">
-                <fieldset class="fieldset w-full">
-                    <legend class="fieldset-legend">{m.active()}</legend>
-                    <select
-                        class="select"
-                        onchange={(e) => {
-                            if (session?.status == SessionStatus.Active) {
-                                document.documentElement.setAttribute(
-                                    "data-theme",
-                                    e.target.value,
-                                );
-                            }
-
-                            set_active_theme(e.target.value as Theme);
-                        }}
-                    >
-                        {#each Object.values(Theme) as theme}
-                            <option
-                                value={theme}
-                                selected={get_instellingen().theme_active ==
-                                    theme}
-                            >
-                                {theme}
-                            </option>
-                        {/each}
-                    </select>
-                </fieldset>
-
-                <ThemeSample theme={theme_active} />
-            </div>
-        </fieldset>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-    </form>
-</dialog>
 
 {#snippet type_control(type: PomoType)}
     <button
@@ -371,17 +137,17 @@
             // Check if there is already an active session with a non-zero time_real
             // If so, skip this session
             if (session && session.time_real != 0) {
-                session.skip();
+                session.skip(settings_context, stats_context, task_context);
             }
 
             // If there is no active session or time_real is zero, start a new session
             session = new Session(
                 type,
                 type == PomoType.Pomo
-                    ? get_instellingen().pomo_tijd
+                    ? settings_context.settings.pomo_time
                     : type == PomoType.ShortBreak
-                      ? get_instellingen().korte_pauze_tijd
-                      : get_instellingen().lange_pauze_tijd,
+                      ? settings_context.settings.short_break_time
+                      : settings_context.settings.long_break_time,
             );
         }}
     >
@@ -420,7 +186,7 @@
             </button>
             <button
                 class="btn btn-soft join-item"
-                onclick={() => instellingen_modal.showModal()}
+                onclick={() => settings_modal?.showModal()}
             >
                 <Settings class="size-[1.2em]" />
                 <span class="hidden md:block">{m.settings()}</span>
@@ -437,9 +203,12 @@
             {@render type_control(PomoType.ShortBreak)}
             {@render type_control(PomoType.LongBreak)}
         </div>
-        {#if session?.task_id != "NO_TASK" && task_in_progress}
+        {#if session?.task_id != "NO_TASK" && task_context.active_task}
+            {@const active_task = task_context.tasks.find(
+                (task) => task.id == task_context.active_task,
+            )}
             <span class="btn btn-primary btn-sm">
-                <SquareCheck class="size-[1.2em]"/>{task_in_progress.title}
+                <SquareCheck class="size-[1.2em]"/>{active_task?.title}
             </span>
         {:else}
             <span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]"/>Geen taak</span>
@@ -451,13 +220,13 @@
                 <span
                     style={`--value:${session.minutes};`}
                     aria-live="polite"
-                    aria-label={session.minutes}>{session.minutes}</span
+                    aria-label={`${session.minutes}`}>{session.minutes}</span
                 >
                 :
                 <span
                     style={`--value:${session.seconds};`}
                     aria-live="polite"
-                    aria-label={session.seconds}>{session.seconds}</span
+                    aria-label={`${session.seconds}`}>{session.seconds}</span
                 >
             {/if}
         </span>
@@ -469,35 +238,35 @@
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.pause()}
+                    onclick={() => session?.pause(settings_context, stats_context, task_context)}
                 >
                     <Pause class="size-[1.2em]" />
                     {m.pause()}
                 </button>
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
-                    onclick={() => session?.skip()}
+                    onclick={() => session?.skip(settings_context, stats_context, task_context)}
                     ><SkipForward class="size-[1.2em]" />{m.skip()}</button
                 >
             {:else if session.status == SessionStatus.Paused}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.start()}
+                    onclick={() => session?.start(settings_context, stats_context, task_context)}
                 >
                     <Play class="size-[1.2em]" />
                     {m.resume()}</button
                 >
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
-                    onclick={() => session?.skip()}
+                    onclick={() => session?.skip(settings_context, stats_context, task_context)}
                     ><SkipForward class="size-[1.2em]" /> {m.skip()}</button
                 >
             {:else}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.start()}
+                    onclick={() => session?.start(settings_context, stats_context, task_context)}
                     ><Play class="size-[1.2em]" />{m.start()}</button
                 >
             {/if}

@@ -15,18 +15,16 @@
     import ChevronLeft from "lucide-svelte/icons/chevron-left";
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
-    import { m } from "../../paraglide/messages";
-    import {
-        get_stats,
-        get_todayStats,
-        get_week_focus_time,
-    } from "../../state/stats.svelte";
+    import { m } from "../../../lib/paraglide/messages";
+    import { getStatsContext } from "../context";
 
     interface Props {
         statistieken_modal?: HTMLDialogElement; // Optional dialog element
     }
 
     let { statistieken_modal = $bindable() }: Props = $props();
+
+    const stats_context = getStatsContext();
 
     echarts.use([
         BarChart,
@@ -145,7 +143,7 @@
     const weekEnd = $derived(today.endOf("week").minus({ weeks: delta_weeks }));
 
     $effect(() => {
-        if (statistieken_modal && get_stats() && window) {
+        if (statistieken_modal && stats_context.stats.get_stats() && window) {
             if (stats_graph) {
                 stats_graph.dispose();
             }
@@ -164,14 +162,14 @@
             });
 
             [data.dataset.source, data.series] =
-                get_week_focus_time(delta_weeks);
+                stats_context.stats.get_week_focus_time(delta_weeks);
 
             stats_graph.setOption(data);
             stats_graph.resize();
         }
     });
 
-    let stats_today = $derived(get_todayStats());
+    let stats_today = $derived(stats_context.stats.get_todayStats());
 </script>
 
 <svelte:window on:resize={() => stats_graph.resize()} />

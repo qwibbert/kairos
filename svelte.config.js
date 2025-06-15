@@ -12,9 +12,22 @@ const config = {
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter(),
+		alias: {
+			'$features': 'src/features',
+			'$components': 'src/components',
+		},
 		version: {
 			name: process.env.npm_package_version
+		},
+		files: {
+			hooks: {
+				client: 'src/hooks/hooks.client',
+				server: 'src/hooks/hooks.server',
+				universal: 'src/hooks/hooks/universal'
+			},
+			appTemplate: 'src/routes/app.html',
 		}
+
 	}
 };
 

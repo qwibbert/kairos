@@ -1,54 +1,34 @@
+import type { SettingsContext } from "$features/settings/types";
+import type { StatsContext } from "$features/stats/types";
+import type { TaskID, TasksContext } from "$features/tasks/types";
 import { svelteStringify } from "$lib/utils";
-import { get_instellingen } from "./instellingen.svelte";
-import { add_session, update_on_pause } from "./stats.svelte";
-
-export enum PomoType {
-    Pomo = "POMO",
-    ShortBreak = "SHORT_BREAK",
-    LongBreak = "LONG_BREAK"
-}
-
-export enum SessionStatus {
-    Active = "ACTIVE",
-    Paused = "PAUSED",
-    Ready = "READY",
-    Inactive = "INACTIVE",
-    Skipped = "SKIPPED",
-    Interrupted = "INTERRUPTED",
-}
-
-export interface Pauzes {
-    tijdstip: number,
-    duur: number
-}
+import { PomoType, SessionStatus, type Pauses } from "./types";
 
 export class Session {
-    uuid: string;
+    uuid = crypto.randomUUID();
     date = new Date();
-    status = $state<SessionStatus>(SessionStatus.Inactive);
-    pomo_type = $state<PomoType>(PomoType.Pomo);
-    time_aim = $state<number>(0);
-    time_real = $state<number>(0);
-    pause_timestamp = $state<number>(0);
-    pauses = $state<Pauzes[]>([]);
-    cycle = $state<number>(0);
-    interval = $state<number>(0);
-    time_end = $state<number>(0);
-    minutes = $state<number>(0);
-    seconds = $state<number>(0);
-    task_id = $state<string | null>(null);
+    status = $state(SessionStatus.Inactive);
+    pomo_type = $state<PomoType>();
+    time_aim = $state<number>();
+    time_real = $state(0);
+    pause_timestamp = 0;
+    pauses: Pauses[] = [];
+    cycle = 0;
+    interval = 0;
+    time_end = 0;
+    minutes = $state(0);
+    seconds = $state(0);
+    task_id = $state<TaskID | undefined>(undefined);
 
     constructor(pomo_type: PomoType, time: number) {
-        console.debug(`Instantiated new ${pomo_type} session with ${time} time value.`)
-        this.uuid = crypto.randomUUID();
         this.pomo_type = pomo_type;
         this.time_aim = time;
         this.minutes = Math.floor(time / 60)
         this.seconds = time % 60;
     }
 
-    start = () => {
-        click_sound();
+    start = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
+        click_sound(settings_context);
         const now = Date.now();
 
         if (this.status == SessionStatus.Ready) {
@@ -65,7 +45,7 @@ export class Session {
 
         if (this.status == SessionStatus.Paused) {
             console.debug('Paused session detected, saving pause duration and adjusting end time.')
-            this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((now - this.pause_timestamp) / 1000) });
+            this.pauses.push({ timestamp: this.pause_timestamp, duration: Math.floor((now - this.pause_timestamp) / 1000) });
             this.pause_timestamp = 0;
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else if (this.status == SessionStatus.Interrupted) {
@@ -90,7 +70,7 @@ export class Session {
 
             this.time_real = this.time_aim - seconds_left;
 
-            tick_sound();
+            tick_sound(settings_context);
 
             document.title = `${this.minutes}:${this.seconds < 10 ? '0' : ''}${this.seconds} | Kairos`;
 
@@ -102,16 +82,16 @@ export class Session {
                 this.time_real = this.time_aim;
                 clearInterval(this.interval);
                 document.title = `Kairos`;
-                add_session(this);
-                this.next();
+                stats_context.stats.add_session(this, tasks_context.tasks);
+                this.next(settings_context);
             }
 
             this.update_local_storage();
         }, 1000)
     }
 
-    pause = () => {
-        click_sound();
+    pause = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
+        click_sound(settings_context);
 
         clearInterval(this.interval);
 
@@ -123,13 +103,13 @@ export class Session {
         const now = Date.now()
         this.pause_timestamp = now;
         this.status = SessionStatus.Paused;
-        
-        update_on_pause(this);
+
+        stats_context.stats.update_on_pause(this, tasks_context.tasks);
 
         this.update_local_storage();
     }
 
-    skip = () => {
+    skip = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
         if (this.status == SessionStatus.Ready) {
             console.warn(`Tried to skip a session which has already finished.`);
             return;
@@ -137,18 +117,19 @@ export class Session {
 
         if (this.status == SessionStatus.Paused) {
             console.warn(`Skipping a paused session.`);
-            this.pauses.push({ tijdstip: this.pause_timestamp, duur: Math.floor((Date.now() - this.pause_timestamp) / 1000) });
+            this.pauses.push({ timestamp: this.pause_timestamp, duration: Math.floor((Date.now() - this.pause_timestamp) / 1000) });
         }
 
         clearInterval(this.interval);
 
         this.status = SessionStatus.Skipped;
-        add_session(this);
 
-        this.next();
+        stats_context.stats.add_session(this, tasks_context.tasks);
+
+        this.next(settings_context);
     }
 
-    next = () => {
+    next = (settings_context: SettingsContext) => {
         console.debug('Preparing next session.');
         this.save_history();
         this.clear_local();
@@ -165,16 +146,16 @@ export class Session {
             if (this.cycle > 0 && (this.cycle % 4) == 0) {
                 console.debug('Long break cycle.');
                 this.pomo_type = PomoType.LongBreak;
-                this.time_aim = get_instellingen().lange_pauze_tijd;
+                this.time_aim = settings_context.settings.long_break_time;
             } else {
                 console.debug('Short break cycle.');
                 this.pomo_type = PomoType.ShortBreak;
-                this.time_aim = get_instellingen().korte_pauze_tijd;
+                this.time_aim = settings_context.settings.short_break_time;
             }
         } else if (this.pomo_type == PomoType.ShortBreak || this.pomo_type == PomoType.LongBreak) {
             console.debug('Pomo cycle.');
             this.pomo_type = PomoType.Pomo;
-            this.time_aim = get_instellingen().pomo_tijd;
+            this.time_aim = settings_context.settings.pomo_time;
         }
 
         this.minutes = Math.floor(this.time_aim / 60)
@@ -186,7 +167,7 @@ export class Session {
         localStorage.setItem('session', svelteStringify(this));
     }
 
-    switch_task = (task_id: string | null) => {
+    switch_task = (task_id: string | undefined) => {
         console.debug(`Switching task to ${task_id}`);
         this.task_id = task_id;
         this.update_local_storage();
@@ -200,17 +181,17 @@ export class Session {
     save_history = () => {
         console.debug('Saving history to local storage.');
 
-        const history = localStorage.getItem('history') as Session[] | null;
+        const history = localStorage.getItem('history');
         const session = {
             uuid: this.uuid,
             date: this.date,
-            status: $state.snapshot(this.status),
-            pomo_type: $state.snapshot(this.pomo_type),
-            time_aim: $state.snapshot(this.time_aim),
-            time_real: $state.snapshot(this.time_real),
-            pause_timestamp: $state.snapshot(this.pause_timestamp),
-            pauses: $state.snapshot(this.pauses),
-            time_end: $state.snapshot(this.time_end),
+            status: this.status,
+            pomo_type: this.pomo_type,
+            time_aim: this.time_aim,
+            time_real: this.time_real,
+            pause_timestamp: this.pause_timestamp,
+            pauses: this.pauses,
+            time_end: this.time_end,
         }
 
         if (history) {
@@ -230,11 +211,11 @@ export class Session {
         if (local_session) {
             const parsed_session = JSON.parse(local_session) as Session;
 
-            let session = new Session(parsed_session.pomo_type, parsed_session.time_aim - parsed_session.time_real);
+            const session = new Session(parsed_session.pomo_type, parsed_session.time_aim - parsed_session.time_real);
 
             session.time_aim = parsed_session.time_aim;
             session.time_real = parsed_session.time_real;
-            session.uuid = parsed_session.uuid,
+            session.uuid = parsed_session.uuid;
             session.date = new Date(parsed_session.date);
             session.status = parsed_session.status;
             session.pause_timestamp = parsed_session.pause_timestamp;
@@ -248,21 +229,21 @@ export class Session {
     }
 }
 
-export const click_sound = () => {
-    if (get_instellingen().ui_geluiden) {
+export const click_sound = (settings_context: SettingsContext) => {
+    if (settings_context.settings.ui_sounds) {
         console.debug('Playing Click sound.');
         const audio = new Audio("sounds/click.mp3");
-        audio.volume = get_instellingen().ui_geluiden_volume / 100;
+        audio.volume = settings_context.settings.ui_sounds_volume / 100;
         audio.play();
     } else {
         console.debug('Skipped playing Click sound, user disabled this function');
     }
 }
 
-export const tick_sound = () => {
-    if (get_instellingen().tick_geluid) {
+export const tick_sound = (settings_context: SettingsContext) => {
+    if (settings_context.settings.tick_sound) {
         const audio = new Audio("sounds/tick.wav");
-        audio.volume = get_instellingen().tick_geluid_volume / 100;
+        audio.volume = settings_context.settings.tick_sound_volume / 100;
         audio.play();
     }
 }

@@ -1,74 +1,11 @@
-import { DateTime, Interval } from 'luxon';
-import { PomoType, SessionStatus, type Session } from "../state/session.svelte";
-import { get_parents, get_task } from './tasks.svelte';
+import { get_parent_nodes_from_flat_list } from "$features/tasks/db";
+import type { Task } from "$features/tasks/types";
+import { type Session } from "$lib/session/session.svelte";
+import { PomoType, SessionStatus } from "$lib/session/types";
+import { DateTime } from "luxon";
+import type { Stats } from "./types";
 
-interface Stats {
-    focus_sessions: number;
-    pause_sessions: number;
-    total_sessions: number;
-
-    time_total: number;
-    time_focus: number;
-    time_pause: number;
-
-    per_day: Array<{
-        date: string;
-        focus_sessions: number;
-        pause_sessions: number;
-        total_sessions: number;
-        time_total: number;
-        time_focus: number;
-        time_pause: number;
-        per_task: Array<{
-            task_id: string;
-            task_title: string;
-            focus_sessions: number;
-            pause_sessions: number;
-            total_sessions: number;
-            time_total: number;
-            time_focus: number;
-            time_pause: number;
-
-        }>;
-    }>;
-
-    per_task: Array<{
-        task_id: string;
-        focus_sessions: number;
-        pause_sessions: number;
-        total_sessions: number;
-        time_total: number;
-        time_focus: number;
-        time_pause: number;
-    }>;
-}
-
-let stats_manager = $state<StatsManager>();
-
-export const restore_stats = () => {
-    if (!stats_manager) {
-        stats_manager = new StatsManager();
-        stats_manager.load();
-    }
-};
-
-export const update_on_pause = (session: Session) =>
-    stats_manager?.update_on_pause(session);
-
-export const add_session = (session: Session) =>
-    stats_manager?.add_session(session);
-
-export const get_todayStats = () =>
-    stats_manager?.get_todayStats()
-
-export const get_week_focus_time = (earlier_weeks: number = 0) =>
-    stats_manager?.get_week_focus_time(earlier_weeks);
-
-export const get_stats = () =>
-    stats_manager?.get_stats();
-
-
-class StatsManager {
+export class StatsManager {
     private stats = $state<Stats>({
         focus_sessions: 0,
         pause_sessions: 0,
@@ -93,13 +30,13 @@ class StatsManager {
         localStorage.setItem('stats', JSON.stringify(this.stats));
     }
 
-    public update_on_pause(session: Session) {
-        this.update_stats(session);
+    public update_on_pause(session: Session, tasks: Task[]) {
+        this.update_stats(session, tasks);
         this.save();
     }
 
-    public add_session(session: Session) {
-        this.update_stats(session);
+    public add_session(session: Session, tasks: Task[]) {
+        this.update_stats(session, tasks);
 
         this.save();
     }
@@ -140,8 +77,6 @@ class StatsManager {
     public get_week_focus_time(earlier_weeks: number = 0) {
         const today = DateTime.now();
         const weekStart = today.startOf('week').minus({ weeks: earlier_weeks });
-        const weekEnd = today.endOf('week').minus({ weeks: earlier_weeks });
-        const weekInterval = Interval.fromDateTimes(weekStart, weekEnd.plus({ days: 1 }));
 
         const source = [
             ['day']
@@ -149,7 +84,7 @@ class StatsManager {
 
         const series = [];
 
-        let tasks = [];
+        const tasks = [];
         for (let i = 0; i < 7; i++) {
             const day = weekStart.plus({ days: i });
             source[i + 1] = [day.toISODate()];
@@ -290,11 +225,10 @@ class StatsManager {
         return this.stats;
     }
 
-    private update_stats(session: Session) {
+    private update_stats(session: Session, tasks: Task[]) {
         console.debug("Updating stats for session:", session.uuid);
-
         let real_time = 0;
-        const pauses = $state.snapshot(session.pauses);
+        const pauses = session.pauses;
 
         if (session.status == SessionStatus.Paused) {
             console.debug("Session is paused, so we need to calculate the real time.");
@@ -306,11 +240,11 @@ class StatsManager {
             } else {
                 console.debug("Previous pauses found, calculating elapsed time since last pause.");
                 const lastPause = pauses[pauses.length - 1];
-                real_time = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000);
+                real_time = Math.floor((Date.now() - lastPause.timestamp - (lastPause.duration * 1000)) / 1000);
             }
         } else {
             console.debug("Session is not paused or has been skipped during a pause, calculating real time based on session time.");
-            const pauses = $state.snapshot(session.pauses);
+            const pauses = session.pauses;
 
             // Pause timestamp is set when the session is paused, so we can use it to determine if the session was skipped while paused
             const skipped_while_paused = session.pause_timestamp ? true : false;
@@ -321,7 +255,7 @@ class StatsManager {
             } else if (pauses.length > 0) {
                 console.debug("Session has pauses, calculating time since last pause.");
                 const lastPause = pauses[pauses.length - 1];
-                real_time = Math.floor((Date.now() - lastPause.tijdstip - (lastPause.duur * 1000)) / 1000);
+                real_time = Math.floor((Date.now() - lastPause.timestamp - (lastPause.duration * 1000)) / 1000);
             } else {
                 console.debug("Session has no pauses, using session time as real time.");
                 real_time = session.time_real;
@@ -345,7 +279,7 @@ class StatsManager {
         }
 
         if (session.task_id) {
-            const parents = get_parents(session.task_id);
+            const parents = get_parent_nodes_from_flat_list(tasks, session.task_id);
 
             console.debug("Task has parents, updating stats for all parent tasks.");
             parents.forEach(parent => {
@@ -410,7 +344,7 @@ class StatsManager {
             dayStats.time_pause += session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? real_time : 0;
 
             if (session.task_id) {
-                const task = get_task(session.task_id);
+                const task = tasks.find(task => task.id == session.task_id);
 
                 if (!dayStats.per_task.some(t => t.task_id == session.task_id)) {
                     console.debug("Adding task stats to day's per_task for", session.task_id);
@@ -449,7 +383,7 @@ class StatsManager {
                 time_pause: session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak ? real_time : 0,
                 per_task: session.task_id ? [{
                     task_id: session.task_id,
-                    task_title: get_task(session.task_id)?.title || 'Onbekende taak',
+                    task_title: tasks.find(task => session.task_id == task.id)?.title || 'Onbekende taak',
                     focus_sessions: session.pomo_type == PomoType.Pomo && session.status != SessionStatus.Paused ? 1 : 0,
                     pause_sessions: (session.pomo_type == PomoType.ShortBreak || session.pomo_type == PomoType.LongBreak) && session.status != SessionStatus.Paused ? 1 : 0,
                     total_sessions: session.status != SessionStatus.Paused ? 1 : 0,
