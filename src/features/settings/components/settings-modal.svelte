@@ -1,6 +1,5 @@
 <script lang="ts">
     import ThemeSample from "$features/settings/components/theme-sample.svelte";
-    import { m } from "$lib/paraglide/messages";
     import { Session } from "$lib/session/session.svelte";
     import { PomoType, SessionStatus } from "$lib/session/types";
     import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
@@ -8,6 +7,7 @@
     import Volume1 from "lucide-svelte/icons/volume-1";
     import Volume2 from "lucide-svelte/icons/volume-2";
     import VolumeX from "lucide-svelte/icons/volume-x";
+    import { m } from "../../../paraglide/messages";
     import { getSettingsContext } from "../context";
     import { set_active_theme, set_inactive_theme, set_long_break_time, set_pomo_time, set_short_break_time, set_tick_sound, set_tick_sound_volume, set_ui_sound_volume, set_ui_sounds } from "../db";
     import { Theme } from "../types";
