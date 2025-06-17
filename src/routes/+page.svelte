@@ -116,7 +116,7 @@
 
 <Statsmodal bind:statistieken_modal />
 <Taskmodal bind:taskselector_modal />
-<SettingsModal bind:settings_modal {session} />
+<SettingsModal bind:settings_modal bind:session />
 
 
 {#snippet type_control(type: PomoType)}

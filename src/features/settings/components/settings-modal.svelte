@@ -17,7 +17,7 @@
         session?: Session;
     }
 
-    let { settings_modal = $bindable(), session }: Props = $props();
+    let { settings_modal = $bindable(), session = $bindable() }: Props = $props();
 
     const settings_context = getSettingsContext();
 </script>
