@@ -20,5 +20,26 @@
   "today": "Vandaag",
   "focus_sessions": "Focus-sessies",
   "focus_time_hours": "Focustijd (uren)",
-  "date": "Datum"
+  "date": "Datum",
+  "general": "Algemeen",
+  "import": "Importeer",
+  "export": "Exporteer",
+  "database_import_success": "Database succesvol bijgewerkt!",
+  "database_import_error": "Fout bij het importeren van de database!",
+  "database_import_dropzone": "Sleep je databasebestand hierheen of klik om te selecteren",
+  "reloading_in":  [
+    {
+      "declarations": [
+        "input seconds",
+        "local countPlural = seconds: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Herladen over {seconds} seconde.",
+        "countPlural=other": "Herladen over {seconds} seconden."
+      }
+    }
+  ]
 }

@@ -20,5 +20,26 @@
   "today": "Today",
   "focus_sessions": "Focus sessions",
   "focus_time_hours": "Focus time (hours)",
-  "date": "Date"
+  "date": "Date",
+  "general": "General",
+  "import": "Import",
+  "export": "Export",
+  "database_import_success": "Database updated succesfully!",
+  "database_import_error": "Error while importing database!",
+  "database_import_dropzone": "Drop your database file here or click to select",
+  "reloading_in":  [
+    {
+      "declarations": [
+        "input seconds",
+        "local countPlural = seconds: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Reloading in {seconds} second.",
+        "countPlural=other": "Reloading in {seconds} seconds."
+      }
+    }
+  ]
 }
