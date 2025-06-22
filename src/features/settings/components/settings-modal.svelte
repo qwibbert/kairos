@@ -28,7 +28,8 @@
         session?: Session;
     }
 
-    let { settings_modal = $bindable(), session = $bindable() }: Props = $props();
+    let { settings_modal = $bindable(), session = $bindable() }: Props =
+        $props();
 
     const settings_context = getSettingsContext();
 
@@ -436,6 +437,7 @@
                     <Dropzone
                         on:drop={handleFilesSelect}
                         accept="application/json"
+                        containerClasses="!bg-base-100 !border-base-300"
                         multiple={false}
                     >
                         {#if uploadSuccess}
