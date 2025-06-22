@@ -148,13 +148,50 @@
                 stats_graph.dispose();
             }
 
-            data.color = [
+            const style = window.getComputedStyle(document.body);
+            const colors = [
                 formatHex(
-                    window
-                        .getComputedStyle(document.body)
-                        .getPropertyValue("--color-primary"),
+                    style.getPropertyValue("--color-primary"),
                 ),
-            ];
+                formatHex(
+                    style.getPropertyValue("--color-secondary"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-accent"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-accent"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-accent-content"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-info"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-info-content"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-success"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-success-content"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-warning"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-warning-content"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-error"),
+                ),
+                formatHex(
+                    style.getPropertyValue("--color-error-content"),
+                )
+            ] as string[];
+            
+            data.color = colors;
 
             stats_graph = echarts.init(document.getElementById("stats"), null, {
                 height: "auto",

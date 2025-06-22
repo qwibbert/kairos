@@ -170,17 +170,17 @@ export class StatsManager {
                 }
             }
 
-            dayStats?.per_task.forEach(task => {
+            dayStats?.per_task.sort((a,b) => a.time_focus - b.time_focus).forEach((task) => {
                 if (!series.some(s => s.id == task.task_id)) {
                     series.push({
                         id: task.task_id,
                         stack: 'x',
                         name: task.task_title || 'Onbekende taak',
-                        color: '#' + Math.floor(Math.random() * 16777215).toString(16), // Random color for each task
                         type: 'bar'
                     });
 
                     tasks.push(task);
+                    console.log('series');
                 }
             });
 
