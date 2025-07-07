@@ -1,22 +1,20 @@
-import type { Database } from "./types";
+import AppDB from "./appdb";
 
-export async function retrieve_db(): Promise<Database> {
-    console.debug("Retrieving database from local storage.");
-    const db = localStorage.getItem('db');
-    if (db) {
-        return JSON.parse(db) as Database;
-    } else {
-        console.warn("No database found in local storage, returning empty database.");
-        return { tasks: [] };
-    }
-}
+export const exportDB = async (): Promise<Blob> => {
+  if (typeof window !== 'undefined') {
+    await import('dexie-export-import');
+  }
 
-export async function save_db(key: string, value: object): Promise<void> {
-    console.debug("Saving database to local storage.");
-    localStorage.setItem(key, JSON.stringify(value));
-}
+  const blob = await db.export();
+  return blob;
+};
 
-export async function clear_db(): Promise<void> {
-    console.debug("Clearing database in local storage.");
-    localStorage.clear();
-}
+export const importDB = async (blob: Blob): Promise<void> => {
+  if (typeof window !== 'undefined') {
+    await import('dexie-export-import');
+  }
+
+  await db.import(blob);
+};
+
+export const db = new AppDB();

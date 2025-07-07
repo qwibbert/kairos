@@ -1,3 +1,5 @@
+import type { TaskID } from "$features/tasks/types";
+
 export enum PomoType {
     Pomo = "POMO",
     ShortBreak = "SHORT_BREAK",
@@ -15,5 +17,6 @@ export enum SessionStatus {
 
 export interface Pauses {
     timestamp: number,
-    duration: number
+    duration: number,
+    task: TaskID | undefined
 }

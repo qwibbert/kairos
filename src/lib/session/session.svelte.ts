@@ -1,17 +1,16 @@
-import type { SettingsContext } from "$features/settings/types";
-import type { StatsContext } from "$features/stats/types";
-import type { TaskID, TasksContext } from "$features/tasks/types";
-import { svelteStringify } from "$lib/utils";
+import type { TaskID } from "$features/tasks/types";
+import { db } from "../../db/db";
+import { add_history_entry, restore_session_from_history, update_history_entry } from "../../db/history";
+import { DEFAULT_SETTINGS, get_setting, SettingsKey } from "../../db/settings";
 import { PomoType, SessionStatus, type Pauses } from "./types";
 
 export class Session {
     uuid = crypto.randomUUID();
     date = new Date();
     status = $state(SessionStatus.Inactive);
-    pomo_type = $state<PomoType>();
-    time_aim = $state<number>();
+    pomo_type = $state<PomoType>(PomoType.Pomo);
+    time_aim = $state<number>(0);
     time_real = $state(0);
-    pause_timestamp = 0;
     pauses: Pauses[] = [];
     cycle = 0;
     interval = 0;
@@ -27,10 +26,7 @@ export class Session {
         this.seconds = time % 60;
     }
 
-    start = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
-        click_sound(settings_context);
-        const now = Date.now();
-
+    start = async (pause_timestamp?: number) => {
         if (this.status == SessionStatus.Ready) {
             console.warn('Tried to start a session which is already active.');
             return;
@@ -43,10 +39,12 @@ export class Session {
 
         if (this.interval != 0) clearInterval(this.interval);
 
-        if (this.status == SessionStatus.Paused) {
-            console.debug('Paused session detected, saving pause duration and adjusting end time.')
-            this.pauses.push({ timestamp: this.pause_timestamp, duration: Math.floor((now - this.pause_timestamp) / 1000) });
-            this.pause_timestamp = 0;
+        const now = Date.now();
+        if (this.status == SessionStatus.Paused && pause_timestamp) {
+            console.debug('Paused session detected, saving pause duration and adjusting end time.');
+            const entry = await restore_session_from_history();
+
+            this.pauses.push({ timestamp: pause_timestamp, duration: Math.floor((now - pause_timestamp) / 1000), task: entry?.task_id});
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else if (this.status == SessionStatus.Interrupted) {
             console.debug('Interrupted session detected, adjusting end time.')
@@ -62,7 +60,16 @@ export class Session {
 
         this.status = SessionStatus.Active;
 
-        this.interval = setInterval(() => {
+        const history_entries = await db.history.where('id').equals(this.uuid).count();
+        if (history_entries == 0) {
+            await add_history_entry(this);
+        } else if (history_entries > 1) {
+            throw new Error("Duplicate history entries found!");
+        } else {
+            await update_history_entry(this.uuid, { status: this.status, pauses: $state.snapshot(this.pauses) })
+        }
+
+        this.interval = setInterval(async () => {
             const seconds_left = Math.max(0, Math.round((this.time_end - Date.now()) / 1000));
 
             this.minutes = Math.floor(seconds_left / 60)
@@ -70,9 +77,11 @@ export class Session {
 
             this.time_real = this.time_aim - seconds_left;
 
-            tick_sound(settings_context);
+            await tick_sound();
 
             document.title = `${this.minutes}:${this.seconds < 10 ? '0' : ''}${this.seconds} | Kairos`;
+
+            await update_history_entry(this.uuid, { time_real: this.time_real });
 
             if (seconds_left < 1) {
                 console.debug(`Session ${this.uuid} finished.`)
@@ -82,16 +91,14 @@ export class Session {
                 this.time_real = this.time_aim;
                 clearInterval(this.interval);
                 document.title = `Kairos`;
-                stats_context.stats.add_session(this, tasks_context.tasks);
-                this.next(settings_context);
+                await update_history_entry(this.uuid, {status: this.status, time_real: this.time_real, date_finished: new Date()});
+                await this.next();
             }
-
-            this.update_local_storage();
         }, 1000)
     }
 
-    pause = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
-        click_sound(settings_context);
+    pause = async () => {
+        await click_sound();
 
         clearInterval(this.interval);
 
@@ -100,150 +107,98 @@ export class Session {
             return;
         }
 
-        const now = Date.now()
-        this.pause_timestamp = now;
         this.status = SessionStatus.Paused;
 
-        stats_context.stats.update_on_pause(this, tasks_context.tasks);
-
-        this.update_local_storage();
+        await update_history_entry(this.uuid, { status: this.status });
     }
 
-    skip = (settings_context: SettingsContext, stats_context: StatsContext, tasks_context: TasksContext) => {
+    skip = async (pause_timestamp?: number) => {
         if (this.status == SessionStatus.Ready) {
             console.warn(`Tried to skip a session which has already finished.`);
             return;
         }
 
-        if (this.status == SessionStatus.Paused) {
+        if (this.status == SessionStatus.Paused && pause_timestamp) {
             console.warn(`Skipping a paused session.`);
-            this.pauses.push({ timestamp: this.pause_timestamp, duration: Math.floor((Date.now() - this.pause_timestamp) / 1000) });
+            this.pauses.push({ timestamp: pause_timestamp, duration: Math.floor((Date.now() - pause_timestamp) / 1000) });
         }
 
         clearInterval(this.interval);
 
         this.status = SessionStatus.Skipped;
 
-        stats_context.stats.add_session(this, tasks_context.tasks);
+        await update_history_entry(this.uuid, {status: this.status, pauses: $state.snapshot(this.pauses), date_finished: new Date()});
 
-        this.next(settings_context);
+        await this.next();
     }
 
-    next = (settings_context: SettingsContext) => {
+    next = async () => {
         console.debug('Preparing next session.');
-        this.save_history();
-        this.clear_local();
 
         this.uuid = crypto.randomUUID();
         this.status = SessionStatus.Inactive;
         this.time_real = 0;
         this.time_aim = 0;
         this.date = new Date();
-        this.pause_timestamp = 0;
+
         this.pauses = [];
+
+        const long_break_time = await get_setting(SettingsKey.long_break_time) ?? DEFAULT_SETTINGS.long_break_time;
+
+        const short_break_time = await get_setting(SettingsKey.short_break_time) ?? DEFAULT_SETTINGS.short_break_time;
+
+        const pomo_time = await get_setting(SettingsKey.pomo_time) ?? DEFAULT_SETTINGS.pomo_time;
 
         if (this.pomo_type == PomoType.Pomo) {
             if (this.cycle > 0 && (this.cycle % 4) == 0) {
                 console.debug('Long break cycle.');
                 this.pomo_type = PomoType.LongBreak;
-                this.time_aim = settings_context.settings.long_break_time;
+                this.time_aim = long_break_time as number;
             } else {
                 console.debug('Short break cycle.');
                 this.pomo_type = PomoType.ShortBreak;
-                this.time_aim = settings_context.settings.short_break_time;
+                this.time_aim = short_break_time as number;
             }
         } else if (this.pomo_type == PomoType.ShortBreak || this.pomo_type == PomoType.LongBreak) {
             console.debug('Pomo cycle.');
             this.pomo_type = PomoType.Pomo;
-            this.time_aim = settings_context.settings.pomo_time;
+            this.time_aim = pomo_time as number;
         }
 
         this.minutes = Math.floor(this.time_aim / 60)
         this.seconds = this.time_aim % 60;
     }
 
-    update_local_storage = () => {
-        console.debug('Updating local session storage.')
-        localStorage.setItem('session', svelteStringify(this));
-    }
-
-    switch_task = (task_id: string | undefined) => {
+    switch_task = async (task_id: string | undefined) => {
         console.debug(`Switching task to ${task_id}`);
         this.task_id = task_id;
-        this.update_local_storage();
-    }
-
-    clear_local = () => {
-        console.debug('Clearing local session storage.')
-        localStorage.removeItem('session');
-    }
-
-    save_history = () => {
-        console.debug('Saving history to local storage.');
-
-        const history = localStorage.getItem('history');
-        const session = {
-            uuid: this.uuid,
-            date: this.date,
-            status: this.status,
-            pomo_type: this.pomo_type,
-            time_aim: this.time_aim,
-            time_real: this.time_real,
-            pause_timestamp: this.pause_timestamp,
-            pauses: this.pauses,
-            time_end: this.time_end,
-        }
-
-        if (history) {
-            console.debug('History key exists, adding this session.')
-            const history_parsed = JSON.parse(history) as Session[];
-
-            localStorage.setItem('history', JSON.stringify([...history_parsed, session]));
-        } else {
-            console.debug('History key does not exist, adding key.')
-            localStorage.setItem('history', JSON.stringify([session]));
-        }
-    }
-
-    static restore_local = (): Session | null => {
-        const local_session = localStorage.getItem('session');
-
-        if (local_session) {
-            const parsed_session = JSON.parse(local_session) as Session;
-
-            const session = new Session(parsed_session.pomo_type, parsed_session.time_aim - parsed_session.time_real);
-
-            session.time_aim = parsed_session.time_aim;
-            session.time_real = parsed_session.time_real;
-            session.uuid = parsed_session.uuid;
-            session.date = new Date(parsed_session.date);
-            session.status = parsed_session.status;
-            session.pause_timestamp = parsed_session.pause_timestamp;
-            session.pauses = parsed_session.pauses;
-
-            return session;
-
-        } else {
-            return null;
-        }
+        await update_history_entry(this.uuid, { task_id })
     }
 }
 
-export const click_sound = (settings_context: SettingsContext) => {
-    if (settings_context.settings.ui_sounds) {
+export const click_sound = async () => {
+    const ui_sounds = await get_setting(SettingsKey.ui_sounds) ?? DEFAULT_SETTINGS.ui_sounds;
+
+    const ui_sounds_volume = await get_setting(SettingsKey.ui_sounds_volume) ?? DEFAULT_SETTINGS.ui_sounds_volume;
+
+    if (ui_sounds) {
         console.debug('Playing Click sound.');
         const audio = new Audio("sounds/click.mp3");
-        audio.volume = settings_context.settings.ui_sounds_volume / 100;
+        audio.volume = ui_sounds_volume as number / 100;
         audio.play();
     } else {
         console.debug('Skipped playing Click sound, user disabled this function');
     }
 }
 
-export const tick_sound = (settings_context: SettingsContext) => {
-    if (settings_context.settings.tick_sound) {
+export const tick_sound = async () => {
+    const tick_sound = await get_setting(SettingsKey.tick_sound) ?? DEFAULT_SETTINGS.tick_sound;
+
+    const tick_sound_volume = await get_setting(SettingsKey.tick_sound_volume) ?? DEFAULT_SETTINGS.tick_sound_volume;
+
+    if (tick_sound) {
         const audio = new Audio("sounds/tick.wav");
-        audio.volume = settings_context.settings.tick_sound_volume / 100;
+        audio.volume = tick_sound_volume as number / 100;
         audio.play();
     }
 }

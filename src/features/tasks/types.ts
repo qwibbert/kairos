@@ -1,23 +1,14 @@
-export type TaskID = string;
+import type { Task } from "../../db/appdb";
 
-export interface Task {
-    id: TaskID;
-    title: string;
-    status: TaskStatus;
-    createdAt: Date;
-    updatedAt: Date;
-    session_aim: number;
-    parent_id?: string;
-}
+export type TaskID = string;
 
 export interface TaskTreeItem extends Task {
     children?: TaskTreeItem[];
 }
 
 export enum TaskStatus {
-    Todo = 'TODO',
-    InProgress = 'IN_PROGRESS',
-    Done = 'DONE',
+    Active = 'ACTIVE',
+    InActive = 'INACTIVE',
 }
 
 export interface TasksContext {

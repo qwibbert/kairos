@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { PomoType, SessionStatus } from "$lib/session/types";
     import { formatHex } from "culori";
     import { BarChart } from "echarts/charts";
     import {
@@ -15,16 +16,19 @@
     import ChevronLeft from "lucide-svelte/icons/chevron-left";
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
+    import { onMount } from "svelte";
+    import { db } from "../../../db/db";
+    import { stateQuery } from "../../../db/reactivity_helper.svelte";
+    import { get_setting, SettingsKey } from "../../../db/settings";
     import { m } from "../../../paraglide/messages";
-    import { getStatsContext } from "../context";
+    import { get_stats_day, get_stats_week_echarts } from "../data";
+    import { week_graph_options } from "../week-graph-options";
 
     interface Props {
-        statistieken_modal?: HTMLDialogElement; // Optional dialog element
+        stats_modal?: HTMLDialogElement;
     }
 
-    let { statistieken_modal = $bindable() }: Props = $props();
-
-    const stats_context = getStatsContext();
+    let { stats_modal = $bindable() }: Props = $props();
 
     echarts.use([
         BarChart,
@@ -39,101 +43,7 @@
         LegendComponent,
     ]);
 
-    let data = {
-        legend: {
-            padding: [0,0, 0, 0],
-            type: "scroll",
-        },
-        datazoom: [],
-        xAxis: {
-            type: "category",
-            name: m.date(),
-            nameLocation: "middle",
-            nameGap: 30,
-            axisTick: { interval: 0 },
-            axisLabel: {
-                interval: 0,
-                formatter: (value: string) =>
-                    DateTime.fromISO(value).toLocaleString({
-                        day: "2-digit",
-                        weekday: "short",
-                    }),
-            }, // Remove year from date
-        },
-        dataset: {
-            source: [],
-        },
-        yAxis: {
-            type: "value",
-            name: m.focus_time_hours(),
-            nameLocation: "end",
-            nameTextStyle: {
-                padding: [0, 0, 0, 30],
-            },
-            minInterval: 0.5,
-            nameGap: 30,
-            axisLabel: {
-                formatter: "{value} h",
-                margin: 2,
-                showMinLabel: false,
-            },
-            min: 0,
-        },
-        series: [],
-        tooltip: {
-            trigger: "axis",
-            formatter: (params) => {
-                let htmlString = "";
-                if (params.length > 1) {
-                    htmlString += `<div><strong>${params[0].axisValue}</strong></div>`;
-                }
-
-                let total_time = 0;
-
-                params.forEach((param) => {
-                    const focusTime = param.value[param.encode.y[0]];
-                    total_time += focusTime;
-
-                    if (focusTime === undefined) return;
-
-                    if (focusTime < 1) {
-                        htmlString += `
-                                <div>
-                        ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
-                            focusTime * 60,
-                        )} min
-                                </div>
-                            `;
-                        return;
-                    } else {
-                        htmlString += `
-                                <div>
-                                   ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
-                                        focusTime,
-                                    )} h ${Math.floor((focusTime % 1) * 60)} min
-                                </div>
-                            `;
-                    }
-                });
-
-                if (Number.isNaN(total_time)) {
-                    return htmlString;
-                }
-                if (total_time < 1) {
-                    htmlString += `<div><strong>Totale tijd: ${Math.floor(
-                        total_time * 60,
-                    )} min</strong></div>`;
-                } else {
-                    htmlString += `<div><strong>Totale tijd: ${Math.floor(
-                        total_time,
-                    )} h ${Math.floor((total_time % 1) * 60)} min</strong></div>`;
-                }
-                return htmlString;
-            },
-        },
-    };
-
-    let stats_graph = undefined;
+    let theme = $state<string | null>(null);
 
     const today = DateTime.now();
     let delta_weeks = $state(0);
@@ -142,80 +52,142 @@
     );
     const weekEnd = $derived(today.endOf("week").minus({ weeks: delta_weeks }));
 
-    $effect(() => {
-        if (statistieken_modal && stats_context.stats.get_stats() && window) {
-            if (stats_graph) {
-                stats_graph.dispose();
-            }
+    let time_today = $state(0);
 
-            const style = window.getComputedStyle(document.body);
-            const colors = [
-                formatHex(
-                    style.getPropertyValue("--color-primary"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-secondary"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-accent"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-accent"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-accent-content"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-info"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-info-content"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-success"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-success-content"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-warning"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-warning-content"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-error"),
-                ),
-                formatHex(
-                    style.getPropertyValue("--color-error-content"),
+    let stats_graph = $state<echarts.EChartsType | undefined>(undefined);
+
+    const tasks_query = stateQuery(
+        async () =>
+            db.history.where("status").equals(SessionStatus.Active).toArray(),
+        () => [],
+    );
+    const active_session = $derived(tasks_query.current);
+
+    const sessions_today_query = stateQuery(
+        async () =>
+            db.history
+                .where("date_finished")
+                .between(
+                    DateTime.now().startOf("day").toJSDate(),
+                    DateTime.now().endOf("day").toJSDate(),
                 )
-            ] as string[];
-            
-            data.color = colors;
+                .count(),
+        () => [],
+    );
+    const sessions_today = $derived(sessions_today_query.current);
 
-            stats_graph = echarts.init(document.getElementById("stats"), null, {
-                height: "auto",
-                width: "auto",
+    const theme_inactive_query = stateQuery(
+        async () => get_setting(SettingsKey.theme_inactive),
+        () => [],
+    );
+    const theme_inactive = $derived(theme_inactive_query.current);
+
+    $effect(() => {
+        if (theme && stats_graph && active_session?.length == 0) {
+            load_week_graph();
+            get_stats_day(today, PomoType.Pomo).then((stats) => {
+                time_today =
+                    stats.no_task +
+                    stats.per_task.reduce((time, task) => time + task.time, 0);
             });
-
-            [data.dataset.source, data.series] =
-                stats_context.stats.get_week_focus_time(delta_weeks);
-
-            stats_graph.setOption(data);
-            stats_graph.resize();
         }
     });
 
-    let stats_today = $derived(stats_context.stats.get_todayStats());
+    onMount(() => {
+        load_week_graph();
+        get_stats_day(today, PomoType.Pomo).then((stats) => {
+            time_today =
+                stats.no_task +
+                stats.per_task.reduce((time, task) => time + task.time, 0);
+        });
+    });
+
+    $effect(() => {
+        get_stats_week_echarts(
+            today.minus({ weeks: delta_weeks }),
+            PomoType.Pomo,
+        ).then(([source, series, legend]) => {
+            week_graph_options.dataset.source = source;
+            week_graph_options.series = series;
+            week_graph_options.legend.data = legend;
+
+            stats_graph?.setOption(week_graph_options);
+        });
+    });
+
+    $effect(() => {
+        if (theme_inactive && stats_graph && window) {
+            const style = window.getComputedStyle(document.body);
+
+            week_graph_options.legend.textStyle.color = formatHex(style.getPropertyValue("--color-base-content")) ?? '#333';
+            week_graph_options.color = [
+                formatHex(style.getPropertyValue("--color-primary")),
+                formatHex(style.getPropertyValue("--color-secondary")),
+                formatHex(style.getPropertyValue("--color-accent")),
+                formatHex(style.getPropertyValue("--color-accent")),
+                formatHex(style.getPropertyValue("--color-accent-content")),
+                formatHex(style.getPropertyValue("--color-info")),
+                formatHex(style.getPropertyValue("--color-info-content")),
+                formatHex(style.getPropertyValue("--color-success")),
+                formatHex(style.getPropertyValue("--color-success-content")),
+                formatHex(style.getPropertyValue("--color-warning")),
+                formatHex(style.getPropertyValue("--color-warning-content")),
+                formatHex(style.getPropertyValue("--color-error")),
+                formatHex(style.getPropertyValue("--color-error-content")),
+            ] as string[];
+            stats_graph?.setOption(week_graph_options);
+        }
+    });
+
+    async function load_week_graph() {
+        const style = window.getComputedStyle(document.body);
+
+        const colors = [
+            formatHex(style.getPropertyValue("--color-primary")),
+            formatHex(style.getPropertyValue("--color-secondary")),
+            formatHex(style.getPropertyValue("--color-accent")),
+            formatHex(style.getPropertyValue("--color-accent")),
+            formatHex(style.getPropertyValue("--color-accent-content")),
+            formatHex(style.getPropertyValue("--color-info")),
+            formatHex(style.getPropertyValue("--color-info-content")),
+            formatHex(style.getPropertyValue("--color-success")),
+            formatHex(style.getPropertyValue("--color-success-content")),
+            formatHex(style.getPropertyValue("--color-warning")),
+            formatHex(style.getPropertyValue("--color-warning-content")),
+            formatHex(style.getPropertyValue("--color-error")),
+            formatHex(style.getPropertyValue("--color-error-content")),
+        ] as string[];
+
+        week_graph_options.color = colors;
+
+        if (!stats_graph) {
+            stats_graph = echarts.init(
+                document.getElementById("week_stats_graph"),
+                null,
+                {
+                    height: "auto",
+                    width: "auto",
+                },
+            );
+        }
+
+        [
+            week_graph_options.dataset.source,
+            week_graph_options.series,
+            week_graph_options.legend.data,
+        ] = await get_stats_week_echarts(
+            today.minus({ weeks: delta_weeks }),
+            PomoType.Pomo,
+        );
+
+        stats_graph.setOption(week_graph_options);
+        stats_graph.resize();
+    }
 </script>
 
-<svelte:window on:resize={() => stats_graph.resize()} />
+<svelte:window on:resize={async () => await load_week_graph()} />
 
-<dialog
-    bind:this={statistieken_modal}
-    id="statistieken"
-    class="modal overflow-y-auto"
->
+<dialog bind:this={stats_modal} id="stats" class="modal overflow-y-auto">
     <div class="modal-box">
         <div class="flex flex-row items-center justify-between mb-2">
             <h3 class="text-lg font-bold">{m.statistics()}</h3>
@@ -224,32 +196,27 @@
             </form>
         </div>
 
-        {#if stats_today}
-            <div class="stats text-primary shadow w-full">
-                <div class="stat">
-                    <div class="stat-title">{m.focus_time()}</div>
-                    <div class="stat-value text-md md:text-3xl">
-                        {#if stats_today?.time_focus < 3600}
-                            {Math.floor(stats_today?.time_focus / 60)} min
-                        {:else}
-                            {Math.floor(stats_today?.time_focus / 3600)}
-                            h {Math.floor(
-                                (stats_today?.time_focus % 3600) / 60,
-                            )} min
-                        {/if}
-                    </div>
-                    <div class="stat-desc">{m.today()}</div>
+        <div class="stats text-primary shadow w-full">
+            <div class="stat">
+                <div class="stat-title">{m.focus_time()}</div>
+                <div class="stat-value text-md md:text-3xl">
+                    {#if time_today < 3600}
+                        {Math.floor(time_today / 60)} min
+                    {:else}
+                        {Math.floor(time_today / 3600)}
+                        h {Math.floor((time_today % 3600) / 60)} min
+                    {/if}
                 </div>
-
-                <div class="stat">
-                    <div class="stat-title">{m.focus_sessions()}</div>
-                    <div class="stat-value">
-                        {stats_today?.focus_sessions}
-                    </div>
-                    <div class="stat-desc">{m.today()}</div>
-                </div>
+                <div class="stat-desc">{m.today()}</div>
             </div>
-        {/if}
+
+            <div class="stat">
+                <div class="stat-title">{m.focus_sessions()}</div>
+                <div class="stat-value">{sessions_today ?? 0}</div>
+                <div class="stat-desc">{m.today()}</div>
+            </div>
+        </div>
+
         <div class="w-full flex flex-col mt-5">
             <div class="flex flex-row items-center justify-between mb-2">
                 <button
@@ -277,7 +244,7 @@
                     ><ChevronRight class="size-[1.5em]" /></button
                 >
             </div>
-            <div id="stats" class="w-full h-[50vh]"></div>
+            <div id="week_stats_graph" class="w-full h-[50vh]"></div>
         </div>
     </div>
     <form method="dialog" class="modal-backdrop">

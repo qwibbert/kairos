@@ -8,28 +8,28 @@
     import Trash from "lucide-svelte/icons/trash";
 
     import { getContext } from "svelte";
-    import { getTaskContext } from "../context";
+    import type { Task } from "../../../db/appdb";
+    import { add_task, archive_task, update_task } from "../../../db/tasks";
     import {
-        add_task,
         build_task_subtree,
-        delete_task,
         get_parent_nodes_from_flat_list,
-        update_task
     } from "../db";
     import { TaskStatus, type TaskTreeItem } from "../types";
 
     interface Props {
         taskselector_modal?: HTMLDialogElement;
+        tasks?: Task[]
     }
 
-    let { taskselector_modal = $bindable() }: Props = $props();
+    let { taskselector_modal = $bindable(), tasks }: Props = $props();
 
     const session = getContext("session");
-    const task_context = getTaskContext();
 
-    let parent_task: string | undefined = $derived(task_context.tasks.find(task => session()?.task_id == task.id)?.parent_id);
+    let active_task = $derived(tasks?.find(task => session()?.task_id == task.id));
+
+    let parent_task: string | undefined = $derived(active_task?.parent_id);
     let page = $state(1);
-    let tasks_list = $derived(build_task_subtree(task_context.tasks, parent_task));
+    let tasks_list = $derived(tasks ? build_task_subtree(tasks, parent_task): []);
     let paginated_tasks = $derived.by(() => {
         if (!tasks_list) return [];
 
@@ -65,14 +65,6 @@
             new_task_input.focus();
         }
     });
-
-    // Update session task_id when the active task changes
-    $effect(() => {
-        console.log("task changed!")
-        if (session() && session().task_id != task_context.active_task) {
-            session().switch_task(task_context.active_task ?? undefined);
-        }
-    });
 </script>
 
 {#snippet task_list_item(task: TaskTreeItem)}
@@ -82,12 +74,12 @@
         {:else}
             <input
                 type="checkbox"
-                checked={task.status == TaskStatus.InProgress}
-                onchange={(e) => {
-                    update_task(task_context, task_context.tasks, task.id, {
+                checked={task.status == TaskStatus.Active}
+                onchange={async (e) => {
+                    await update_task(task.id, {
                         status: (e.target as HTMLInputElement)?.checked
-                            ? TaskStatus.InProgress
-                            : TaskStatus.Todo,
+                            ? TaskStatus.Active
+                            : TaskStatus.InActive,
                     });
                 }}
                 class="checkbox"
@@ -100,10 +92,10 @@
                 type="text"
                 class="input input-bordered input-sm flex-1 ml-2"
                 value={task.title}
-                onchange={(e) => {
+                onchange={async (e) => {
                     const value = (e.target as HTMLInputElement)?.value;
 
-                    update_task(task_context, task_context.tasks, task.id, {
+                    await update_task(task.id, {
                         title: value == "" ? "Nieuwe taak" : value,
                     });
 
@@ -134,12 +126,7 @@
             <button
                 class="btn btn-square btn-ghost join-item"
                 onclick={async () => {
-                    const child_task = await add_task(
-                        task_context.tasks,
-                        undefined,
-                        undefined,
-                        task.id,
-                    );
+                    const child_task = await add_task(undefined, undefined, task.id);
 
                     // Jump to the child task page after adding a task
                     parent_task = task.id;
@@ -152,7 +139,7 @@
             >
             <button
                 class="btn btn-square btn-ghost join-item"
-                onclick={() => delete_task(task_context, task.id)}
+                onclick={async () => await archive_task(task.id)}
                 ><Trash class="size-[1.2em]" /></button
             >
         </div>
@@ -173,7 +160,6 @@
                 class="btn btn-primary btn-wide my-5"
                 onclick={async () => {
                     const task = await add_task(
-                        task_context.tasks,
                         undefined,
                         undefined,
                         resolved_parent_task,
@@ -192,7 +178,7 @@
             >
                 {#if parent_task}
                     {@const parents = get_parent_nodes_from_flat_list(
-                        task_context.tasks,
+                        tasks ?? [] as Task[],
                         parent_task,
                     )}
 

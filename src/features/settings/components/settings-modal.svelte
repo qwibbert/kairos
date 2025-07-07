@@ -1,27 +1,23 @@
 <script lang="ts">
     import ThemeSample from "$features/settings/components/theme-sample.svelte";
     import { Session } from "$lib/session/session.svelte";
-    import { PomoType, SessionStatus } from "$lib/session/types";
+    import { SessionStatus } from "$lib/session/types";
     import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
     import Volume from "lucide-svelte/icons/volume";
     import Volume1 from "lucide-svelte/icons/volume-1";
     import Volume2 from "lucide-svelte/icons/volume-2";
     import VolumeX from "lucide-svelte/icons/volume-x";
+    import { onMount } from "svelte";
     import Dropzone from "svelte-file-dropzone";
-    import { m } from "../../../paraglide/messages";
-    import { getSettingsContext } from "../context";
+    import { db, exportDB, importDB } from "../../../db/db";
+    import { stateQuery } from "../../../db/reactivity_helper.svelte";
     import {
-        set_active_theme,
-        set_inactive_theme,
-        set_long_break_time,
-        set_pomo_time,
-        set_short_break_time,
-        set_tick_sound,
-        set_tick_sound_volume,
-        set_ui_sound_volume,
-        set_ui_sounds,
-    } from "../db";
-    import { Theme } from "../types";
+        get_setting,
+        SettingsKey,
+        type SettingType,
+    } from "../../../db/settings";
+    import { m } from "../../../paraglide/messages";
+    import { Theme } from "../db";
 
     interface Props {
         settings_modal?: HTMLDialogElement;
@@ -31,22 +27,62 @@
     let { settings_modal = $bindable(), session = $bindable() }: Props =
         $props();
 
-    const settings_context = getSettingsContext();
+    // Retrieve settings
+    const pomo_time_query = stateQuery(
+        async () => get_setting(SettingsKey.pomo_time),
+        () => [],
+    );
+    const short_break_query = stateQuery(
+        async () => get_setting(SettingsKey.short_break_time),
+        () => [],
+    );
+    const long_break_query = stateQuery(
+        async () => get_setting(SettingsKey.long_break_time),
+        () => [],
+    );
+    const theme_active_query = stateQuery(
+        async () => get_setting(SettingsKey.theme_active),
+        () => [],
+    );
+    const theme_inactive_query = stateQuery(
+        async () => get_setting(SettingsKey.theme_inactive),
+        () => [],
+    );
+    const ui_sounds_query = stateQuery(
+        async () => get_setting(SettingsKey.ui_sounds),
+        () => [],
+    );
+    const ui_sounds_volume_query = stateQuery(
+        async () => get_setting(SettingsKey.ui_sounds_volume),
+        () => [],
+    );
+    const tick_sound_query = stateQuery(
+        async () => get_setting(SettingsKey.tick_sound),
+        () => [],
+    );
+    const tick_sound_volume_query = stateQuery(
+        async () => get_setting(SettingsKey.tick_sound_volume),
+        () => [],
+    );
+    const pomo_time = $derived(pomo_time_query.current as number);
+    const short_break_time = $derived(short_break_query.current as number);
+    const long_break_time = $derived(long_break_query.current as number);
+    const theme_active = $derived(theme_active_query.current as Theme);
+    const theme_inactive = $derived(theme_inactive_query.current as Theme);
+    const ui_sounds = $derived(ui_sounds_query.current as boolean);
+    const ui_sounds_volume = $derived(ui_sounds_volume_query.current as number);
+    const tick_sound = $derived(tick_sound_query.current as boolean);
+    const tick_sound_volume = $derived(
+        tick_sound_volume_query.current as number,
+    );
 
-    function dump(storage: Storage) {
-        let store = {};
-        for (let i = 0, l = storage.length; i < l; i++) {
-            let key = storage.key(i);
-            store[key] = JSON.parse(storage.getItem(key));
-        }
-        return store;
-    }
+    onMount(async () => {
+        await import("dexie-export-import");
+    });
 
-    function triggerDownload() {
+    async function triggerDownload() {
         const downloadLink = document.createElement("a");
-        const blob = new Blob([JSON.stringify(dump(localStorage))], {
-            type: "text/plain",
-        });
+        const blob = await exportDB();
         const fileURL = URL.createObjectURL(blob);
         downloadLink.href = fileURL;
         downloadLink.download = "Kairos Data.json";
@@ -80,7 +116,7 @@
         }
     };
 
-    function handleFilesSelect(e) {
+    async function handleFilesSelect(e) {
         uploadSuccess = false;
         uploadError = false;
 
@@ -90,52 +126,28 @@
 
         if (files.accepted.length > 0) {
             const file = files.accepted[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = JSON.parse(event.target.result as string);
 
-                    const requiredKey = "tasks";
-                    if (!data.hasOwnProperty(requiredKey)) {
-                        console.error(
-                            `Database upload failed, the required key "${requiredKey}" was not found.`,
-                        );
-                        uploadError = true;
-                        return;
-                    }
+            try {
+                await db.delete();
+                await db.open();
+                await importDB(file);
 
-                    const acceptedKeys = [
-                        "session",
-                        "settings",
-                        "history",
-                        "stats",
-                        "tasks",
-                    ];
-
-                    for (const key in data) {
-                        if (!acceptedKeys.includes(key)) {
-                            console.error(
-                                `Database upload failed, the following key was not recognised: ${key}`,
-                            );
-                            uploadError = true;
-                            return;
-                        }
-                    }
-
-                    for (const key in data) {
-                        localStorage.setItem(key, JSON.stringify(data[key]));
-                    }
-
-                    uploadSuccess = true;
-                    reloadTimeStamp = Date.now() + 5000; // Set reload time to 5 seconds from now
-                    requestAnimationFrame(updateProgressBar);
-                } catch (error) {
-                    console.error("Error parsing JSON:", error);
-                }
-            };
-            reader.readAsText(file);
+                uploadSuccess = true;
+                reloadTimeStamp = Date.now() + 5000; // Set reload time to 5 seconds from now
+                requestAnimationFrame(updateProgressBar);
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
+
+    const update_setting = async (setting: SettingsKey, value: SettingType) => {
+        try {
+            await db.settings.put({ value, key: setting });
+        } catch {
+            console.error(`Failed to update setting: ${setting}`);
+        }
+    };
 </script>
 
 <dialog bind:this={settings_modal} id="settings" class="modal">
@@ -169,81 +181,55 @@
                                 type="number"
                                 class="input"
                                 placeholder="25"
-                                value={settings_context.settings.pomo_time / 60}
-                                onchange={(e) => {
-                                    set_pomo_time(
-                                        settings_context.settings,
+                                value={pomo_time / 60}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.pomo_time,
                                         parseInt(
                                             (e.target as HTMLInputElement)
                                                 .value,
                                         ) * 60,
-                                    );
-                                    session = new Session(
-                                        PomoType.Pomo,
-                                        parseInt(
-                                            (e.target as HTMLInputElement)
-                                                .value,
-                                        ) * 60,
-                                    );
-                                }}
+                                    )}
                             />
                         </div>
                         <div class="flex flex-col">
-                            <label for="korte_pauze" class="label"
+                            <label for="short_break" class="label"
                                 >{m.break()}</label
                             >
                             <input
-                                id="korte_pauze"
+                                id="short_break"
                                 type="number"
                                 class="input"
                                 placeholder="5"
-                                value={settings_context.settings
-                                    .short_break_time / 60}
-                                onchange={(e) => {
-                                    set_short_break_time(
-                                        settings_context.settings,
+                                value={short_break_time / 60}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.short_break_time,
                                         parseInt(
                                             (e.target as HTMLInputElement)
                                                 .value,
                                         ) * 60,
-                                    );
-                                    session = new Session(
-                                        PomoType.ShortBreak,
-                                        parseInt(
-                                            (e.target as HTMLInputElement)
-                                                .value,
-                                        ) * 60,
-                                    );
-                                }}
+                                    )}
                             />
                         </div>
                         <div class="flex flex-col">
-                            <label for="lange_pauze" class="label"
+                            <label for="long_break" class="label"
                                 >{m.long_break()}</label
                             >
                             <input
-                                id="lange_pauze"
+                                id="long_break"
                                 type="number"
                                 class="input"
                                 placeholder="15"
-                                value={settings_context.settings
-                                    .long_break_time / 60}
-                                onchange={(e) => {
-                                    set_long_break_time(
-                                        settings_context.settings,
+                                value={long_break_time / 60}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.long_break_time,
                                         parseInt(
                                             (e.target as HTMLInputElement)
                                                 .value,
                                         ) * 60,
-                                    );
-                                    session = new Session(
-                                        PomoType.LongBreak,
-                                        parseInt(
-                                            (e.target as HTMLInputElement)
-                                                .value,
-                                        ) * 60,
-                                    );
-                                }}
+                                    )}
                             />
                         </div>
                     </div>
@@ -256,10 +242,10 @@
                         <label class="label">
                             <input
                                 type="checkbox"
-                                checked={settings_context.settings.ui_sounds}
-                                onchange={(e) =>
-                                    set_ui_sounds(
-                                        settings_context.settings,
+                                checked={ui_sounds}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.ui_sounds,
                                         (e.target as HTMLInputElement).checked,
                                     )}
                                 class="toggle"
@@ -267,11 +253,11 @@
                             {m.ui_sounds()}
                         </label>
                         <button class="btn btn-primary btn-circle">
-                            {#if settings_context.settings.ui_sounds && settings_context.settings.ui_sounds_volume < 25}
+                            {#if ui_sounds && ui_sounds_volume < 25}
                                 <Volume class="size-[1.2em]" />
-                            {:else if settings_context.settings.ui_sounds && settings_context.settings.ui_sounds_volume >= 25 && settings_context.settings.ui_sounds_volume < 75}
+                            {:else if ui_sounds && ui_sounds_volume >= 25 && ui_sounds_volume < 75}
                                 <Volume1 class="size-[1.2em]" />
-                            {:else if settings_context.settings.ui_sounds && settings_context.settings.ui_sounds_volume >= 75}
+                            {:else if ui_sounds && ui_sounds_volume >= 75}
                                 <Volume2 class="size-[1.2em]" />
                             {:else}
                                 <VolumeX class="size-[1.2em]" />
@@ -279,18 +265,18 @@
                         </button>
 
                         <input
-                            disabled={!settings_context.settings.ui_sounds}
+                            disabled={!ui_sounds}
                             type="range"
                             min="0"
                             max="100"
-                            onchange={(e) =>
-                                set_ui_sound_volume(
-                                    settings_context.settings,
+                            onchange={async (e) =>
+                                await update_setting(
+                                    SettingsKey.ui_sounds_volume,
                                     parseInt(
                                         (e.target as HTMLInputElement).value,
                                     ),
                                 )}
-                            value={settings_context.settings.ui_sounds_volume}
+                            value={ui_sounds_volume}
                             class="range w-[30%]"
                         />
                     </div>
@@ -299,10 +285,10 @@
                         <label class="label">
                             <input
                                 type="checkbox"
-                                checked={settings_context.settings.tick_sound}
-                                onchange={(e) =>
-                                    set_tick_sound(
-                                        settings_context.settings,
+                                checked={tick_sound}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.tick_sound,
                                         (e.target as HTMLInputElement).checked,
                                     )}
                                 class="toggle"
@@ -310,25 +296,25 @@
                             {m.tick_sound()}
                         </label>
                         <button class="btn btn-primary btn-circle">
-                            {#if settings_context.settings.tick_sound && settings_context.settings.tick_sound_volume < 25}
+                            {#if tick_sound && tick_sound_volume < 25}
                                 <Volume class="size-[1.2em]" />
-                            {:else if settings_context.settings.tick_sound && settings_context.settings.tick_sound_volume >= 25 && settings_context.settings.tick_sound_volume < 75}
+                            {:else if tick_sound && tick_sound_volume >= 25 && tick_sound_volume < 75}
                                 <Volume1 class="size-[1.2em]" />
-                            {:else if settings_context.settings.tick_sound && settings_context.settings.tick_sound_volume >= 75}
+                            {:else if tick_sound && tick_sound_volume >= 75}
                                 <Volume2 class="size-[1.2em]" />
                             {:else}
                                 <VolumeX class="size-[1.2em]" />
                             {/if}
                         </button>
                         <input
-                            disabled={!settings_context.settings.tick_sound}
+                            disabled={!tick_sound}
                             type="range"
                             min="0"
                             max="100"
-                            value={settings_context.settings.tick_sound_volume}
-                            onchange={(e) =>
-                                set_tick_sound_volume(
-                                    settings_context.settings,
+                            value={tick_sound_volume}
+                            onchange={async (e) =>
+                                await update_setting(
+                                    SettingsKey.tick_sound_volume,
                                     parseInt(
                                         (e.target as HTMLInputElement).value,
                                     ),
@@ -348,7 +334,7 @@
                             >
                             <select
                                 class="select"
-                                onchange={(e) => {
+                                onchange={async (e) => {
                                     if (
                                         session?.status != SessionStatus.Active
                                     ) {
@@ -358,8 +344,8 @@
                                         );
                                     }
 
-                                    set_inactive_theme(
-                                        settings_context.settings,
+                                    await update_setting(
+                                        SettingsKey.theme_inactive,
                                         e.target.value as Theme,
                                     );
                                 }}
@@ -367,17 +353,14 @@
                                 {#each Object.values(Theme) as theme (theme)}
                                     <option
                                         value={theme}
-                                        selected={settings_context.settings
-                                            .theme_inactive == theme}
+                                        selected={theme_inactive == theme}
                                     >
                                         {theme}
                                     </option>
                                 {/each}
                             </select>
                         </fieldset>
-                        <ThemeSample
-                            theme={settings_context.settings.theme_inactive}
-                        />
+                        <ThemeSample theme={theme_inactive} />
                     </div>
                     <ArrowRightLeft class="size-[2.5em] self-center" />
                     <div class="flex flex-col gap-2 items-center">
@@ -386,7 +369,7 @@
                             >
                             <select
                                 class="select"
-                                onchange={(e) => {
+                                onchange={async (e) => {
                                     if (
                                         session?.status == SessionStatus.Active
                                     ) {
@@ -396,8 +379,8 @@
                                         );
                                     }
 
-                                    set_active_theme(
-                                        settings_context.settings,
+                                    await update_setting(
+                                        SettingsKey.theme_active,
                                         e.target.value as Theme,
                                     );
                                 }}
@@ -405,8 +388,7 @@
                                 {#each Object.values(Theme) as theme (theme)}
                                     <option
                                         value={theme}
-                                        selected={settings_context.settings
-                                            .theme_active == theme}
+                                        selected={theme_active == theme}
                                     >
                                         {theme}
                                     </option>
@@ -414,9 +396,7 @@
                             </select>
                         </fieldset>
 
-                        <ThemeSample
-                            theme={settings_context.settings.theme_active}
-                        />
+                        <ThemeSample theme={theme_active} />
                     </div>
                 </fieldset>
             </div>
@@ -431,7 +411,8 @@
                 <div class="flex flex-row justify-evenly mt-5 items-center">
                     <button
                         class="btn btn-primary"
-                        onclick={() => triggerDownload()}>Exporteer data</button
+                        onclick={async () => await triggerDownload()}
+                        >Exporteer data</button
                     >
                     <div class="divider divider-horizontal"></div>
                     <Dropzone

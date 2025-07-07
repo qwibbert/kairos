@@ -2,16 +2,9 @@
     import "$components/style.css";
     import KairosLogo from "$components/ui/kairos-logo.svelte";
     import SettingsModal from "$features/settings/components/settings-modal.svelte";
-    import { setSettingsContext } from "$features/settings/context";
-    import { DEFAULT_SETTINGS, retrieve_settings } from "$features/settings/db";
-    import type { SettingsContext } from "$features/settings/types";
     import Statsmodal from "$features/stats/components/stats-modal.svelte";
-    import { setStatsContext } from "$features/stats/context";
-    import { StatsManager } from "$features/stats/db.svelte";
     import Taskmodal from "$features/tasks/components/task-modal.svelte";
-    import { setTaskContext } from "$features/tasks/context";
-    import { ensure_no_task_exists, retrieve_active_task, retrieve_all_tasks } from "$features/tasks/db";
-    import type { TasksContext } from "$features/tasks/types";
+    import { TaskStatus } from "$features/tasks/types";
     import { Session } from "$lib/session/session.svelte";
     import { PomoType, SessionStatus } from "$lib/session/types";
     import { shortcut } from "@svelte-put/shortcut";
@@ -23,43 +16,61 @@
     import Square from "lucide-svelte/icons/square";
     import SquareCheck from "lucide-svelte/icons/square-check";
     import { onMount, setContext } from "svelte";
+    import { db } from "../db/db";
+    import { restore_session_from_history } from "../db/history";
+    import { stateQuery } from "../db/reactivity_helper.svelte";
+    import { get_setting, SettingsKey } from "../db/settings";
     import * as m from "../paraglide/messages";
+
+    // Retrieve settings
+    const pomo_time_query = stateQuery(
+        async () => get_setting(SettingsKey.pomo_time),
+        () => [],
+    );
+    const short_break_query = stateQuery(
+        async () => get_setting(SettingsKey.short_break_time),
+        () => [],
+    );
+    const long_break_query = stateQuery(
+        async () => get_setting(SettingsKey.long_break_time),
+        () => [],
+    );
+    const theme_active_query = stateQuery(
+        async () => get_setting(SettingsKey.theme_active),
+        () => [],
+    );
+    const theme_inactive_query = stateQuery(
+        async () => get_setting(SettingsKey.theme_inactive),
+        () => [],
+    );
+    const pomo_time = $derived(pomo_time_query.current);
+    const short_break_time = $derived(short_break_query.current);
+    const long_break_time = $derived(long_break_query.current);
+    const theme_active = $derived(theme_active_query.current);
+    const theme_inactive = $derived(theme_inactive_query.current);
+
+    const tasks_query = stateQuery(
+        async () => db.tasks.where("archived").equals(0).toArray(),
+        () => [],
+    );
+    const tasks = $derived(tasks_query.current);
+    const active_task = $derived(
+        tasks?.find((task) => task.status == TaskStatus.Active),
+    );
 
     // Initialize state
     let session = $state<Session>();
-    
-    let settings_context = $state<SettingsContext>({settings: DEFAULT_SETTINGS});
-    let task_context = $state<TasksContext>({
-        tasks: [],
-        active_task: 'NO_TASK',
-    });
-    let stats_context = $state({
-        stats: new StatsManager()
-    });
+
     setContext("session", () => session);
-    setSettingsContext(settings_context);
-    setTaskContext(task_context);
-    setStatsContext(stats_context);
 
     onMount(async () => {
         console.debug("App mounted, restoring state...");
-        const local_session = Session.restore_local();
-
-        task_context.tasks = await retrieve_all_tasks();
-        ensure_no_task_exists(task_context.tasks);
-        task_context.active_task = retrieve_active_task(task_context.tasks);
-
-        settings_context.settings = retrieve_settings();
-
-        stats_context.stats.load();
+        const local_session = await restore_session_from_history();
 
         console.debug("State restored.");
 
         if (local_session) {
-            console.debug(
-                "Restored session from local storage:",
-                local_session.uuid,
-            );
+            console.debug("Restored session from history:", local_session.uuid);
             session = local_session;
 
             if (session.status == SessionStatus.Active) {
@@ -72,25 +83,41 @@
             }
         } else {
             console.debug("No previous session found, starting a new one.");
-            session = new Session(PomoType.Pomo, settings_context.settings.pomo_time);
+
+            session = new Session(
+                PomoType.Pomo,
+                (await get_setting(SettingsKey.pomo_time)) as number,
+            );
         }
     });
 
     let settings_modal = $state<HTMLDialogElement>();
-    let statistieken_modal = $state<HTMLDialogElement>();
+    let stats_modal = $state<HTMLDialogElement>();
     let taskselector_modal = $state<HTMLDialogElement>();
     let start_knop = $state<HTMLButtonElement>();
 
-    let theme_inactive = $derived(settings_context.settings.theme_inactive);
-    let theme_active = $derived(settings_context.settings.theme_active);
-
     $effect(() => {
-        if (session?.status == SessionStatus.Active) {
-            console.debug("Switch theme to active:", theme_active);
-            document.documentElement.setAttribute("data-theme", theme_active);
-        } else {
-            console.debug("Switch theme to inactive:", theme_inactive);
-            document.documentElement.setAttribute("data-theme", theme_inactive);
+        if (theme_active && theme_inactive) {
+            if (session?.status == SessionStatus.Active) {
+                console.debug("Switch theme to active:", theme_active);
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    theme_active as string,
+                );
+            } else {
+                console.debug("Switch theme to inactive:", theme_inactive);
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    theme_inactive as string,
+                );
+            }
+        }
+    });
+
+    // Update session task_id when the active task changes
+    $effect(() => {
+        if (session && session.task_id != active_task) {
+            session.switch_task(active_task?.id ?? undefined);
         }
     });
 </script>
@@ -106,7 +133,7 @@
             modifier: false,
             callback: () =>
                 settings_modal?.open ||
-                statistieken_modal?.open ||
+                stats_modal?.open ||
                 taskselector_modal?.open
                     ? null
                     : start_knop?.click(),
@@ -114,10 +141,9 @@
     }}
 />
 
-<Statsmodal bind:statistieken_modal />
-<Taskmodal bind:taskselector_modal />
+<Statsmodal bind:stats_modal />
+<Taskmodal bind:taskselector_modal {tasks} />
 <SettingsModal bind:settings_modal bind:session />
-
 
 {#snippet type_control(type: PomoType)}
     <button
@@ -133,21 +159,21 @@
                     session?.pomo_type == type,
             },
         ]}
-        onclick={() => {
+        onclick={async () => {
             // Check if there is already an active session with a non-zero time_real
             // If so, skip this session
             if (session && session.time_real != 0) {
-                session.skip(settings_context, stats_context, task_context);
+                await session.skip();
             }
 
             // If there is no active session or time_real is zero, start a new session
             session = new Session(
                 type,
                 type == PomoType.Pomo
-                    ? settings_context.settings.pomo_time
+                    ? (pomo_time as number)
                     : type == PomoType.ShortBreak
-                      ? settings_context.settings.short_break_time
-                      : settings_context.settings.long_break_time,
+                      ? (short_break_time as number)
+                      : (long_break_time as number),
             );
         }}
     >
@@ -179,7 +205,7 @@
             </button>
             <button
                 class="btn btn-soft md:btn-md join-item"
-                onclick={() => statistieken_modal?.showModal()}
+                onclick={() => stats_modal?.showModal()}
             >
                 <ChartLine class="size-[1.2em]" />
                 <span class="hidden md:block">{m.statistics()}</span>
@@ -203,15 +229,14 @@
             {@render type_control(PomoType.ShortBreak)}
             {@render type_control(PomoType.LongBreak)}
         </div>
-        {#if session?.task_id != "NO_TASK" && task_context.active_task}
-            {@const active_task = task_context.tasks.find(
-                (task) => task.id == task_context.active_task,
-            )}
+        {#if active_task}
             <span class="btn btn-primary btn-sm">
-                <SquareCheck class="size-[1.2em]"/>{active_task?.title}
+                <SquareCheck class="size-[1.2em]" />{active_task.title}
             </span>
         {:else}
-            <span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]"/>Geen taak</span>
+            <span class="btn btn-primary btn-sm">
+                <Square class="size-[1.2em]" />Geen taak</span
+            >
         {/if}
     </section>
     <section>
@@ -238,35 +263,35 @@
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.pause(settings_context, stats_context, task_context)}
+                    onclick={async () => await session?.pause()}
                 >
                     <Pause class="size-[1.2em]" />
                     {m.pause()}
                 </button>
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
-                    onclick={() => session?.skip(settings_context, stats_context, task_context)}
+                    onclick={async () => await session?.skip()}
                     ><SkipForward class="size-[1.2em]" />{m.skip()}</button
                 >
             {:else if session.status == SessionStatus.Paused}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.start(settings_context, stats_context, task_context)}
+                    onclick={async () => await session?.start()}
                 >
                     <Play class="size-[1.2em]" />
                     {m.resume()}</button
                 >
                 <button
                     class="btn btn-secondary btn-sm md:btn-md"
-                    onclick={() => session?.skip(settings_context, stats_context, task_context)}
+                    onclick={async () => await session?.skip()}
                     ><SkipForward class="size-[1.2em]" /> {m.skip()}</button
                 >
             {:else}
                 <button
                     bind:this={start_knop}
                     class="btn btn-primary btn-wide btn-sm md:btn-md"
-                    onclick={() => session?.start(settings_context, stats_context, task_context)}
+                    onclick={async () => await session?.start()}
                     ><Play class="size-[1.2em]" />{m.start()}</button
                 >
             {/if}
