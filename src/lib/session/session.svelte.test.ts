@@ -21,6 +21,7 @@ describe('session', () => {
     const db = new AppDB();
 
     beforeEach(async () => {
+        vi.useRealTimers();
         await db.delete();
         await db.open();
     });

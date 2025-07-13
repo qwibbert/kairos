@@ -24,3 +24,6 @@ pocketbase
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Utils
+scripts
