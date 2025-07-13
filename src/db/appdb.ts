@@ -16,14 +16,13 @@ export class Task extends Entity<AppDB> {
   status!: TaskStatus;
   parent_id?: string;
   created_at!: Date;
-  updated_at!: Date;
+  updated_at?: Date;
   archived!: number;
 }
 
 export class HistoryEntry extends Entity<AppDB> {
   id!: string;
-  date_started!: Date;
-  date_finished!: Date;
+  date_finished!: Date | undefined;
   pauses!: Pauses[];
   time_aim!: number;
   time_real!: number;
@@ -33,6 +32,7 @@ export class HistoryEntry extends Entity<AppDB> {
   updated_at!: Date;
   pomo_type!: PomoType;
   cycle!: number;
+  paused_at?: Date;
 }
 
 export default class AppDB extends Dexie {

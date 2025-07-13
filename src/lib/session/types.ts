@@ -16,7 +16,7 @@ export enum SessionStatus {
 }
 
 export interface Pauses {
-    timestamp: number,
+    timestamp: Date,
     duration: number,
     task: TaskID | undefined
 }
