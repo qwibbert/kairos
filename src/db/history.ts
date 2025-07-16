@@ -1,5 +1,5 @@
 import { ErrorBase } from "$lib/errors";
-import { Session } from "$lib/session/session.svelte";
+import { elapsed_time_sum, Session } from "$lib/session/session.svelte";
 import { SessionStatus } from "$lib/session/types";
 import { HistoryEntry } from "./appdb";
 import { db } from "./db";
@@ -22,12 +22,12 @@ export async function get_history_entry(id: string): Promise<HistoryEntry | unde
 
 export async function add_history_entry(session: Session): Promise<string> {
     // Check session time
-    if (session.time_aim <= 0) {
+    if (session.target_time <= 0) {
         throw new HistoryError({
             name: "SESSION_INVALID_TIME",
-            message: session.time_aim == 0 ? 'Target time equals 0' : `Target time less than 0 (${session.time_aim})`
+            message: session.target_time == 0 ? 'Target time equals 0' : `Target time less than 0 (${session.target_time})`
         })
-    } else if (session.time_real > session.time_aim) {
+    } else if (elapsed_time_sum(session.elapsed_time) > session.target_time) {
         throw new HistoryError({
             name: "SESSION_INVALID_TIME",
             message: "Elapsed session time exceeded the time target"
@@ -41,8 +41,8 @@ export async function add_history_entry(session: Session): Promise<string> {
         id: session.uuid,
         date_finished: [SessionStatus.Skipped, SessionStatus.Ready].includes(session.status) ? new Date() : undefined,
         pauses: session.pauses,
-        time_aim: session.time_aim,
-        time_real: session.time_real,
+        elapsed_time: session.elapsed_time,
+        target_time: session.target_time,
         vine_id: session.vine_id,
         status: session.status,
         created_at: new Date(),
@@ -81,13 +81,13 @@ export async function update_history_entry(id: string, updates: Partial<HistoryE
     }
 
     // Check target time
-    if (updates.time_aim) {
-        if (updates.time_aim <= 0) {
+    if (updates.target_time) {
+        if (updates.target_time <= 0) {
             throw new HistoryError({
                 name: "ENTRY_INVALID_TIME",
-                message: updates.time_aim == 0 ? 'Target time equals 0' : `Target time less than 0 (${updates.time_aim})`
+                message: updates.target_time == 0 ? 'Target time equals 0' : `Target time less than 0 (${updates.target_time})`
             })
-        } else if (entry.time_real > updates.time_aim) {
+        } else if (elapsed_time_sum(entry.elapsed_time) > updates.target_time) {
             throw new HistoryError({
                 name: "ENTRY_INVALID_TIME",
                 message: "Elapsed session time exceeded the updated time target."
@@ -95,14 +95,13 @@ export async function update_history_entry(id: string, updates: Partial<HistoryE
         }
     }
 
-    // Check elapsed time
-    if (updates.time_real) {
-        if (updates.time_real < 0) {
+    if (updates.elapsed_time) {
+        if (elapsed_time_sum(updates.elapsed_time) < 0) {
             throw new HistoryError({
                 name: "ENTRY_INVALID_TIME",
                 message: 'Elapsed time smaller than 0'
             })
-        } else if (updates.time_real > entry.time_aim) {
+        } else if (elapsed_time_sum(updates.elapsed_time) > entry.target_time) {
             throw new HistoryError({
                 name: "ENTRY_INVALID_TIME",
                 message: "Updated elapsed session time exceeded the time target."
@@ -112,11 +111,14 @@ export async function update_history_entry(id: string, updates: Partial<HistoryE
 
     // Check if updated entry with `READY` status has maximum elapsed time
     if (updates.status == SessionStatus.Ready) {
-        if ((updates.time_real ?? entry.time_real) != (updates.time_aim ?? entry.time_aim)) {
+        const elapsed_time = updates.elapsed_time ? elapsed_time_sum(updates.elapsed_time) : elapsed_time_sum(entry.elapsed_time);
+        const target_time = updates.target_time ?? entry.target_time;
+
+        if (elapsed_time != target_time) {
             throw new HistoryError({
                 name: 'ENTRY_INVALID_TIME',
                 message: `Entry with 'READY' state should have a maximum elapsed time 
-                (elapsed: ${(updates.time_real ?? entry.time_real)} != ${(updates.time_aim ?? entry.time_aim)})`
+                (elapsed: ${elapsed_time} != ${target_time})`
             })
         }
     }
@@ -153,12 +155,12 @@ export async function restore_session_from_history(): Promise<Session | undefine
             }
         }));
 
-        const session = new Session(latest_session.pomo_type, latest_session.time_aim - latest_session.time_real);
+        const session = new Session(latest_session.pomo_type, latest_session.target_time - elapsed_time_sum(latest_session.elapsed_time));
         session.uuid = latest_session.id;
         session.created_at = latest_session.created_at;
         session.status = latest_session.status;
-        session.time_aim = latest_session.time_aim;
-        session.time_real = latest_session.time_real;
+        session.target_time = latest_session.target_time;
+        session.elapsed_time = latest_session.elapsed_time;
         session.pauses = latest_session.pauses;
         session.cycle = latest_session.cycle;
         session.paused_at = latest_session.paused_at;
@@ -167,12 +169,12 @@ export async function restore_session_from_history(): Promise<Session | undefine
     } else if (entries.length == 1) {
         const entry = entries[0];
 
-        const session = new Session(entry.pomo_type, entry.time_aim - entry.time_real);
+        const session = new Session(entry.pomo_type, entry.target_time - elapsed_time_sum(entry.elapsed_time));
         session.uuid = entry.id;
         session.created_at = entry.created_at;
         session.status = entry.status;
-        session.time_aim = entry.time_aim;
-        session.time_real = entry.time_real;
+        session.target_time = entry.target_time;
+        session.elapsed_time = entry.elapsed_time;
         session.pauses = entry.pauses;
         session.cycle = entry.cycle;
         session.paused_at = entry.paused_at;

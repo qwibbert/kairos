@@ -26,8 +26,8 @@ export class HistoryEntry extends Entity<AppDB> {
   id!: string;
   date_finished!: Date | undefined;
   pauses!: Pauses[];
-  time_aim!: number;
-  time_real!: number;
+  target_time!: number;
+  elapsed_time!: Map<string, number>;
   vine_id!: VineID | undefined;
   status!: SessionStatus;
   created_at!: Date;

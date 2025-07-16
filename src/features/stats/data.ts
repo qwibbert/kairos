@@ -17,7 +17,7 @@ interface VineTimeCount {
 }
 
 export async function get_stats_day(day: DateTime, vine_id: string | undefined, entries: HistoryEntry[], vine_map: Map<string, Vine>, children_cache: Map<string, string[]>): Promise<FocusTimeCounter> {
-    const entries_subset = entries.filter(entry => DateTime.fromJSDate(entry.updated_at).hasSame(day, 'day'));
+    const entries_subset = entries.filter(entry => entry.elapsed_time.get(day.toJSDate().toDateString()));
 
     const counter: FocusTimeCounter = {
         per_vine: [],
@@ -25,6 +25,12 @@ export async function get_stats_day(day: DateTime, vine_id: string | undefined, 
     }
 
     for (const entry of entries_subset) {
+        const elapsed_time = entry.elapsed_time.get(day.toJSDate().toDateString());
+
+        if (!elapsed_time) {
+            throw new Error('No elapsed time');
+        }
+
         if (entry.vine_id && vine_id) {
             const vine = vine_map.get(vine_id);
 
@@ -35,11 +41,11 @@ export async function get_stats_day(day: DateTime, vine_id: string | undefined, 
                     counter.per_vine.push({
                         vine_id: vine_id ?? '',
                         vine_title: vine?.title ?? 'Unknown vine',
-                        time: entry.time_real
+                        time: elapsed_time
                     });
                 } else {
                     const object = counter.per_vine[vine_time_count]
-                    counter.per_vine[vine_time_count] = { ...object, time: object.time + entry.time_real };
+                    counter.per_vine[vine_time_count] = { ...object, time: object.time + elapsed_time };
                 }
             } else if (children_cache.get(vine_id)?.includes(entry.vine_id)) {
                 const vine_time_count = counter.per_vine.findIndex(vine_entry => vine_entry.vine_id == vine_id);
@@ -48,11 +54,11 @@ export async function get_stats_day(day: DateTime, vine_id: string | undefined, 
                     counter.per_vine.push({
                         vine_id: vine_id ?? '',
                         vine_title: vine?.title ?? 'Unknown vine',
-                        time: entry.time_real
+                        time: elapsed_time
                     });
                 } else {
                     const object = counter.per_vine[vine_time_count];
-                    counter.per_vine[vine_time_count] = { ...object, time: object.time + entry.time_real };
+                    counter.per_vine[vine_time_count] = { ...object, time: object.time + elapsed_time };
                 }
             }
         } else if (entry.vine_id) {
@@ -66,21 +72,21 @@ export async function get_stats_day(day: DateTime, vine_id: string | undefined, 
                 counter.per_vine.push({
                     vine_id: entry.vine_id,
                     vine_title: 'Unknown vine',
-                    time: entry.time_real
+                    time: elapsed_time
                 });
             } else if (vine_time_count == -1 && vine) {
                 counter.per_vine.push({
                     vine_id: entry.vine_id,
                     vine_title: vine.title,
-                    time: entry.time_real
+                    time: elapsed_time
                 });
             } else {
                 // Previous entries already populated the `per_vine` array with vine details
                 // We just need to update the `time`
-                counter.per_vine[vine_time_count].time += entry.time_real;
+                counter.per_vine[vine_time_count].time += elapsed_time;
             }
         } else {
-            counter.no_vine += entry.time_real;
+            counter.no_vine += elapsed_time;
         }
     }
 
