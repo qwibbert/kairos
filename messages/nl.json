@@ -41,5 +41,12 @@
         "countPlural=other": "Herladen over {seconds} seconden."
       }
     }
-  ]
+  ],
+  "vine": "Tros",
+  "vines": "Trossen",
+  "no_vines_found": "Geen trossen gevonden",
+  "page": "Pagina",
+  "add": "Voeg toe",
+  "new_vine": "Nieuwe tros",
+  "no_vine": "Geen Tros"
 }

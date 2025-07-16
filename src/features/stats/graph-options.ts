@@ -3,10 +3,14 @@ import { DateTime } from "luxon";
 import type { LegendType, SeriesType, SourceType } from "./data";
 
 
-export const tooltip_formatter = (params: Array<object>) => {
+export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
     let htmlString = "";
     if (params.length > 1) {
-        htmlString += `<div><strong>${params[0].axisValue}</strong></div>`;
+        if (mode == 'WEEKS') {
+            htmlString += `<div><strong>${params[0].axisValue}</strong></div>`;
+        } else if (mode == 'MONTHS') {
+            htmlString += `<div><strong>${DateTime.fromISO(params[0].axisValue).toLocaleString({ month: 'long', year: 'numeric' })}</strong></div>`;
+        }
     }
 
     let total_time = 0;
@@ -53,7 +57,7 @@ export const tooltip_formatter = (params: Array<object>) => {
     return htmlString;
 };
 
-export const week_graph_options = {
+export const day_options = {
     color: [] as string[],
     legend: {
         padding: [0, 0, 0, 0],
@@ -69,7 +73,9 @@ export const week_graph_options = {
         name: m.date(),
         nameLocation: "middle",
         nameGap: 30,
-        axisTick: { interval: 0 },
+        axisTick: {
+            interval: 0
+        },
         axisLabel: {
             interval: 0,
             formatter: (value: string) =>
@@ -78,6 +84,11 @@ export const week_graph_options = {
                     weekday: "short",
                 }),
         }, // Remove year from date
+        axisLine: {
+            lineStyle: {
+                color: '#333' as string
+            },
+        }
     },
     dataset: {
         source: [] as SourceType,
@@ -88,6 +99,7 @@ export const week_graph_options = {
         nameLocation: "end",
         nameTextStyle: {
             padding: [0, 0, 0, 30],
+            color: ''
         },
         minInterval: 0.5,
         nameGap: 30,
@@ -95,14 +107,52 @@ export const week_graph_options = {
             formatter: "{value} h",
             margin: 2,
             showMinLabel: false,
+            textStyle: {
+                color: '#333' as string
+            },
         },
         min: 0,
+        axisLine: {
+            lineStyle: {
+                color: '#333' as string
+            },
+        },
+        splitLine: {
+            lineStyle: {
+                color: '#333' as string
+            },
+        }
     },
     series: [] as SeriesType,
     tooltip: {
         trigger: 'axis',
         confine: true,
-        formatter: tooltip_formatter
+        formatter: tooltip_formatter,
+        backgroundColor: '',
+        borderColor: '',
+        textStyle: {
+            color: ''
+        }
     }
 };
 
+export const year_options = {
+    ...day_options,
+    xAxis: {
+        ...day_options.xAxis,
+        axisLabel: {
+            interval: 0,
+            formatter: (value: string) =>
+                DateTime.fromISO(value).toLocaleString({
+                    month: "short"
+                }),
+        },
+    },
+    tooltip: {
+        ...day_options.tooltip,
+        formatter: (params) => tooltip_formatter(params, "MONTHS")
+    }
+};
+
+export const vine_day_options = day_options;
+export const vine_year_options = year_options;

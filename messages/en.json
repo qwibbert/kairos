@@ -41,5 +41,12 @@
         "countPlural=other": "Reloading in {seconds} seconds."
       }
     }
-  ]
+  ],
+  "vine": "Vine",
+  "vines": "Vines",
+  "no_vines_found": "No vines found",
+  "page": "Page",
+  "add": "Add",
+  "new_vine": "New vine",
+  "no_vine": "No Vine"
 }

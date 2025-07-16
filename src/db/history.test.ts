@@ -17,7 +17,7 @@ vi.mock("$lib/session/session.svelte", () => ({
             pauses: [],
             cycle: 1,
             pomo_type,
-            task_id: undefined,
+            vine_id: undefined,
         };
     }),
 }));
@@ -31,7 +31,7 @@ describe("history db functions", () => {
         pauses: [],
         time_aim: 25 * 60,
         time_real: 25 * 60,
-        task_id: undefined,
+        vine_id: undefined,
         status: SessionStatus.Ready,
         created_at: new Date("2025-01-01T00:00:00Z"),
         updated_at: new Date("2025-01-01T00:25:00Z"),
@@ -69,7 +69,7 @@ describe("history db functions", () => {
             expect(entry?.pauses.length).toBe(0);
             expect(entry?.time_aim).toBe(25 * 60);
             expect(entry?.time_real).toBe(0);
-            expect(entry?.task_id).toBe(undefined);
+            expect(entry?.vine_id).toBe(undefined);
             expect(entry?.status).toBe(SessionStatus.Inactive);
             expect(entry?.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(entry?.updated_at.getTime()).toBeCloseTo(Date.now(), -2);
@@ -117,7 +117,7 @@ describe("history db functions", () => {
             expect(entry?.pauses.length).toBe(0);
             expect(entry?.time_aim).toBe(25 * 60);
             expect(entry?.time_real).toBe(25 * 60);
-            expect(entry?.task_id).toBe(undefined);
+            expect(entry?.vine_id).toBe(undefined);
             expect(entry?.status).toBe(SessionStatus.Skipped);
             expect(entry?.created_at.getTime()).toBeLessThan(Date.now());
             expect(entry?.updated_at.getTime()).toBeCloseTo(Date.now(), -2);

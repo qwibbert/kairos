@@ -1,4 +1,3 @@
-import type { TaskID } from "$features/tasks/types";
 
 export enum PomoType {
     Pomo = "POMO",
@@ -18,5 +17,4 @@ export enum SessionStatus {
 export interface Pauses {
     timestamp: Date,
     duration: number,
-    task: TaskID | undefined
 }

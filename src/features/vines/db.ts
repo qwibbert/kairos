@@ -1,28 +1,28 @@
-import type { Task } from "../../db/appdb";
-import { type TaskTreeItem } from "./types";
+import type { Vine } from "../../db/appdb";
+import { type VineTreeItem } from "./types";
 
 /**
- * Builds the task tree and returns the subtree rooted at root_id as an array.
+ * Builds the vine tree and returns the subtree rooted at root_id as an array.
  * If root_id is undefined, returns the full tree.
  * If the root_id is not found, returns an empty array.
  */
-export const build_task_subtree = (tasks: Task[], root_id?: string): TaskTreeItem[] => {
-    const taskMap: { [id: string]: TaskTreeItem } = {};
-    const roots: TaskTreeItem[] = [];
+export const build_vine_subtree = (vines: Vine[], root_id?: string): VineTreeItem[] => {
+    const vine_map: { [id: string]: VineTreeItem } = {};
+    const roots: VineTreeItem[] = [];
 
     // Initialize map and add empty children arrays
-    tasks.forEach(task => {
-        if (task.id === 'NO_TASK') return;
-        taskMap[task.id] = { ...task, children: [] };
+    vines.forEach(vine => {
+        if (vine.id === 'NO_vine') return;
+        vine_map[vine.id] = { ...vine, children: [] };
     });
 
     // Build the tree
-    tasks.forEach(task => {
-        if (task.id === 'NO_TASK') return;
-        if (task.parent_id && taskMap[task.parent_id]) {
-            taskMap[task.parent_id].children!.push(taskMap[task.id]);
+    vines.forEach(vine => {
+        if (vine.id === 'NO_VINE') return;
+        if (vine.parent_id && vine_map[vine.parent_id]) {
+            vine_map[vine.parent_id].children!.push(vine_map[vine.id]);
         } else {
-            roots.push(taskMap[task.id]);
+            roots.push(vine_map[vine.id]);
         }
     });
 
@@ -31,7 +31,7 @@ export const build_task_subtree = (tasks: Task[], root_id?: string): TaskTreeIte
     }
 
     // Helper to find the subtree root
-    function find_subtree_array(nodes: TaskTreeItem[], id: string): TaskTreeItem[] {
+    function find_subtree_array(nodes: VineTreeItem[], id: string): VineTreeItem[] {
         for (const node of nodes) {
             if (node.id === id) {
                 return node.children || [];
@@ -50,7 +50,7 @@ export const build_task_subtree = (tasks: Task[], root_id?: string): TaskTreeIte
     return find_subtree_array(roots, root_id);
 };
 
-export function find_subtree(tree: TaskTreeItem[], id: string): TaskTreeItem | undefined {
+export function find_subtree(tree: VineTreeItem[], id: string): VineTreeItem | undefined {
     for (const node of tree) {
         if (node.id === id) {
             return node;
@@ -63,15 +63,15 @@ export function find_subtree(tree: TaskTreeItem[], id: string): TaskTreeItem | u
     return undefined;
 }
 
-export function get_parent_nodes_from_flat_list(list: Task[], id: string): Task[] {
-    const parents: Task[] = [];
+export function get_parent_nodes_from_flat_list(list: Vine[], id: string): Vine[] {
+    const parents: Vine[] = [];
     let currentId = id;
 
     while (currentId) {
-        const task = list.find(t => t.id === currentId);
-        if (!task) break; // If no task found, exit the loop
-        parents.push(task);
-        currentId = task.parent_id; // Move to the parent
+        const vine = list.find(t => t.id === currentId);
+        if (!vine) break; // If no vine found, exit the loop
+        parents.push(vine);
+        currentId = vine.parent_id; // Move to the parent
     }
 
     return parents.reverse(); // Return in order from root to the given id

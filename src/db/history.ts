@@ -43,7 +43,7 @@ export async function add_history_entry(session: Session): Promise<string> {
         pauses: session.pauses,
         time_aim: session.time_aim,
         time_real: session.time_real,
-        task_id: session.task_id,
+        vine_id: session.vine_id,
         status: session.status,
         created_at: new Date(),
         updated_at: new Date(),

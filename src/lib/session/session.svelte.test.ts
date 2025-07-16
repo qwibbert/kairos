@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AppDB from "../../db/appdb";
-import { add_task } from "../../db/tasks";
+import { add_vine } from "../../db/vines";
 import { Session } from "./session.svelte";
 import { PomoType, SessionStatus } from "./types";
 
@@ -44,7 +44,7 @@ describe('session', () => {
             expect(session.interval).toEqual(0);
             expect(session.minutes).toEqual(1);
             expect(session.seconds).toEqual(40);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
         });
 
@@ -239,7 +239,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(5);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
         });
@@ -260,7 +260,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(5);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -277,7 +277,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(25);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -294,7 +294,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(5);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -311,7 +311,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(25);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -328,7 +328,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(5);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -345,7 +345,7 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(25);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
 
@@ -362,29 +362,29 @@ describe('session', () => {
             expect(session.time_end).toEqual(0);
             expect(session.minutes).toEqual(15);
             expect(session.seconds).toEqual(0);
-            expect(session.task_id).toBeUndefined();
+            expect(session.vine_id).toBeUndefined();
             expect(session.created_at.getTime()).toBeCloseTo(Date.now(), -2);
             expect(session.paused_at).toBeUndefined();
         });
     });
 
-    describe('switch_task function', async () => {
+    describe('switch_vine function', async () => {
         let session = new Session(PomoType.Pomo, 60);
 
         beforeEach(() => {
             session = new Session(PomoType.Pomo, 25 * 60);
         });
 
-        it('switches to a specified task',async () => {
-            const task = await add_task('TEST', 0, undefined);
+        it('switches to a specified vine',async () => {
+            const vine = await add_vine('TEST', 0, undefined);
 
-            await session.switch_task(task);
+            await session.switch_vine(vine);
 ;
-            expect(session.task_id).toEqual(task);
+            expect(session.vine_id).toEqual(vine);
         });
 
-        it('throws when task doesn\'t exist', async () => {
-            await expect(session.switch_task('TEST')).rejects.toThrow(expect.objectContaining({ name: 'NO_TASK_WITH_ID' }));
+        it('throws when vine doesn\'t exist', async () => {
+            await expect(session.switch_vine('TEST')).rejects.toThrow(expect.objectContaining({ name: 'NO_vine_WITH_ID' }));
         });
     })
 })

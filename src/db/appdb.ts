@@ -1,4 +1,4 @@
-import type { TaskID, TaskStatus } from '$features/tasks/types';
+import type { VineID, VineStatus, VineType } from '$features/vines/types';
 import type { Pauses, PomoType, SessionStatus } from '$lib/session/types';
 import Dexie, { Entity, type EntityTable } from 'dexie';
 import type { SettingsKey, SettingType } from './settings';
@@ -9,15 +9,17 @@ export class Setting extends Entity<AppDB> {
   value!: SettingType;
 }
 
-export class Task extends Entity<AppDB> {
-  id!: string;
+export class Vine extends Entity<AppDB> {
+  id!: VineID;
+  type!: VineType;
   title!: string;
-  session_aim!: number;
-  status!: TaskStatus;
-  parent_id?: string;
+  session_aim?: number;
+  status!: VineStatus;
+  parent_id?: VineID;
   created_at!: Date;
   updated_at?: Date;
   archived!: number;
+  public!: number;
 }
 
 export class HistoryEntry extends Entity<AppDB> {
@@ -26,7 +28,7 @@ export class HistoryEntry extends Entity<AppDB> {
   pauses!: Pauses[];
   time_aim!: number;
   time_real!: number;
-  task_id!: TaskID | undefined;
+  vine_id!: VineID | undefined;
   status!: SessionStatus;
   created_at!: Date;
   updated_at!: Date;
@@ -37,18 +39,18 @@ export class HistoryEntry extends Entity<AppDB> {
 
 export default class AppDB extends Dexie {
   settings!: EntityTable<Setting, 'key'>;
-  tasks!: EntityTable<Task, 'id'>;
+  vines!: EntityTable<Vine, 'id'>;
   history!: EntityTable<HistoryEntry, 'id'>
 
   constructor() {
     super('KairosDB');
     this.version(1).stores({
       settings: 'key',
-      tasks: 'id, status, created_at, updated_at, title, parent_id, archived',
-      history: 'id, date_started, date_finished, time_aim, time_real, task_id, status, created_at, updated_at, pomo_type, cycle'
+      vines: 'id, status, created_at, updated_at, title, parent_id, archived, type, public, session_aim',
+      history: 'id, date_finished, time_aim, time_real, vine_id, status, created_at, updated_at, pomo_type, cycle'
     });
     this.settings.mapToClass(Setting);
-    this.tasks.mapToClass(Task);
+    this.vines.mapToClass(Vine);
     this.history.mapToClass(HistoryEntry);
   }
 }

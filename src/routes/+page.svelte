@@ -3,8 +3,8 @@
     import KairosLogo from "$components/ui/kairos-logo.svelte";
     import SettingsModal from "$features/settings/components/settings-modal.svelte";
     import Statsmodal from "$features/stats/components/stats-modal.svelte";
-    import Taskmodal from "$features/tasks/components/task-modal.svelte";
-    import { TaskStatus } from "$features/tasks/types";
+    import VineModal from "$features/vines/components/vine-modal.svelte";
+    import { VineStatus } from "$features/vines/types";
     import { Session } from "$lib/session/session.svelte";
     import { PomoType, SessionStatus } from "$lib/session/types";
     import { shortcut } from "@svelte-put/shortcut";
@@ -16,6 +16,7 @@
     import Square from "lucide-svelte/icons/square";
     import SquareCheck from "lucide-svelte/icons/square-check";
     import { onMount, setContext } from "svelte";
+    import VinesIcon from '../components/ui/vines-icon.svelte';
     import { db } from "../db/db";
     import { restore_session_from_history } from "../db/history";
     import { stateQuery } from "../db/reactivity_helper.svelte";
@@ -49,13 +50,13 @@
     const theme_active = $derived(theme_active_query.current);
     const theme_inactive = $derived(theme_inactive_query.current);
 
-    const tasks_query = stateQuery(
-        async () => db.tasks.where("archived").equals(0).toArray(),
+    const vines_query = stateQuery(
+        async () => db.vines.where("archived").equals(0).toArray(),
         () => [],
     );
-    const tasks = $derived(tasks_query.current);
-    const active_task = $derived(
-        tasks?.find((task) => task.status == TaskStatus.Active),
+    const vines = $derived(vines_query.current);
+    const active_vine = $derived(
+        vines?.find((vine) => vine.status == VineStatus.Active),
     );
 
     // Initialize state
@@ -93,7 +94,7 @@
 
     let settings_modal = $state<HTMLDialogElement>();
     let stats_modal = $state<HTMLDialogElement>();
-    let taskselector_modal = $state<HTMLDialogElement>();
+    let vineselector_modal = $state<HTMLDialogElement>();
     let start_knop = $state<HTMLButtonElement>();
 
     $effect(() => {
@@ -114,10 +115,10 @@
         }
     });
 
-    // Update session task_id when the active task changes
+    // Update session vine_id when the active vine changes
     $effect(() => {
-        if (session && session.task_id != active_task) {
-            session.switch_task(active_task?.id ?? undefined);
+        if (session && session.vine_id != active_vine) {
+            session.switch_vine(active_vine?.id ?? undefined);
         }
     });
 </script>
@@ -134,7 +135,7 @@
             callback: () =>
                 settings_modal?.open ||
                 stats_modal?.open ||
-                taskselector_modal?.open
+                vineselector_modal?.open
                     ? null
                     : start_knop?.click(),
         },
@@ -142,7 +143,7 @@
 />
 
 <Statsmodal bind:stats_modal />
-<Taskmodal bind:taskselector_modal {tasks} />
+<VineModal bind:vineselector_modal {vines} />
 <SettingsModal bind:settings_modal bind:session />
 
 {#snippet type_control(type: PomoType)}
@@ -198,10 +199,10 @@
         <div class="join">
             <button
                 class="btn btn-soft md:btn-md join-item"
-                onclick={() => taskselector_modal?.showModal()}
+                onclick={() => vineselector_modal?.showModal()}
             >
-                <SquareCheck class="size-[1.2em]" />
-                <span class="hidden md:block">Taken</span>
+                <VinesIcon styles={['size-[2.5em]']} />
+                <span class="hidden md:block">{m.vines()}</span>
             </button>
             <button
                 class="btn btn-soft md:btn-md join-item"
@@ -229,9 +230,9 @@
             {@render type_control(PomoType.ShortBreak)}
             {@render type_control(PomoType.LongBreak)}
         </div>
-        {#if active_task}
+        {#if active_vine}
             <span class="btn btn-primary btn-sm">
-                <SquareCheck class="size-[1.2em]" />{active_task.title}
+                <SquareCheck class="size-[1.2em]" />{active_vine.title}
             </span>
         {:else}
             <span class="btn btn-primary btn-sm">

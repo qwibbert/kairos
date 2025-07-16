@@ -1,4 +1,4 @@
-import type { TaskID } from "$features/tasks/types";
+import type { VineID } from "$features/vines/types";
 import { ErrorBase } from "$lib/errors";
 import { db } from "../../db/db";
 import { add_history_entry, HistoryError, update_history_entry } from "../../db/history";
@@ -11,7 +11,7 @@ type ErrorName =
     | 'NOT_ACTIVE'
     | 'FINISHED'
     | 'NOT_PRESENT'
-    | 'NO_TASK_WITH_ID'
+    | 'NO_vine_WITH_ID'
     | 'OTHER';
 
 export class SessionError extends ErrorBase<ErrorName> { }
@@ -28,7 +28,7 @@ export class Session {
     time_end = 0;
     minutes = $state(0);
     seconds = $state(0);
-    task_id = $state<TaskID | undefined>(undefined);
+    vine_id = $state<VineID | undefined>(undefined);
     created_at = new Date();
     paused_at?: Date | undefined;
 
@@ -66,7 +66,7 @@ export class Session {
             console.debug('Paused session detected, saving pause duration and adjusting end time.');
 
             const now = Date.now();
-            this.pauses.push({ timestamp: this.paused_at, duration: Math.floor((now - this.paused_at.getTime()) / 1000), task: this.task_id });
+            this.pauses.push({ timestamp: this.paused_at, duration: Math.floor((now - this.paused_at.getTime()) / 1000) });
             this.time_end = now + ((this.time_aim - this.time_real) * 1000);
         } else if (this.status == SessionStatus.Interrupted) {
             console.debug('Interrupted session detected, adjusting end time.')
@@ -146,7 +146,7 @@ export class Session {
         }
 
         if (this.status == SessionStatus.Paused && this.paused_at) {
-            this.pauses.push({ timestamp: this.paused_at, duration: Math.floor((Date.now() - this.paused_at.getTime()) / 1000), task: this.task_id });
+            this.pauses.push({ timestamp: this.paused_at, duration: Math.floor((Date.now() - this.paused_at.getTime()) / 1000) });
         }
 
         clearInterval(this.interval);
@@ -197,14 +197,14 @@ export class Session {
         this.seconds = this.time_aim % 60;
     }
 
-    switch_task = async (task_id: string | undefined) => {
-        if (task_id && !(await db.tasks.get(task_id))) {
-            throw new SessionError({ name: 'NO_TASK_WITH_ID', message: 'Tried to switch to a task that doesn\'t exist.' });
+    switch_vine = async (vine_id: string | undefined) => {
+        if (vine_id && !(await db.vines.get(vine_id))) {
+            throw new SessionError({ name: 'NO_vine_WITH_ID', message: 'Tried to switch to a vine that doesn\'t exist.' });
         }
 
-        this.task_id = task_id;
-        await update_history_entry(this.uuid, { task_id }).catch((e: HistoryError) => {
-            // A history entry would not yet have been created if the task was changed while the session hasn't been started yet
+        this.vine_id = vine_id;
+        await update_history_entry(this.uuid, { vine_id }).catch((e: HistoryError) => {
+            // A history entry would not yet have been created if the vine was changed while the session hasn't been started yet
             if (e.name != 'NOT_PRESENT') {
                 throw e;
             }
