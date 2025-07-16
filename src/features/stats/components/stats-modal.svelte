@@ -48,7 +48,7 @@
         LegendComponent,
     ]);
 
-    let view = $state<"DAY" | "YEAR">("YEAR");
+    let view = $state<'DAY' | 'YEAR'>('DAY');
     const today = DateTime.now();
     let delta_weeks = $state(0);
     let delta_years = $state(0);
