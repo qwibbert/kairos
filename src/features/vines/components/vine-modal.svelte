@@ -13,8 +13,14 @@
     import VinesIcon from "$components/ui/vines-icon.svelte";
     import VineStatsModal from "$features/stats/components/vine-stats-modal.svelte";
     import { getContext } from "svelte";
+    import { dndzone } from "svelte-dnd-action";
     import type { Vine } from "../../../db/appdb";
-    import { add_vine, archive_vine, get_vine, update_vine } from "../../../db/vines";
+    import {
+        add_vine,
+        archive_vine,
+        get_vine,
+        update_vine,
+    } from "../../../db/vines";
     import * as m from "../../../paraglide/messages";
     import { build_vine_subtree, get_parent_nodes_from_flat_list } from "../db";
     import { VineStatus, VineType, type VineTreeItem } from "../types";
@@ -41,27 +47,13 @@
         }
     });
     let page = $state(1);
-    let vines_list = $derived(
-        vines ? build_vine_subtree(vines, parent_vine) : [],
-    );
-    let paginated_vines = $derived.by(() => {
-        if (!vines_list) return [];
-
-        const length = vines_list.length;
-
-        if (length > 5) {
-            const start = (page - 1) * 5;
-            const end = start + 5;
-            return vines_list.slice(start, end);
-        } else {
-            return vines_list;
-        }
-    });
+    let vines_list_state = $state<VineTreeItem[]>([]);
+    let paginated_vines = $state<VineTreeItem[]>([]);
 
     let pages_count = $derived.by(() => {
-        if (!vines_list) return;
+        if (!vines_list_state) return;
 
-        const length = vines_list.length;
+        const length = vines_list_state.length;
 
         if (length > 5) {
             return Math.ceil(length / 5);
@@ -82,14 +74,84 @@
         }
     });
 
+    $effect(() => {
+        if (vines) {
+            vines_list_state = build_vine_subtree(vines, parent_vine).toSorted(
+                (a, b) => a.position - b.position,
+            );
+        }
+    });
+
+    $effect(() => {
+        const length = vines_list_state.length;
+
+        if (length > 5) {
+            const start = (page - 1) * 5;
+            const end = start + 5;
+            paginated_vines = vines_list_state.slice(start, end);
+        } else {
+            paginated_vines = vines_list_state;
+        }
+    });
     let vine_stats_modal = $state<HTMLDialogElement | undefined>();
     let vine_to_view = $state<Vine | undefined>();
+
+    function handleDndConsider(e) {
+        const id: string = e.detail.info.id;
+
+        if (e.detail.items.length != paginated_vines.length) {
+            return;
+        }
+
+        paginated_vines = e.detail.items;
+    }
+
+    async function handleDndFinalize(e) {
+        const id: string = e.detail.info.id;
+
+        if (e.detail.info.trigger == "droppedIntoAnother") {
+            return;
+        }
+
+        const new_position =
+            (page - 1) * 5 +
+            (e.detail.items as VineTreeItem[]).findIndex(
+                (item) => item.id == id,
+            );
+
+        await update_vine(id, { position: new_position });
+    }
+
+    async function handleZonePageDownFinalize(e) {
+        const id: string = e.detail.info.id;
+
+        const new_position = (page - 1) * 5 - 1;
+
+        await update_vine(id, { position: new_position });
+    }
+
+    async function handleZonePageUpFinalize(e) {
+        const id: string = e.detail.info.id;
+
+        let new_position = page * 5;
+
+        await update_vine(id, { position: new_position + 1 });
+    }
+
+    async function handleChangeParentFinalize(e, parent_id: string) {
+        const id: string = e.detail.info.id;
+
+        await update_vine(id, { parent_id });
+    }
 </script>
 
 <VineStatsModal bind:vine={vine_to_view} bind:vine_stats_modal />
 
 {#snippet vine_list_item(vine: VineTreeItem)}
-    <li class="list-row flex items-center justify-between w-full">
+    <li
+        class="list-row flex items-center justify-between w-full"
+        aria-label={vine.title}
+    >
         <div class="flex flex-row items-center gap-2">
             {#if vine_editing == vine.id}
                 <fieldset class="fieldset">
@@ -140,6 +202,18 @@
             />
         {:else if vine.children && vine.children.length > 0}
             <button
+                use:dndzone={{
+                    items: [],
+                    type: page.toString(),
+                    dropTargetClasses: [
+                        "border-4",
+                        "border-primary",
+                        "animate-pulse",
+                    ],
+                    dropTargetStyle: {},
+                    centreDraggedOnCursor: true,
+                }}
+                onfinalize={(e) => handleChangeParentFinalize(e, vine.id)}
                 onclick={() => {
                     if (parent_override) {
                         parent_override = undefined;
@@ -148,10 +222,10 @@
                     parent_override = vine.id;
                     page = 1;
                 }}
-                class="btn btn-link text-base-content">{vine.title}</button
+                class="btn btn-link text-base-content absolute ml-[25%] max-w-[50%]">{vine.title}</button
             >
         {:else}
-            <p>{vine.title}</p>
+            <p class="absolute ml-[28.5%]">{vine.title}</p>
         {/if}
         <div class="join bg-base-300 rounded-box">
             {#if vine_editing == vine.id}
@@ -238,7 +312,7 @@
                             undefined,
                             VineType.Task,
                             undefined,
-                            resolved_parent_vine,
+                            resolved_parent_vine ?? "",
                         );
 
                         // Jump to the last page after adding a vine
@@ -248,16 +322,18 @@
                         vine_editing = vine;
                     }}><CirclePlus class="size-[1.2em]" /> {m.add()}</button
                 >
-                <button class="btn btn-secondary" onclick={async () => {
-                    if (parent_vine) {
-                        vine_to_view = await get_vine(parent_vine ?? '');
-                    
-                    } else {
-                        vine_to_view = undefined;
-                    }
-                    
-                    vine_stats_modal?.showModal();
-                }}><ChartLine class="size-[1.2em]"/> Vine Stats</button>
+                <button
+                    class="btn btn-secondary"
+                    onclick={async () => {
+                        if (parent_vine) {
+                            vine_to_view = await get_vine(parent_vine ?? "");
+                        } else {
+                            vine_to_view = undefined;
+                        }
+
+                        vine_stats_modal?.showModal();
+                    }}><ChartLine class="size-[1.2em]" /> Vine Stats</button
+                >
             </div>
 
             <div
@@ -271,7 +347,21 @@
 
                     <div class="breadcrumbs text-sm self-start">
                         <ul>
-                            <li>
+                            <li
+                                use:dndzone={{
+                                    items: [],
+                                    type: page.toString(),
+                                    dropTargetClasses: [
+                                        "border-4",
+                                        "border-primary",
+                                        "animate-pulse",
+                                    ],
+                                    dropTargetStyle: {},
+                                    centreDraggedOnCursor: true,
+                                }}
+                                onfinalize={(e) =>
+                                    handleChangeParentFinalize(e, "")}
+                            >
                                 <button
                                     class="btn btn-link text-base-content"
                                     onclick={() => {
@@ -284,7 +374,24 @@
                                 >
                             </li>
                             {#each parents as parent (parent.id)}
-                                <li>
+                                <li
+                                    use:dndzone={{
+                                        items: [],
+                                        type: page.toString(),
+                                        dropTargetClasses: [
+                                            "border-4",
+                                            "border-primary",
+                                            "animate-pulse",
+                                        ],
+                                        dropTargetStyle: {},
+                                        centreDraggedOnCursor: true,
+                                    }}
+                                    onfinalize={(e) =>
+                                        handleChangeParentFinalize(
+                                            e,
+                                            parent.id,
+                                        )}
+                                >
                                     <button
                                         class="btn btn-link text-base-content flex items-center"
                                         onclick={() => {
@@ -297,7 +404,18 @@
                         </ul>
                     </div>
                 {/if}
-                <ul class="list w-full">
+                <ul
+                    use:dndzone={{
+                        items: paginated_vines,
+                        dropTargetStyle: {},
+                        type: page.toString(),
+                        centreDraggedOnCursor: true,
+                    }}
+                    aria-label={"Vine List"}
+                    onconsider={handleDndConsider}
+                    onfinalize={handleDndFinalize}
+                    class="list w-full"
+                >
                     {#each paginated_vines as vine (vine.id)}
                         {@render vine_list_item(vine)}
                     {:else}
@@ -313,15 +431,43 @@
                 </ul>
 
                 {#if pages_count && pages_count > 1}
-                    <div class="join">
+                    <div class="join my-5">
                         <button
-                            class="join-item btn"
+                            use:dndzone={{
+                                items: [],
+                                dragDisabled: page <= 1,
+                                dropFromOthersDisabled: page <= 1,
+                                type: page.toString(),
+                                centreDraggedOnCursor: true,
+                                dropTargetClasses: [
+                                    "border-4",
+                                    "border-primary",
+                                    "animate-pulse",
+                                ],
+                                dropTargetStyle: {},
+                            }}
+                            onfinalize={handleZonePageDownFinalize}
+                            class="join-item btn w-32"
                             onclick={() => (page -= 1)}
                             disabled={page <= 1}>«</button
                         >
                         <button class="join-item btn">{m.page()} {page}</button>
                         <button
-                            class="join-item btn"
+                            use:dndzone={{
+                                items: [],
+                                dragDisabled: page == pages_count,
+                                dropFromOthersDisabled: page == pages_count,
+                                type: page.toString(),
+                                dropTargetClasses: [
+                                    "border-4",
+                                    "border-primary",
+                                    "animate-pulse",
+                                ],
+                                centreDraggedOnCursor: true,
+                                dropTargetStyle: {},
+                            }}
+                            onfinalize={handleZonePageUpFinalize}
+                            class="join-item btn w-32"
                             onclick={() => (page += 1)}
                             disabled={page == pages_count}>»</button
                         >

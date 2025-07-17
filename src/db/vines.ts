@@ -54,13 +54,15 @@ export async function get_vine(id: string): Promise<Vine | undefined> {
   });
 }
 
-export async function add_vine(title: string = m.new_vine(), type: VineType, session_aim: number | undefined = undefined, parent_id: string | undefined = undefined): Promise<string> {
+export async function add_vine(title: string = m.new_vine(), type: VineType, session_aim: number | undefined = undefined, parent_id: string): Promise<string> {
   if (title == '') {
     throw new VineError({ name: 'EMPTY_TITLE', message: 'An empty string was provided as vine title.' });
   }
+  const length = await db.vines.where('parent_id').equals(parent_id).sortBy("position").then(result => result.length);
 
   return await db.vines.add({
     id: crypto.randomUUID(),
+    position: length,
     type: VineType.Task,
     title,
     session_aim,
@@ -93,6 +95,49 @@ export async function update_vine(id: string, updates: Partial<Vine>) {
     });
   }
 
+  if (updates.position != undefined) {
+    const vine = await get_vine(id);
+
+    if (!vine) {
+      throw new VineError({ name: 'NOT_PRESENT', message: 'Could not update position of vine with id ' + id });
+    }
+
+    await db.transaction('rw', [db.vines], async () => {
+      // Get all siblings (including the current vine)
+      const siblings = await db.vines
+        .where('parent_id')
+        .equals(vine.parent_id)
+        .and(entry => entry.archived != 1)
+        .sortBy('position');
+
+      // Remove the current vine from the array
+      const oldIndex = siblings.findIndex(v => v.id === id);
+      if (oldIndex === -1) throw new VineError({ name: 'NOT_PRESENT', message: 'Vine not found among siblings.' });
+      const [movingVine] = siblings.splice(oldIndex, 1);
+
+      // Clamp new position
+      const new_position = Math.max(0, Math.min(updates.position!, siblings.length));
+
+      // Insert at new position
+      siblings.splice(new_position, 0, movingVine);
+
+      // Update positions in DB
+      await Promise.all(
+        siblings.map((v, idx) =>
+          db.vines.update(v.id, { position: idx, updated_at: new Date() }).catch(() => {
+            throw new VineError({ name: 'OTHER', message: 'A not further specified error occured while updating vine positions' })
+          })
+        )
+      );
+    })
+  }
+
+  if (updates.parent_id != undefined) {
+    const length = await db.vines.where('parent_id').equals(updates.parent_id).sortBy("position").then(result => result.length);
+
+    await db.vines.update(id, { parent_id: updates.parent_id, position: length });
+  }
+
   await db.vines.update(id, { ...updates, updated_at: new Date() }).catch(e => {
     throw new VineError({ name: 'OTHER', message: 'A not further specified error occured while updating vine.', cause: e });
   }).then(result => {
@@ -107,7 +152,7 @@ export async function archive_vine(id: string) {
     // Collect all ids to delete (the vine and its descendants)
     const children_to_delete = await get_all_children(id);
 
-    const changes = [...children_to_delete, id].map(vine_id => ({ key: vine_id, changes: { archived: 1 } }));
+    const changes = [...children_to_delete, id].map(vine_id => ({ key: vine_id, changes: { archived: 1, position: -1 } }));
 
     await db.vines.bulkUpdate(changes).catch(e => {
       throw new VineError({ name: 'OTHER', message: 'A not further specified error occured while archiving vine.', cause: e });

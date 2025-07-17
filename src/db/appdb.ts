@@ -11,11 +11,12 @@ export class Setting extends Entity<AppDB> {
 
 export class Vine extends Entity<AppDB> {
   id!: VineID;
+  position!: number;
   type!: VineType;
   title!: string;
   session_aim?: number;
   status!: VineStatus;
-  parent_id?: VineID;
+  parent_id!: VineID;
   created_at!: Date;
   updated_at?: Date;
   archived!: number;
@@ -46,7 +47,7 @@ export default class AppDB extends Dexie {
     super('KairosDB');
     this.version(1).stores({
       settings: 'key',
-      vines: 'id, status, created_at, updated_at, title, parent_id, archived, type, public, session_aim',
+      vines: 'id, status, created_at, updated_at, title, parent_id, archived, type, public, session_aim, position',
       history: 'id, date_finished, time_aim, time_real, vine_id, status, created_at, updated_at, pomo_type, cycle'
     });
     this.settings.mapToClass(Setting);

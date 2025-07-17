@@ -376,6 +376,11 @@ export function vines_pie_chart(vine_id: VineID | undefined, entries: HistoryEnt
         }
 
         const vine = vine_map.get(entry.vine_id ?? '');
+
+        if (vine?.archived) {
+            continue;
+        }
+        
         const parent_vine = vine_map.get(vine?.parent_id ?? '');
 
         const data_index = data.findIndex(data_entry => vine_id || !parent_vine ? data_entry.name == vine?.title : data_entry.name == parent_vine?.title);
