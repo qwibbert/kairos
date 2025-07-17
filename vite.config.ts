@@ -5,6 +5,13 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [paraglideVitePlugin({ project: './project.inlang', 
-		outdir: './src/paraglide', strategy: ['preferredLanguage', 'baseLocale'] }), enhancedImages(), tailwindcss(), sveltekit()],
+	plugins: [paraglideVitePlugin({
+		project: './project.inlang',
+		outdir: './src/paraglide', strategy: ['preferredLanguage', 'baseLocale']
+	}), enhancedImages(), tailwindcss(), sveltekit()],
+	build: {
+		rollupOptions: {
+			external: ['src/lib/paraglide/messages'],
+		},
+	},
 });
