@@ -1,3 +1,5 @@
+import type { VineID } from "$features/vines/types";
+import { elapsed_time_sum } from "$lib/session/session.svelte";
 import type { PomoType } from "$lib/session/types";
 import { DateTime } from "luxon";
 import type { HistoryEntry, Vine } from "../../db/appdb";
@@ -118,17 +120,18 @@ export async function get_stats_month(month: DateTime, vine_id: string | undefin
     return counter;
 }
 
-export type SeriesType = { id: string, stack: string, name: string, type: string }[];
-export type SourceType = (string | number)[][];
-export type LegendType = { name: string }[];
-export async function get_day_histogram_echarts(day: DateTime, pomo_type: PomoType, vine_id: string | undefined): Promise<[SourceType, SeriesType, LegendType]> {
+export type HistogramSeriesType = { id: string, stack: string, name: string, type: string }[];
+export type HistogramSourceType = (string | number)[][];
+export type HistogramLegendType = { name: string }[];
+
+export async function get_day_histogram_echarts(day: DateTime, pomo_type: PomoType, vine_id: string | undefined): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
     const start_day = day.startOf('week');
 
-    const source: SourceType = [
+    const source: HistogramSourceType = [
         ['day']
     ];
 
-    const series: SeriesType = [];
+    const series: HistogramSeriesType = [];
 
     const legend = [];
 
@@ -176,14 +179,15 @@ export async function get_day_histogram_echarts(day: DateTime, pomo_type: PomoTy
             source[i + 1][1] = day_stats.no_vine / 3600;
         }
 
+        let vine_i = 0;
         for (const vine of day_stats.per_vine) {
-            const children = vine_children_cache.get(vine.vine_id);
+            const children = vine_children_cache.get(vine.vine_id)?.map(child_id => vine_map.get(child_id));
 
-            if (children?.length && !vine_id) {
+            if (children && children.length > 0 && children.find(child => child?.archived == 0) && !vine_id) {
                 continue;
             }
 
-            const vine_index = day_stats.per_vine.findIndex(vine_entry => vine.vine_id == vine_entry.vine_id);
+            vine_i++;
 
             if (!series.some(s => s.id == vine.vine_id)) {
                 series.push({
@@ -194,12 +198,12 @@ export async function get_day_histogram_echarts(day: DateTime, pomo_type: PomoTy
                 });
                 legend.push({ name: vine.vine_title });
 
-                if (!source[0][vine_index + (vine_id ? 1 : 2)]) {
-                    source[0][vine_index + (vine_id ? 1 : 2)] = vine.vine_title;
+                if (!source[0][vine_i + (vine_id ? 0 : 1)]) {
+                    source[0][vine_i + (vine_id ? 0 : 1)] = vine.vine_title;
                 }
-                source[i + 1][vine_index + (vine_id ? 1 : 2)] = vine.time / 3600;
+                source[i + 1][vine_i + (vine_id ? 0 : 1)] = vine.time / 3600;
             } else {
-                source[i + 1][vine_index + (vine_id ? 1 : 2)] = vine.time / 3600;
+                source[i + 1][vine_i + (vine_id ? 0 : 1)] = vine.time / 3600;
             }
         }
     }
@@ -240,14 +244,14 @@ export async function get_day_histogram_echarts(day: DateTime, pomo_type: PomoTy
     return [source, series, legend];
 }
 
-export async function get_year_histogram_echarts(day: DateTime, pomo_type: PomoType, vine_id: string | undefined): Promise<[SourceType, SeriesType, LegendType]> {
+export async function get_year_histogram_echarts(day: DateTime, pomo_type: PomoType, vine_id: string | undefined): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
     const start_day = day.startOf('month');
 
-    const source: SourceType = [
+    const source: HistogramSourceType = [
         ['month']
     ];
 
-    const series: SeriesType = [];
+    const series: HistogramSeriesType = [];
 
     const legend = vine_id ? [] : [{ name: m.no_vine() }];
 
@@ -296,14 +300,15 @@ export async function get_year_histogram_echarts(day: DateTime, pomo_type: PomoT
             source[i + 1][1] = month_stats.no_vine / 3600;
         }
 
+        let vine_i = 0;
         for (const vine of month_stats.per_vine) {
-            const children = vine_children_cache.get(vine.vine_id);
+            const children = vine_children_cache.get(vine.vine_id)?.map(child_id => vine_map.get(child_id));
 
-            if (children?.length && !vine_id) {
+            if (children && children.length > 0 && children.find(child => child?.archived == 0) && !vine_id) {
                 continue;
             }
 
-            const vine_index = month_stats.per_vine.findIndex(vine_entry => vine.vine_id == vine_entry.vine_id);
+            vine_i++;
 
             if (!series.some(s => s.id == vine.vine_id)) {
                 series.push({
@@ -314,12 +319,12 @@ export async function get_year_histogram_echarts(day: DateTime, pomo_type: PomoT
                 });
                 legend.push({ name: vine.vine_title });
 
-                if (!source[0][vine_index + 1]) {
-                    source[0][vine_index + 1] = vine.vine_title;
+                if (!source[0][vine_i + (vine_id ? 0 : 1)]) {
+                    source[0][vine_i + (vine_id ? 0 : 1)] = vine.vine_title;
                 }
-                source[i + 1][vine_index + 1] = vine.time / 3600;
+                source[i + 1][vine_i + (vine_id ? 0 : 1)] = vine.time / 3600;
             } else {
-                source[i + 1][vine_index + 1] = vine.time / 3600;
+                source[i + 1][vine_i + (vine_id ? 0 : 1)] = vine.time / 3600;
             }
         }
     }
@@ -357,4 +362,80 @@ export async function get_year_histogram_echarts(day: DateTime, pomo_type: PomoT
     }
 
     return [source, series, legend];
+}
+
+type PieChartData = { name: string, value: number }[];
+
+export function vines_pie_chart(vine_id: VineID | undefined, entries: HistoryEntry[], vine_map: Map<string, Vine>, children_map: Map<string, string[]>): PieChartData {
+    const data: PieChartData = [];
+    const parent_vine = vine_map.get(vine_id ?? '');
+
+    for (const entry of entries) {
+        if (vine_id && !children_map.get(vine_id)?.includes(entry?.vine_id ?? '')) {
+            continue;
+        }
+
+        const vine = vine_map.get(entry.vine_id ?? '');
+        const parent_vine = vine_map.get(vine?.parent_id ?? '');
+
+        const data_index = data.findIndex(data_entry => vine_id || !parent_vine ? data_entry.name == vine?.title : data_entry.name == parent_vine?.title);
+
+        if (data_index == -1) {
+            // Calculate the elapsed_time of all the child tasks
+            const children = children_map.get(entry?.vine_id ?? '');
+            let children_elapsed_time = 0;
+
+            if (children) {
+                for (const child_id of children) {
+                    const child = vine_map.get(child_id);
+
+                    if (child?.archived) {
+                        continue;
+                    }
+
+                    if (child) {
+                        const entries_with_child = entries.filter(e => e.vine_id == child.id);
+
+                        for (const child_entry of entries_with_child) {
+                            children_elapsed_time += elapsed_time_sum(child_entry.elapsed_time);
+                        }
+                    }
+                }
+            }
+
+            data.push({
+                name: vine_id || !parent_vine ? vine?.title ?? '' : parent_vine?.title ?? '',
+                value: children_elapsed_time + elapsed_time_sum(entry.elapsed_time)
+            });
+        } else {
+            data[data_index] = { ...data[data_index], value: data[data_index].value + elapsed_time_sum(entry.elapsed_time) }
+        }
+    }
+
+    // No data was found, we need to distribute the pie chart evenly
+    if (data.length == 0) {
+        if (parent_vine) {
+            for (const child_id of children_map.get(parent_vine.id) ?? []) {
+                const child = vine_map.get(child_id);
+
+                if (child?.archived) {
+                    continue;
+                }
+
+                data.push({
+                    name: child?.title ?? 'Unknown Task',
+                    value: 0
+                });
+            }
+        } else {
+            for (const parentless_vine of vine_map.values().filter(entry => (entry.parent_id ? false : true) && entry.archived == 0)) {
+                data.push({
+                    name: parentless_vine.title,
+                    value: 0
+                });
+            }
+        }
+    }
+
+    return data;
 }

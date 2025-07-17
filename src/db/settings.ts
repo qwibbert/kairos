@@ -45,8 +45,10 @@ export const DEFAULT_SETTINGS = {
     long_break_time: 15 * 60,
     ui_sounds: true,
     tick_sound: true,
+    timer_sound: true,
     ui_sounds_volume: 100,
     tick_sound_volume: 100,
+    timer_sound_volume: 100,
     theme_inactive: Theme.LIGHT,
     theme_active: Theme.DARK
 };
@@ -63,6 +65,9 @@ export enum SettingsKey {
 
   tick_sound = 'tick_sound',
   tick_sound_volume = 'tick_sound_volume',
+
+  timer_sound = 'timer_sound',
+  timer_sound_volume = 'timer_sound_volume',
 
   theme_active = 'theme_active',
   theme_inactive = 'theme_inactive',

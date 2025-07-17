@@ -6,11 +6,18 @@
     import ChevronRight from "lucide-svelte/icons/chevron-right";
     import { DateTime } from "luxon";
     import { Vine } from "../../../db/appdb";
+    import { db } from "../../../db/db";
+    import { get_all_children } from "../../../db/vines";
     import {
         get_day_histogram_echarts,
         get_year_histogram_echarts,
+        vines_pie_chart,
     } from "../data";
-    import { vine_day_options, vine_year_options } from "../graph-options";
+    import {
+        vine_day_options,
+        vine_pie_options,
+        vine_year_options,
+    } from "../graph-options";
 
     interface Props {
         vine_stats_modal?: HTMLDialogElement;
@@ -21,6 +28,8 @@
         $props();
 
     let view = $state<"DAY" | "YEAR">("DAY");
+    let chart = $state<"HISTOGRAM" | "PIE">("PIE");
+
     const today = DateTime.now();
     let delta_weeks = $state(0);
     let delta_years = $state(0);
@@ -31,21 +40,26 @@
 
     let time_today = $state(0);
 
-    let histogram = $state<echarts.EChartsType | undefined>(undefined);
+    let histogram = $state<echarts.EChartsType | undefined>();
+    let pie_chart = $state<echarts.EChartsType | undefined>();
 
     $effect(() => {
-        if (vine && view == "DAY" && delta_weeks >= 0) {
+        if (vine && chart == "HISTOGRAM" && view == "DAY" && delta_weeks >= 0) {
             load_histogram();
-        } else if (vine && view == "YEAR" && delta_years >= 0) {
+        } else if (
+            vine &&
+            chart == "HISTOGRAM" &&
+            view == "YEAR" &&
+            delta_years >= 0
+        ) {
             load_histogram();
+        }
+
+        if (chart == "PIE") {
+            load_pie_chart();
         }
     });
 
-    $effect(() => {
-        if (vine) {
-            load_histogram();
-        }
-    })
     function load_colors() {
         const style = window.getComputedStyle(document.body);
 
@@ -67,6 +81,7 @@
 
         vine_day_options.color = colors;
         vine_year_options.color = colors;
+        vine_pie_options.color = colors;
         vine_day_options.tooltip.backgroundColor =
             style.getPropertyValue("--color-base-100");
         vine_year_options.tooltip.backgroundColor =
@@ -89,24 +104,18 @@
         vine_year_options.legend.textStyle.color = style.getPropertyValue(
             "--color-base-content",
         );
-        vine_day_options.xAxis.axisLine.lineStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
-        vine_year_options.xAxis.axisLine.lineStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
-        vine_day_options.yAxis.splitLine.lineStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
-        vine_year_options.yAxis.splitLine.lineStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
-        vine_day_options.yAxis.axisLabel.textStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
-        vine_year_options.yAxis.axisLabel.textStyle.color = style.getPropertyValue(
-            "--color-base-content",
-        );
+        vine_day_options.xAxis.axisLine.lineStyle.color =
+            style.getPropertyValue("--color-base-content");
+        vine_year_options.xAxis.axisLine.lineStyle.color =
+            style.getPropertyValue("--color-base-content");
+        vine_day_options.yAxis.splitLine.lineStyle.color =
+            style.getPropertyValue("--color-base-content");
+        vine_year_options.yAxis.splitLine.lineStyle.color =
+            style.getPropertyValue("--color-base-content");
+        vine_day_options.yAxis.axisLabel.textStyle.color =
+            style.getPropertyValue("--color-base-content");
+        vine_year_options.yAxis.axisLabel.textStyle.color =
+            style.getPropertyValue("--color-base-content");
         vine_day_options.yAxis.nameTextStyle.color = style.getPropertyValue(
             "--color-base-content",
         );
@@ -114,10 +123,18 @@
             "--color-base-content",
         );
 
-        if (view == "DAY") {
+        vine_pie_options.series[0].label.color = formatHex(
+            style.getPropertyValue("--color-base-content"),
+        );
+
+        if (view == "DAY" && chart == "HISTOGRAM") {
             histogram?.setOption(vine_day_options);
-        } else if (view == "YEAR") {
+        } else if (view == "YEAR" && chart == "HISTOGRAM") {
             histogram?.setOption(vine_year_options);
+        }
+
+        if (chart == "PIE") {
+            pie_chart?.setOption(vine_pie_options);
         }
     }
 
@@ -159,6 +176,47 @@
         load_colors();
         histogram.resize();
     }
+
+    async function load_pie_chart() {
+        pie_chart?.clear();
+
+        const vines = await db.vines.toArray();
+        const vine_map = new Map(vines.map((v) => [v.id, v]));
+        const vine_children_cache = new Map<string, string[]>();
+
+        // Precompute vine children for all vine_ids
+        for (const vine of vines) {
+            vine_children_cache.set(vine.id, await get_all_children(vine.id));
+        }
+
+        const all_entries = await db.history
+            .where("pomo_type")
+            .equals(PomoType.Pomo)
+            .and((entry) => (entry.vine_id ? true : false))
+            .toArray();
+
+        if (!pie_chart) {
+            pie_chart = echarts.init(
+                document.getElementById("vine_pie_chart"),
+                null,
+                {
+                    height: "auto",
+                    width: "auto",
+                },
+            );
+        }
+
+        vine_pie_options.series[0].data = vines_pie_chart(
+            vine?.id,
+            all_entries,
+            vine_map,
+            vine_children_cache,
+        );
+
+        load_colors();
+
+        pie_chart?.resize();
+    }
 </script>
 
 <svelte:window on:resize={() => histogram?.resize()} />
@@ -173,48 +231,77 @@
         </form>
         <h3 class="text-lg font-bold self-baseline">{vine?.title}</h3>
         <div class="flex flex-col mt-5 items-center gap-3 w-full">
-            <select bind:value={view} class="select">
-                <option value="DAY">Day view</option>
-                <option value="YEAR">Year view</option>
-            </select>
-            <div class="flex flex-row items-center justify-between mb-2 w-full">
-                <button
-                    class="btn btn-xs btn-primary"
-                    onclick={() =>
-                        view == "DAY" ? (delta_weeks += 1) : (delta_years += 1)}
-                    ><ChevronLeft class="size-[1.5em]" /></button
-                >
-                {#if weekStart && weekEnd && view == "DAY"}
-                    <span class="mx-2 text-sm">
-                        {weekStart.toLocaleString({
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                        })} - {weekEnd.toLocaleString({
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                        })}
-                    </span>
-                {:else if view == "YEAR"}
-                    <span class="mx-2 text-sm">
-                        {today.minus({ years: delta_years }).year}
-                    </span>
+            <div class="flex flex-row justify-evenly w-full gap-2">
+                <select bind:value={chart} class="select">
+                    <option value="PIE">Pie chart</option>
+                    {#if vine}
+                        <option value="HISTOGRAM">Histogram</option>
+                    {/if}
+                </select>
+                {#if chart == "HISTOGRAM"}
+                    <select bind:value={view} class="select">
+                        <option value="DAY">Day view</option>
+                        <option value="YEAR">Year view</option>
+                    </select>
                 {/if}
-                <button
-                    class="btn btn-xs btn-primary"
-                    disabled={view == "DAY"
-                        ? delta_weeks <= 0
-                        : view == "YEAR"
-                          ? delta_years <= 0
-                          : true}
-                    onclick={() =>
-                        view == "DAY" ? (delta_weeks -= 1) : (delta_years -= 1)}
-                    ><ChevronRight class="size-[1.5em]" /></button
-                >
             </div>
 
-            <div id="vine_histogram" class="w-full h-[50vh]"></div>
+            {#if chart == "HISTOGRAM"}
+                <div
+                    class="flex flex-row items-center justify-between mb-2 w-full"
+                >
+                    <button
+                        class="btn btn-xs btn-primary"
+                        onclick={() =>
+                            view == "DAY"
+                                ? (delta_weeks += 1)
+                                : (delta_years += 1)}
+                        ><ChevronLeft class="size-[1.5em]" /></button
+                    >
+                    {#if weekStart && weekEnd && view == "DAY"}
+                        <span class="mx-2 text-sm">
+                            {weekStart.toLocaleString({
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                            })} - {weekEnd.toLocaleString({
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </span>
+                    {:else if view == "YEAR"}
+                        <span class="mx-2 text-sm">
+                            {today.minus({ years: delta_years }).year}
+                        </span>
+                    {/if}
+                    <button
+                        class="btn btn-xs btn-primary"
+                        disabled={view == "DAY"
+                            ? delta_weeks <= 0
+                            : view == "YEAR"
+                              ? delta_years <= 0
+                              : true}
+                        onclick={() =>
+                            view == "DAY"
+                                ? (delta_weeks -= 1)
+                                : (delta_years -= 1)}
+                        ><ChevronRight class="size-[1.5em]" /></button
+                    >
+                </div>
+            {/if}
+
+            <div
+                id="vine_histogram"
+                class="w-full h-[50vh]"
+                class:hidden={chart != "HISTOGRAM"}
+            ></div>
+
+            <div
+                id="vine_pie_chart"
+                class="w-full h-[50vh]"
+                class:hidden={chart != "PIE"}
+            ></div>
         </div>
     </div>
 </dialog>

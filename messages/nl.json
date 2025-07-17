@@ -13,6 +13,7 @@
   "sound": "Geluid",
   "ui_sounds": "UI-geluiden",
   "tick_sound": "Tick-geluid",
+  "timer_sound": "Timer-geluid",
   "appearance": "Uiterlijk",
   "inactive": "Inactief",
   "active": "Actief",

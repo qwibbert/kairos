@@ -1,4 +1,5 @@
 import { m } from "$lib/paraglide/messages";
+import type { EChartsOption } from "echarts";
 import { DateTime } from "luxon";
 import type { LegendType, SeriesType, SourceType } from "./data";
 
@@ -134,7 +135,7 @@ export const day_options = {
             color: ''
         }
     }
-};
+} as EChartsOption;
 
 export const year_options = {
     ...day_options,
@@ -152,7 +153,32 @@ export const year_options = {
         ...day_options.tooltip,
         formatter: (params) => tooltip_formatter(params, "MONTHS")
     }
-};
+} as EChartsOption;
 
 export const vine_day_options = day_options;
 export const vine_year_options = year_options;
+
+export const vine_pie_options = {
+    tooltip: {
+        trigger: 'item',
+    },
+    series: [
+        {
+            type: 'pie',
+            data: [],
+            label: {},
+            radius: '50%',
+            tooltip: {
+                formatter: (data) => {
+                    const value = data.value;
+
+                    if (value >= 3600) {
+                        return `${data.marker} ${data.name}: <b>${Math.floor(value / 3600)} h ${Math.floor((value % 3600) / 60)}</b>`
+                    } else {
+                        return `${data.marker} ${data.name}: <b>${Math.floor(value / 60)} min</b>`
+                    }
+                }
+            }
+        }
+    ]
+} as EChartsOption;

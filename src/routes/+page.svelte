@@ -5,7 +5,7 @@
     import Statsmodal from "$features/stats/components/stats-modal.svelte";
     import VineModal from "$features/vines/components/vine-modal.svelte";
     import { VineStatus } from "$features/vines/types";
-    import { Session } from "$lib/session/session.svelte";
+    import { elapsed_time_sum, Session } from "$lib/session/session.svelte";
     import { PomoType, SessionStatus } from "$lib/session/types";
     import { shortcut } from "@svelte-put/shortcut";
     import ChartLine from "lucide-svelte/icons/chart-line";
@@ -163,7 +163,7 @@
         onclick={async () => {
             // Check if there is already an active session with a non-zero time_real
             // If so, skip this session
-            if (session && session.time_real != 0) {
+            if (session && elapsed_time_sum(session.elapsed_time) != 0) {
                 await session.skip();
             }
 

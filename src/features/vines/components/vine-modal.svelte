@@ -14,7 +14,7 @@
     import VineStatsModal from "$features/stats/components/vine-stats-modal.svelte";
     import { getContext } from "svelte";
     import type { Vine } from "../../../db/appdb";
-    import { add_vine, archive_vine, update_vine } from "../../../db/vines";
+    import { add_vine, archive_vine, get_vine, update_vine } from "../../../db/vines";
     import * as m from "../../../paraglide/messages";
     import { build_vine_subtree, get_parent_nodes_from_flat_list } from "../db";
     import { VineStatus, VineType, type VineTreeItem } from "../types";
@@ -73,8 +73,8 @@
     let vine_editing = $state<string | null>(null);
 
     let new_vine_input = $state<HTMLInputElement | null>(null);
-    let vine_title_input_value = $state('');
-    let vine_type_selector_value = $state<'TASK' | 'COURSE'>('TASK');
+    let vine_title_input_value = $state("");
+    let vine_type_selector_value = $state<"TASK" | "COURSE">("TASK");
 
     $effect(() => {
         if (new_vine_input && vine_editing) {
@@ -86,18 +86,24 @@
     let vine_to_view = $state<Vine | undefined>();
 </script>
 
-<VineStatsModal bind:vine={vine_to_view} bind:vine_stats_modal={vine_stats_modal} />
+<VineStatsModal bind:vine={vine_to_view} bind:vine_stats_modal />
 
 {#snippet vine_list_item(vine: VineTreeItem)}
     <li class="list-row flex items-center justify-between w-full">
         <div class="flex flex-row items-center gap-2">
             {#if vine_editing == vine.id}
                 <fieldset class="fieldset">
-                    <select bind:value={vine_type_selector_value} class="select">
-                        <option value="TASK" selected={vine.type == VineType.Task}
-                            >Task</option
+                    <select
+                        bind:value={vine_type_selector_value}
+                        class="select"
+                    >
+                        <option
+                            value="TASK"
+                            selected={vine.type == VineType.Task}>Task</option
                         >
-                        <option value="COURSE" selected={vine.type == VineType.Course}
+                        <option
+                            value="COURSE"
+                            selected={vine.type == VineType.Course}
                             >Course</option
                         >
                     </select>
@@ -153,11 +159,16 @@
                     class="btn btn-square btn-ghost join-item"
                     onclick={async () => {
                         await update_vine(vine.id, {
-                        title: vine_title_input_value == "" ? "Nieuwe taak" : vine_title_input_value,
-                        type: vine_type_selector_value == "TASK" ? VineType.Task : VineType.Course
-                    });
+                            title:
+                                vine_title_input_value == ""
+                                    ? "Nieuwe taak"
+                                    : vine_title_input_value,
+                            type:
+                                vine_type_selector_value == "TASK"
+                                    ? VineType.Task
+                                    : VineType.Course,
+                        });
                         vine_editing = null;
-
                     }}><Check class="size-[1.2em]" /></button
                 >
             {:else}
@@ -167,7 +178,6 @@
                         vine_title_input_value = vine.title;
                         vine_type_selector_value = vine.type;
                         vine_editing = vine.id;
-
                     }}><Pencil class="size-[1.2em]" /></button
                 >
             {/if}
@@ -185,7 +195,7 @@
                     if (parent_override) {
                         parent_override = undefined;
                     }
-                    
+
                     parent_override = vine.id;
 
                     page = pages_count ?? 1;
@@ -194,10 +204,13 @@
                     vine_editing = child_vine;
                 }}><ListPlus class="size-[1.2em]" /></button
             >
-            <button class="btn btn-square btn-ghost join-item" onclick={ () => {
-                vine_to_view = vine;
-                vine_stats_modal?.showModal();
-            } }><ChartLine class="size-[1.2em]" /></button>
+            <button
+                class="btn btn-square btn-ghost join-item"
+                onclick={() => {
+                    vine_to_view = vine;
+                    vine_stats_modal?.showModal();
+                }}><ChartLine class="size-[1.2em]" /></button
+            >
             <button
                 class="btn btn-square btn-ghost join-item"
                 onclick={async () => await archive_vine(vine.id)}
@@ -217,23 +230,35 @@
                 >
             </form>
             <h3 class="text-lg font-bold self-baseline">Taken</h3>
-            <button
-                class="btn btn-primary btn-wide my-5"
-                onclick={async () => {
-                    const vine = await add_vine(
-                        undefined,
-                        VineType.Task,
-                        undefined,
-                        resolved_parent_vine,
-                    );
+            <div class="flex flex-row justify-evenly w-full my-5">
+                <button
+                    class="btn btn-primary btn-wide"
+                    onclick={async () => {
+                        const vine = await add_vine(
+                            undefined,
+                            VineType.Task,
+                            undefined,
+                            resolved_parent_vine,
+                        );
 
-                    // Jump to the last page after adding a vine
-                    page = pages_count ?? 1;
+                        // Jump to the last page after adding a vine
+                        page = pages_count ?? 1;
 
-                    // Make last vine editable
-                    vine_editing = vine;
-                }}><CirclePlus class="size-[1.2em]" /> {m.add()}</button
-            >
+                        // Make last vine editable
+                        vine_editing = vine;
+                    }}><CirclePlus class="size-[1.2em]" /> {m.add()}</button
+                >
+                <button class="btn btn-secondary" onclick={async () => {
+                    if (parent_vine) {
+                        vine_to_view = await get_vine(parent_vine ?? '');
+                    
+                    } else {
+                        vine_to_view = undefined;
+                    }
+                    
+                    vine_stats_modal?.showModal();
+                }}><ChartLine class="size-[1.2em]"/> Vine Stats</button>
+            </div>
 
             <div
                 class="rounded-box bg-base-200 shadow-md w-full flex flex-col items-center"

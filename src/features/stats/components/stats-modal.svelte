@@ -1,7 +1,7 @@
 <script lang="ts">
     import { PomoType, SessionStatus } from "$lib/session/types";
     import { formatHex } from "culori";
-    import { BarChart } from "echarts/charts";
+    import { BarChart, PieChart } from "echarts/charts";
     import {
         DatasetComponent,
         GridComponent,
@@ -36,6 +36,7 @@
     let { stats_modal = $bindable() }: Props = $props();
 
     echarts.use([
+        PieChart,
         BarChart,
         TitleComponent,
         TooltipComponent,

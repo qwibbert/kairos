@@ -1,6 +1,6 @@
 <script lang="ts">
     import ThemeSample from "$features/settings/components/theme-sample.svelte";
-    import { Session } from "$lib/session/session.svelte";
+    import { click_sound, tick_sound as play_tick_sound, timer_sound as play_timer_sound, Session } from "$lib/session/session.svelte";
     import { SessionStatus } from "$lib/session/types";
     import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
     import Volume from "lucide-svelte/icons/volume";
@@ -64,6 +64,15 @@
         async () => get_setting(SettingsKey.tick_sound_volume),
         () => [],
     );
+    const timer_sound_query = stateQuery(
+        async () => get_setting(SettingsKey.timer_sound),
+        () => []
+    );
+    const timer_sound_volume_query = stateQuery(
+        async () => get_setting(SettingsKey.timer_sound_volume),
+        () => []
+    );
+
     const pomo_time = $derived(pomo_time_query.current as number);
     const short_break_time = $derived(short_break_query.current as number);
     const long_break_time = $derived(long_break_query.current as number);
@@ -74,6 +83,10 @@
     const tick_sound = $derived(tick_sound_query.current as boolean);
     const tick_sound_volume = $derived(
         tick_sound_volume_query.current as number,
+    );
+    const timer_sound = $derived(timer_sound_query.current as boolean);
+    const timer_sound_volume = $derived(
+        timer_sound_volume_query.current as number,
     );
 
     onMount(async () => {
@@ -252,7 +265,7 @@
                             />
                             {m.ui_sounds()}
                         </label>
-                        <button class="btn btn-primary btn-circle">
+                        <button class="btn btn-primary btn-circle" onclick={async () => await click_sound()}>
                             {#if ui_sounds && ui_sounds_volume < 25}
                                 <Volume class="size-[1.2em]" />
                             {:else if ui_sounds && ui_sounds_volume >= 25 && ui_sounds_volume < 75}
@@ -295,7 +308,7 @@
                             />
                             {m.tick_sound()}
                         </label>
-                        <button class="btn btn-primary btn-circle">
+                        <button class="btn btn-primary btn-circle" onclick={async () => await play_tick_sound()}>
                             {#if tick_sound && tick_sound_volume < 25}
                                 <Volume class="size-[1.2em]" />
                             {:else if tick_sound && tick_sound_volume >= 25 && tick_sound_volume < 75}
@@ -315,6 +328,48 @@
                             onchange={async (e) =>
                                 await update_setting(
                                     SettingsKey.tick_sound_volume,
+                                    parseInt(
+                                        (e.target as HTMLInputElement).value,
+                                    ),
+                                )}
+                            class="range w-[30%]"
+                        />
+                    </div>
+                    <div class="divider"></div>
+                    <div class="flex flex-row justify-evenly items-center">
+                        <label class="label">
+                            <input
+                                type="checkbox"
+                                checked={timer_sound}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.timer_sound,
+                                        (e.target as HTMLInputElement).checked,
+                                    )}
+                                class="toggle"
+                            />
+                            {m.timer_sound()}
+                        </label>
+                        <button class="btn btn-primary btn-circle" onclick={async () => await play_timer_sound()}>
+                            {#if timer_sound && timer_sound_volume < 25}
+                                <Volume class="size-[1.2em]" />
+                            {:else if timer_sound && timer_sound_volume >= 25 && timer_sound_volume < 75}
+                                <Volume1 class="size-[1.2em]" />
+                            {:else if timer_sound && timer_sound_volume >= 75}
+                                <Volume2 class="size-[1.2em]" />
+                            {:else}
+                                <VolumeX class="size-[1.2em]" />
+                            {/if}
+                        </button>
+                        <input
+                            disabled={!timer_sound}
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={timer_sound_volume}
+                            onchange={async (e) =>
+                                await update_setting(
+                                    SettingsKey.timer_sound_volume,
                                     parseInt(
                                         (e.target as HTMLInputElement).value,
                                     ),

@@ -61,8 +61,6 @@ export class Session {
             });
         }
 
-        const timer_sound = new Audio("sounds/timer.wav");
-
         if (this.interval != 0) clearInterval(this.interval);
 
         if (this.status == SessionStatus.Paused && this.paused_at) {
@@ -124,11 +122,10 @@ export class Session {
 
             if (seconds_left < 1) {
                 console.debug(`Session ${this.uuid} finished.`)
-                timer_sound.currentTime = 0;
-                timer_sound.play();
                 this.status = SessionStatus.Ready;
                 clearInterval(this.interval);
                 document.title = `Kairos`;
+                await timer_sound();
                 await update_history_entry(this.uuid, { status: this.status, date_finished: new Date() });
                 await this.next();
             }
@@ -245,6 +242,18 @@ export const tick_sound = async () => {
     if (tick_sound) {
         const audio = new Audio("sounds/tick.wav");
         audio.volume = tick_sound_volume as number / 100;
+        audio.play();
+    }
+}
+
+export const timer_sound = async () => {
+    const timer_sound = await get_setting(SettingsKey.timer_sound) ?? DEFAULT_SETTINGS.timer_sound;
+
+    const timer_sound_volume = await get_setting(SettingsKey.timer_sound_volume) ?? DEFAULT_SETTINGS.timer_sound_volume;
+
+    if (timer_sound) {
+        const audio = new Audio("sounds/timer.wav");
+        audio.volume = timer_sound_volume as number / 100;
         audio.play();
     }
 }
