@@ -1,6 +1,6 @@
-import { m } from "$lib/paraglide/messages";
 import type { EChartsOption } from "echarts";
 import { DateTime } from "luxon";
+import { m } from "../../lib/paraglide/messages";
 import type { LegendType, SeriesType, SourceType } from "./data";
 
 
