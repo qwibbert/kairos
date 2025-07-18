@@ -1,6 +1,11 @@
 <script lang="ts">
     import ThemeSample from "$features/settings/components/theme-sample.svelte";
-    import { click_sound, tick_sound as play_tick_sound, timer_sound as play_timer_sound, Session } from "$lib/session/session.svelte";
+    import {
+        click_sound,
+        tick_sound as play_tick_sound,
+        timer_sound as play_timer_sound,
+        Session,
+    } from "$lib/session/session.svelte";
     import { SessionStatus } from "$lib/session/types";
     import ArrowRightLeft from "lucide-svelte/icons/arrow-right-left";
     import Volume from "lucide-svelte/icons/volume";
@@ -66,11 +71,11 @@
     );
     const timer_sound_query = stateQuery(
         async () => get_setting(SettingsKey.timer_sound),
-        () => []
+        () => [],
     );
     const timer_sound_volume_query = stateQuery(
         async () => get_setting(SettingsKey.timer_sound_volume),
-        () => []
+        () => [],
     );
 
     const pomo_time = $derived(pomo_time_query.current as number);
@@ -164,7 +169,7 @@
 </script>
 
 <dialog bind:this={settings_modal} id="settings" class="modal">
-    <div class="modal-box">
+    <div class="modal-box max-h-[90dvh]">
         <div class="flex flex-row items-center justify-between mb-2">
             <h3 class="text-lg font-bold">{m.settings()}</h3>
             <form method="dialog">
@@ -184,7 +189,7 @@
                     class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
                 >
                     <legend class="fieldset-legend">{m.focus_times()}</legend>
-                    <div class="flex flex-row gap-2">
+                    <div class="flex flex-col md:flex-row gap-2">
                         <div class="flex flex-col">
                             <label for="pomo" class="label"
                                 >{m.pomodoro()}</label
@@ -192,7 +197,7 @@
                             <input
                                 id="pomo"
                                 type="number"
-                                class="input"
+                                class="input text-center"
                                 placeholder="25"
                                 value={pomo_time / 60}
                                 onchange={async (e) =>
@@ -212,7 +217,7 @@
                             <input
                                 id="short_break"
                                 type="number"
-                                class="input"
+                                class="input text-center"
                                 placeholder="5"
                                 value={short_break_time / 60}
                                 onchange={async (e) =>
@@ -232,7 +237,7 @@
                             <input
                                 id="long_break"
                                 type="number"
-                                class="input"
+                                class="input text-center"
                                 placeholder="15"
                                 value={long_break_time / 60}
                                 onchange={async (e) =>
@@ -251,7 +256,9 @@
                     class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4"
                 >
                     <legend class="fieldset-legend">{m.sound()}</legend>
-                    <div class="flex flex-row justify-evenly items-center">
+                    <div
+                        class="flex flex-col md:flex-row gap-2 justify-evenly items-center"
+                    >
                         <label class="label">
                             <input
                                 type="checkbox"
@@ -265,36 +272,45 @@
                             />
                             {m.ui_sounds()}
                         </label>
-                        <button class="btn btn-primary btn-circle" onclick={async () => await click_sound()}>
-                            {#if ui_sounds && ui_sounds_volume < 25}
-                                <Volume class="size-[1.2em]" />
-                            {:else if ui_sounds && ui_sounds_volume >= 25 && ui_sounds_volume < 75}
-                                <Volume1 class="size-[1.2em]" />
-                            {:else if ui_sounds && ui_sounds_volume >= 75}
-                                <Volume2 class="size-[1.2em]" />
-                            {:else}
-                                <VolumeX class="size-[1.2em]" />
-                            {/if}
-                        </button>
 
-                        <input
-                            disabled={!ui_sounds}
-                            type="range"
-                            min="0"
-                            max="100"
-                            onchange={async (e) =>
-                                await update_setting(
-                                    SettingsKey.ui_sounds_volume,
-                                    parseInt(
-                                        (e.target as HTMLInputElement).value,
-                                    ),
-                                )}
-                            value={ui_sounds_volume}
-                            class="range w-[30%]"
-                        />
+                        <div
+                            class="flex flex-row items-center gap-2 w-full md:contents"
+                        >
+                            <button
+                                class="btn btn-primary btn-circle w-1/4"
+                                onclick={async () => await click_sound()}
+                            >
+                                {#if ui_sounds && ui_sounds_volume < 25}
+                                    <Volume class="size-[1.2em]" />
+                                {:else if ui_sounds && ui_sounds_volume >= 25 && ui_sounds_volume < 75}
+                                    <Volume1 class="size-[1.2em]" />
+                                {:else if ui_sounds && ui_sounds_volume >= 75}
+                                    <Volume2 class="size-[1.2em]" />
+                                {:else}
+                                    <VolumeX class="size-[1.2em]" />
+                                {/if}
+                            </button>
+
+                            <input
+                                disabled={!ui_sounds}
+                                type="range"
+                                min="0"
+                                max="100"
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.ui_sounds_volume,
+                                        parseInt(
+                                            (e.target as HTMLInputElement)
+                                                .value,
+                                        ),
+                                    )}
+                                value={ui_sounds_volume}
+                                class="range w-3/4 md:w-[30%]"
+                            />
+                        </div>
                     </div>
                     <div class="divider"></div>
-                    <div class="flex flex-row justify-evenly items-center">
+                    <div class="flex flex-col md:flex-row justify-evenly items-center">
                         <label class="label">
                             <input
                                 type="checkbox"
@@ -308,35 +324,43 @@
                             />
                             {m.tick_sound()}
                         </label>
-                        <button class="btn btn-primary btn-circle" onclick={async () => await play_tick_sound()}>
-                            {#if tick_sound && tick_sound_volume < 25}
-                                <Volume class="size-[1.2em]" />
-                            {:else if tick_sound && tick_sound_volume >= 25 && tick_sound_volume < 75}
-                                <Volume1 class="size-[1.2em]" />
-                            {:else if tick_sound && tick_sound_volume >= 75}
-                                <Volume2 class="size-[1.2em]" />
-                            {:else}
-                                <VolumeX class="size-[1.2em]" />
-                            {/if}
-                        </button>
-                        <input
-                            disabled={!tick_sound}
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={tick_sound_volume}
-                            onchange={async (e) =>
-                                await update_setting(
-                                    SettingsKey.tick_sound_volume,
-                                    parseInt(
-                                        (e.target as HTMLInputElement).value,
-                                    ),
-                                )}
-                            class="range w-[30%]"
-                        />
+                        <div
+                            class="flex flex-row items-center gap-2 w-full md:contents"
+                        >
+                            <button
+                                class="btn btn-primary btn-circle w-1/4"
+                                onclick={async () => await play_tick_sound()}
+                            >
+                                {#if tick_sound && tick_sound_volume < 25}
+                                    <Volume class="size-[1.2em]" />
+                                {:else if tick_sound && tick_sound_volume >= 25 && tick_sound_volume < 75}
+                                    <Volume1 class="size-[1.2em]" />
+                                {:else if tick_sound && tick_sound_volume >= 75}
+                                    <Volume2 class="size-[1.2em]" />
+                                {:else}
+                                    <VolumeX class="size-[1.2em]" />
+                                {/if}
+                            </button>
+                            <input
+                                disabled={!tick_sound}
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={tick_sound_volume}
+                                onchange={async (e) =>
+                                    await update_setting(
+                                        SettingsKey.tick_sound_volume,
+                                        parseInt(
+                                            (e.target as HTMLInputElement)
+                                                .value,
+                                        ),
+                                    )}
+                                class="range w-3/4 md:w-[30%]"
+                            />
+                        </div>
                     </div>
                     <div class="divider"></div>
-                    <div class="flex flex-row justify-evenly items-center">
+                    <div class="flex flex-col md:flex-row justify-evenly items-center">
                         <label class="label">
                             <input
                                 type="checkbox"
@@ -350,7 +374,13 @@
                             />
                             {m.timer_sound()}
                         </label>
-                        <button class="btn btn-primary btn-circle" onclick={async () => await play_timer_sound()}>
+                        <div
+                            class="flex flex-row items-center gap-2 w-full md:contents"
+                        >
+                        <button
+                            class="btn btn-primary w-1/4 btn-circle"
+                            onclick={async () => await play_timer_sound()}
+                        >
                             {#if timer_sound && timer_sound_volume < 25}
                                 <Volume class="size-[1.2em]" />
                             {:else if timer_sound && timer_sound_volume >= 25 && timer_sound_volume < 75}
@@ -374,8 +404,9 @@
                                         (e.target as HTMLInputElement).value,
                                     ),
                                 )}
-                            class="range w-[30%]"
+                            class="range w-3/4 md:w-[30%]"
                         />
+                        </div>
                     </div>
                 </fieldset>
                 <fieldset

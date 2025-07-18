@@ -1,13 +1,11 @@
 <script lang="ts">
-    import BookText from "lucide-svelte/icons/book-text";
     import ChartLine from "lucide-svelte/icons/chart-line";
     import Check from "lucide-svelte/icons/check";
-    import ChevronDown from "lucide-svelte/icons/chevron-down";
     import CirclePlus from "lucide-svelte/icons/circle-plus";
+    import Folder from "lucide-svelte/icons/folder";
     import Home from "lucide-svelte/icons/home";
     import ListPlus from "lucide-svelte/icons/list-plus";
     import Pencil from "lucide-svelte/icons/pencil";
-    import SquareCheck from "lucide-svelte/icons/square-check";
     import Trash from "lucide-svelte/icons/trash";
 
     import VinesIcon from "$components/ui/vines-icon.svelte";
@@ -119,7 +117,7 @@
                 (item) => item.id == id,
             );
 
-        await update_vine(id, { position: new_position });
+        update_vine(id, { position: new_position });
     }
 
     async function handleZonePageDownFinalize(e) {
@@ -127,7 +125,7 @@
 
         const new_position = (page - 1) * 5 - 1;
 
-        await update_vine(id, { position: new_position });
+        update_vine(id, { position: new_position });
     }
 
     async function handleZonePageUpFinalize(e) {
@@ -135,178 +133,140 @@
 
         let new_position = page * 5;
 
-        await update_vine(id, { position: new_position + 1 });
+        update_vine(id, { position: new_position + 1 });
     }
 
     async function handleChangeParentFinalize(e, parent_id: string) {
+        console.log(e);
         const id: string = e.detail.info.id;
 
-        await update_vine(id, { parent_id });
+        update_vine(id, { parent_id });
+    }
+
+    async function action_update_vine(vine: Vine) {
+        await update_vine(vine.id, {
+            title:
+                vine_title_input_value == ""
+                    ? "Nieuwe taak"
+                    : vine_title_input_value,
+        });
+        vine_editing = null;
+        vine_title_input_value = "";
     }
 </script>
 
 <VineStatsModal bind:vine={vine_to_view} bind:vine_stats_modal />
 
 {#snippet vine_list_item(vine: VineTreeItem)}
-    <li
-        class="list-row flex items-center justify-between w-full"
-        aria-label={vine.title}
-    >
-        <div class="flex flex-row items-center gap-2">
-            {#if vine_editing == vine.id}
-                <fieldset class="fieldset">
-                    <select
-                        bind:value={vine_type_selector_value}
-                        class="select"
-                    >
-                        <option
-                            value="TASK"
-                            selected={vine.type == VineType.Task}>Task</option
-                        >
-                        <option
-                            value="COURSE"
-                            selected={vine.type == VineType.Course}
-                            >Course</option
-                        >
-                    </select>
-                </fieldset>
-            {:else if vine.type == VineType.Task}
-                <SquareCheck class="size-[1.2em]" />
-            {:else if vine.type == VineType.Course}
-                <BookText class="size-[1.2em]" />
-            {/if}
-            {#if vine.children && vine.children.length > 0}
-                <ChevronDown class="size-[1.2em]" />
-            {:else}
-                <input
-                    type="checkbox"
-                    checked={vine.status == VineStatus.Active}
-                    onchange={async (e) => {
-                        await update_vine(vine.id, {
-                            status: (e.target as HTMLInputElement)?.checked
-                                ? VineStatus.Active
-                                : VineStatus.InActive,
-                        });
-                    }}
-                    class="checkbox"
-                />
-            {/if}
-        </div>
-
-        {#if vine_editing == vine.id}
+    <div class="flex flex-row items-center gap-2">
+        {#if vine.children && vine.children.length > 0}
+            <Folder class="size-[1.5em]" />
+        {:else}
             <input
-                bind:this={new_vine_input}
-                type="text"
-                class="input input-bordered input-sm flex-1 ml-2"
-                bind:value={vine_title_input_value}
+                type="checkbox"
+                checked={vine.status == VineStatus.Active}
+                onchange={async (e) => {
+                    await update_vine(vine.id, {
+                        status: (e.target as HTMLInputElement)?.checked
+                            ? VineStatus.Active
+                            : VineStatus.InActive,
+                    });
+                }}
+                class="checkbox"
             />
-        {:else if vine.children && vine.children.length > 0}
-            <button
-                use:dndzone={{
-                    items: [],
-                    type: page.toString(),
-                    dropTargetClasses: [
-                        "border-4",
-                        "border-primary",
-                        "animate-pulse",
-                    ],
-                    dropTargetStyle: {},
-                    centreDraggedOnCursor: true,
-                }}
-                onfinalize={(e) => handleChangeParentFinalize(e, vine.id)}
-                onclick={() => {
-                    if (parent_override) {
-                        parent_override = undefined;
-                    }
+        {/if}
+    </div>
 
-                    parent_override = vine.id;
-                    page = 1;
-                }}
-                class="btn btn-link text-base-content absolute ml-[25%] max-w-[50%]">{vine.title}</button
+    {#if vine_editing == vine.id}
+        <input
+            bind:this={new_vine_input}
+            type="text"
+            class="input input-bordered input-sm flex-1 ml-2"
+            bind:value={vine_title_input_value}
+        />
+    {:else if vine.children && vine.children.length > 0}
+        <button
+            onclick={() => {
+                if (parent_override) {
+                    parent_override = undefined;
+                }
+
+                parent_override = vine.id;
+                page = 1;
+            }}
+            class="btn btn-link text-base-content">{vine.title}</button
+        >
+    {:else}
+        <p>{vine.title}</p>
+    {/if}
+    <div class="join bg-base-300 rounded-box">
+        {#if vine_editing == vine.id}
+            <button
+                class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
+                onclick={() => action_update_vine(vine)}
+                ><Check class="size-[1.2em]" /></button
             >
         {:else}
-            <p class="absolute ml-[28.5%]">{vine.title}</p>
-        {/if}
-        <div class="join bg-base-300 rounded-box">
-            {#if vine_editing == vine.id}
-                <button
-                    class="btn btn-square btn-ghost join-item"
-                    onclick={async () => {
-                        await update_vine(vine.id, {
-                            title:
-                                vine_title_input_value == ""
-                                    ? "Nieuwe taak"
-                                    : vine_title_input_value,
-                            type:
-                                vine_type_selector_value == "TASK"
-                                    ? VineType.Task
-                                    : VineType.Course,
-                        });
-                        vine_editing = null;
-                    }}><Check class="size-[1.2em]" /></button
-                >
-            {:else}
-                <button
-                    class="btn btn-square btn-ghost join-item"
-                    onclick={() => {
-                        vine_title_input_value = vine.title;
-                        vine_type_selector_value = vine.type;
-                        vine_editing = vine.id;
-                    }}><Pencil class="size-[1.2em]" /></button
-                >
-            {/if}
             <button
-                class="btn btn-square btn-ghost join-item"
-                onclick={async () => {
-                    const child_vine = await add_vine(
-                        undefined,
-                        vine.type,
-                        undefined,
-                        vine.id,
-                    );
-
-                    // Jump to the child vine page after adding a vine
-                    if (parent_override) {
-                        parent_override = undefined;
-                    }
-
-                    parent_override = vine.id;
-
-                    page = pages_count ?? 1;
-
-                    // Make child vine editable
-                    vine_editing = child_vine;
-                }}><ListPlus class="size-[1.2em]" /></button
-            >
-            <button
-                class="btn btn-square btn-ghost join-item"
+                class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
                 onclick={() => {
-                    vine_to_view = vine;
-                    vine_stats_modal?.showModal();
-                }}><ChartLine class="size-[1.2em]" /></button
+                    vine_title_input_value = vine.title;
+                    vine_type_selector_value = vine.type;
+                    vine_editing = vine.id;
+                }}><Pencil class="size-[1.2em]" /></button
             >
-            <button
-                class="btn btn-square btn-ghost join-item"
-                onclick={async () => await archive_vine(vine.id)}
-                ><Trash class="size-[1.2em]" /></button
-            >
-        </div>
-    </li>
+        {/if}
+        <button
+            class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
+            onclick={async () => {
+                const child_vine = await add_vine(
+                    undefined,
+                    vine.type,
+                    undefined,
+                    vine.id,
+                );
+
+                // Jump to the child vine page after adding a vine
+                if (parent_override) {
+                    parent_override = undefined;
+                }
+
+                parent_override = vine.id;
+
+                page = pages_count ?? 1;
+
+                // Make child vine editable
+                vine_editing = child_vine;
+            }}><ListPlus class="size-[1.2em]" /></button
+        >
+        <button
+            class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
+            onclick={() => {
+                vine_to_view = vine;
+                vine_stats_modal?.showModal();
+            }}><ChartLine class="size-[1.2em]" /></button
+        >
+        <button
+            class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
+            onclick={async () => await archive_vine(vine.id)}
+            ><Trash class="size-[1.2em]" /></button
+        >
+    </div>
 {/snippet}
 
 {#await parent_vine then resolved_parent_vine}
     <dialog bind:this={vineselector_modal} class="modal">
-        <div class="modal-box flex flex-col items-center">
-            <form method="dialog">
+        <div class="modal-box max-h-[90dvh]">
+            <div class="flex flex-row justify-between items-center w-full">
+                <h3 class="text-lg font-bold self-baseline">Taken</h3>
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+                </form>
+            </div>
+
+            <div class="my-5 flex flex-row justify-center join w-full">
                 <button
-                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                    >✕</button
-                >
-            </form>
-            <h3 class="text-lg font-bold self-baseline">Taken</h3>
-            <div class="flex flex-row justify-evenly w-full my-5">
-                <button
-                    class="btn btn-primary btn-wide"
+                    class="btn btn-soft join-item"
                     onclick={async () => {
                         const vine = await add_vine(
                             undefined,
@@ -323,7 +283,7 @@
                     }}><CirclePlus class="size-[1.2em]" /> {m.add()}</button
                 >
                 <button
-                    class="btn btn-secondary"
+                    class="btn btn-soft join-item"
                     onclick={async () => {
                         if (parent_vine) {
                             vine_to_view = await get_vine(parent_vine ?? "");
@@ -332,7 +292,7 @@
                         }
 
                         vine_stats_modal?.showModal();
-                    }}><ChartLine class="size-[1.2em]" /> Vine Stats</button
+                    }}><ChartLine class="size-[1.2em]" />Vine Stats</button
                 >
             </div>
 
@@ -350,7 +310,6 @@
                             <li
                                 use:dndzone={{
                                     items: [],
-                                    type: page.toString(),
                                     dropTargetClasses: [
                                         "border-4",
                                         "border-primary",
@@ -408,8 +367,8 @@
                     use:dndzone={{
                         items: paginated_vines,
                         dropTargetStyle: {},
-                        type: page.toString(),
                         centreDraggedOnCursor: true,
+                        dragDisabled: paginated_vines.length == 0,
                     }}
                     aria-label={"Vine List"}
                     onconsider={handleDndConsider}
@@ -417,12 +376,38 @@
                     class="list w-full"
                 >
                     {#each paginated_vines as vine (vine.id)}
-                        {@render vine_list_item(vine)}
+                        {#if vine.children && vine.children?.length > 0}
+                            <li
+                                use:dndzone={{
+                                    items: vine.children,
+                                    dropTargetClasses: [
+                                        "border-4",
+                                        "border-primary",
+                                        "animate-pulse",
+                                    ],
+                                    dropTargetStyle: {},
+                                    centreDraggedOnCursor: true,
+                                }}
+                                onfinalize={(e) =>
+                                    handleChangeParentFinalize(e, vine.id)}
+                                class="list-row flex items-center justify-between w-full"
+                                aria-label={vine.title}
+                            >
+                                {@render vine_list_item(vine)}
+                            </li>
+                        {:else}
+                            <li
+                                class="list-row flex items-center justify-between w-full"
+                                aria-label={vine.title}
+                            >
+                                {@render vine_list_item(vine)}
+                            </li>
+                        {/if}
                     {:else}
                         <div
-                            class="flex flex-col h-[30vh] items-center justify-center gap-2"
+                            class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]"
                         >
-                            <VinesIcon styles={["size-[15em]"]} />
+                            <VinesIcon styles={["size-[5em]"]} />
                             <p class="text-lg font-bold">
                                 {m.no_vines_found()}
                             </p>
@@ -437,7 +422,6 @@
                                 items: [],
                                 dragDisabled: page <= 1,
                                 dropFromOthersDisabled: page <= 1,
-                                type: page.toString(),
                                 centreDraggedOnCursor: true,
                                 dropTargetClasses: [
                                     "border-4",
@@ -447,7 +431,7 @@
                                 dropTargetStyle: {},
                             }}
                             onfinalize={handleZonePageDownFinalize}
-                            class="join-item btn w-32"
+                            class="join-item btn"
                             onclick={() => (page -= 1)}
                             disabled={page <= 1}>«</button
                         >
@@ -457,7 +441,6 @@
                                 items: [],
                                 dragDisabled: page == pages_count,
                                 dropFromOthersDisabled: page == pages_count,
-                                type: page.toString(),
                                 dropTargetClasses: [
                                     "border-4",
                                     "border-primary",
@@ -467,7 +450,7 @@
                                 dropTargetStyle: {},
                             }}
                             onfinalize={handleZonePageUpFinalize}
-                            class="join-item btn w-32"
+                            class="join-item btn"
                             onclick={() => (page += 1)}
                             disabled={page == pages_count}>»</button
                         >

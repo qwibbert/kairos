@@ -219,7 +219,13 @@
     }
 </script>
 
-<svelte:window on:resize={() => histogram?.resize()} />
+<svelte:window on:resize={() => {
+    if (chart == 'HISTOGRAM') {
+        histogram?.resize();
+    } else if (chart == 'PIE') {
+        pie_chart?.resize();
+    }
+}} />
 
 <dialog bind:this={vine_stats_modal} class="modal">
     <div class="modal-box flex flex-col items-center">

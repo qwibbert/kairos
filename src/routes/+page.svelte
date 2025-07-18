@@ -188,7 +188,7 @@
     >
 {/snippet}
 
-<header class="flex flex-row justify-evenly items-center mt-5">
+<header class="h-[15dvh] flex flex-col gap-2 md:gap-0 md:flex-row justify-around items-center mt-[5dvh] md:mt-0 ml-auto mr-auto">
     <div class="flex flex-row gap-2 items-center">
         <KairosLogo /><span
             class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
@@ -198,21 +198,21 @@
     {#if session?.status != SessionStatus.Active}
         <div class="join">
             <button
-                class="btn btn-soft md:btn-md join-item"
+                class="btn btn-soft md:btn-md join-item w-20 m md:w-36"
                 onclick={() => vineselector_modal?.showModal()}
             >
-                <VinesIcon styles={['size-[2.5em]']} />
+                <VinesIcon styles={['size-[1.2em]']} />
                 <span class="hidden md:block">{m.vines()}</span>
             </button>
             <button
-                class="btn btn-soft md:btn-md join-item"
+                class="btn btn-soft md:btn-md join-item w-20 md:w-36"
                 onclick={() => stats_modal?.showModal()}
             >
                 <ChartLine class="size-[1.2em]" />
                 <span class="hidden md:block">{m.statistics()}</span>
             </button>
             <button
-                class="btn btn-soft join-item"
+                class="btn btn-soft join-item w-20 md:w-36"
                 onclick={() => settings_modal?.showModal()}
             >
                 <Settings class="size-[1.2em]" />
@@ -222,7 +222,7 @@
     {/if}
 </header>
 <main
-    class="h-[90vh] w-[100vw] flex flex-col justify-around items-center py-10"
+    class="flex flex-col justify-around items-center h-[80dvh] md:h-[85dvh]"
 >
     <section class="flex flex-col gap-5 items-center">
         <div class="flex flex-row justify-center gap-2">
@@ -241,7 +241,7 @@
         {/if}
     </section>
     <section>
-        <span class="countdown font-mono text-8xl rounded w-full">
+        <span class="countdown font-mono text-6xl md:text-7xl xl:text-8xl rounded w-full">
             {#if session}
                 <span
                     style={`--value:${session.minutes};`}
