@@ -1,0 +1,67 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "pomodoro": "Pomodoro",
+  "break": "Break",
+  "long_break": "Long Break",
+  "start": "Start",
+  "resume": "Resume",
+  "pause": "Pause",
+  "skip": "Skip",
+  "statistics": "Statistics",
+  "settings": "Settings",
+  "focus_times": "Focus times",
+  "sound": "Sound",
+  "ui_sounds": "UI sounds",
+  "tick_sound": "Tick sound",
+  "timer_sound": "Timer sound",
+  "appearance": "Appearance",
+  "inactive": "Inactive",
+  "active": "Active",
+  "focus_time": "Focus time",
+  "today": "Today",
+  "focus_sessions": "Focus sessions",
+  "focus_time_hours": "Focus time (hours)",
+  "date": "Date",
+  "general": "General",
+  "import": "Import",
+  "export": "Export",
+  "database_import_success": "Database updated succesfully!",
+  "database_import_error": "Error while importing database!",
+  "database_import_dropzone": "Drop your database file here or click to select",
+  "reloading_in":  [
+    {
+      "declarations": [
+        "input seconds",
+        "local countPlural = seconds: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Reloading in {seconds} second.",
+        "countPlural=other": "Reloading in {seconds} seconds."
+      }
+    }
+  ],
+  "vine": "Vine",
+  "vines": "Vines",
+  "no_vines_found": "No vines found",
+  "page": "Page",
+  "add": "Add",
+  "new_vine": "New vine",
+  "no_vine": "No vine",
+  "day_view": "Day view",
+  "year_view": "Year view",
+  "pie_chart": "Pie chart",
+  "histogram": "Histogram",
+  "institution": "Institution",
+  "search": "Search",
+  "error_course_fetch": "Problem occured while fetching courses",
+  "type_for_results": "Begin typing to view results",
+  "add_task": "Add task",
+  "add_course": "Add course",
+  "vine_stats": "Vine stats",
+  "search_course": "Search for a course",
+  "loading_institutions": "Loading institutions",
+  "error_institutions_fetch": "Problem occured while fetching institutions"
+}
