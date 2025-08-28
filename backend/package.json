@@ -1,0 +1,17 @@
+{
+  "name": "kairos-backend",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup './src/entries/**' -d ./pb_hooks",
+    "dev": "chokidar './src/entries/**' -c 'bun run build' --initial"
+  },
+  "dependencies": {
+    "@swc/core": "^1.13.3",
+    "chokidar-cli": "^3.0.0",
+    "rxdb": "^16.17.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}
