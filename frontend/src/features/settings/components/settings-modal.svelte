@@ -10,13 +10,11 @@
 	import Dropzone from 'svelte-file-dropzone';
 	import { _ } from 'svelte-i18n';
 
-	import { SessionStatus } from '$lib/session/types';
-
 	import { db } from '../../../db/db';
-	import type { SessionDocument } from '../../../db/sessions/define';
 	import { SettingsKey } from '../../../db/settings';
 	import type { SettingsDocument } from '../../../db/settings/define';
 	import { Theme } from '../db';
+import type { SessionDocument } from '../../../db/sessions/define.svelte';
 
 	interface Props {
 		settings_modal?: HTMLDialogElement;

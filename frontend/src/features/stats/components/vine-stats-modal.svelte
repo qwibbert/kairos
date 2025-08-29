@@ -6,9 +6,8 @@
 	import { DateTime } from 'luxon';
 	import { _ } from 'svelte-i18n';
 
-	import { PomoType } from '$lib/session/types';
-
 	import { db } from '../../../db/db';
+	import { PomoType } from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
 	import { get_day_histogram_echarts, get_year_histogram_echarts, vines_pie_chart } from '../data';
 	import { vine_day_options, vine_pie_options, vine_year_options } from '../graph-options';

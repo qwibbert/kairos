@@ -9,8 +9,6 @@ import {
 	toTypedRxJsonSchema,
 } from 'rxdb';
 
-import { PomoType, SessionStatus } from '$lib/session/types';
-
 import { db } from '../db';
 import type { VinesDocType } from '../vines/define';
 import { on_session_syncable } from './client';
@@ -153,6 +151,27 @@ export type SessionNewOpts = {
 };
 
 type TimerInterval = string;
+
+export enum PomoType {
+	Pomo = 'POMO',
+	ShortBreak = 'SHORT_BREAK',
+	LongBreak = 'LONG_BREAK',
+}
+
+export enum SessionStatus {
+	Active = 'ACTIVE',
+	Paused = 'PAUSED',
+	Ready = 'READY',
+	Inactive = 'INACTIVE',
+	Skipped = 'SKIPPED',
+	Interrupted = 'INTERRUPTED',
+}
+
+export interface Pauses {
+	timestamp: Date;
+	duration: number;
+}
+
 
 export const session_doc_methods: SessionDocMethods = {
 	start: async function (this: SessionDocument, increment_cycle: boolean): Promise<TimerInterval> {

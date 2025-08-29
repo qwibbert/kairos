@@ -18,10 +18,8 @@
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 
-	import { PomoType, SessionStatus } from '$lib/session/types';
-
 	import { db } from '../../../db/db';
-	import type { SessionDocument } from '../../../db/sessions/define.svelte';
+	import { PomoType, SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
 	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../data';
 	import { day_options, year_options } from '../graph-options';
 

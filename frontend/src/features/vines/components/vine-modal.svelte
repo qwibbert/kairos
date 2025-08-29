@@ -16,13 +16,12 @@
 	import { _ } from 'svelte-i18n';
 
 	import { alert_dialog } from '$lib/components/alerts.svelte';
-	import { PomoType, SessionStatus } from '$lib/session/types';
 
 	import { db } from '../../../db/db';
-	import { type SessionDocument } from '../../../db/sessions/define.svelte';
+	import { PomoType, SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
-	import { VineStatus, type VineTreeItem, VineType } from '../types';
+	import { VineStatus, VineType, type VineTreeItem } from '../types';
 	import ImportCourseModal from './import-course-modal.svelte';
 
 	interface Props {

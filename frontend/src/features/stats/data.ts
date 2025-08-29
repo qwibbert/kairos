@@ -3,10 +3,8 @@ import { DateTime } from 'luxon';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-import { PomoType } from '$lib/session/types';
-
 import { db } from '../../db/db';
-import type { SessionDocument } from '../../db/sessions/define.svelte';
+import { PomoType, type SessionDocument } from '../../db/sessions/define.svelte';
 import type { VinesDocument } from '../../db/vines/define';
 
 interface FocusTimeCounter {

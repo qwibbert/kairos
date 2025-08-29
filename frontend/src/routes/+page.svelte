@@ -23,8 +23,8 @@
 	import SyncIndicator from '$lib/components/sync-indicator.svelte';
 	import { authModel, logout } from '$lib/pocketbase';
 	import LoginRegister from '$lib/pocketbase/login-register.svelte';
-	import { PomoType, SessionStatus } from '$lib/session/types';
 	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound } from '$lib/sounds';
+	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
 
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
