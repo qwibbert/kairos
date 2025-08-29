@@ -38,6 +38,9 @@ export type KairosCollections = {
 
 export type KairosDB = RxDatabase<KairosCollections>;
 
+import fakeIndexedDB from 'fake-indexeddb';
+import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
+
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBStatePlugin);
@@ -51,7 +54,10 @@ export const db: KairosDB = await init_db();
 export async function init_db(): Promise<KairosDB> {
 	const db: KairosDB = await createRxDatabase({
 		name: 'kairosdb',
-		storage: wrappedValidateAjvStorage({ storage: getRxStorageDexie() }),
+		storage: wrappedValidateAjvStorage({ storage: import.meta.env.MODE == 'test' ? getRxStorageDexie({
+			indexedDB: fakeIndexedDB,
+			IDBKeyRange: fakeIDBKeyRange
+		}) : getRxStorageDexie() }),
 		eventReduce: true,
 		closeDuplicates: true,
 	});
