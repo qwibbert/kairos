@@ -1,56 +1,74 @@
 <script lang="ts">
 	import { CloudDownload } from 'lucide-svelte';
-	import CloudAlert from 'lucide-svelte/icons/cloud-alert';
 	import CloudCheck from 'lucide-svelte/icons/cloud-check';
-	import CloudCog from 'lucide-svelte/icons/cloud-cog';
-	import CloudOff from 'lucide-svelte/icons/cloud-off';
 	import { DateTime } from 'luxon';
 	import { onMount } from 'svelte';
 
-	import { db } from '../../db/db';
+	import { sessions_sync_state } from '../../db/sessions/client';
+	import { settings_sync_state } from '../../db/settings/client';
+	import { vines_sync_state } from '../../db/vines/client';
+
+	let sync_history: Array<{
+		collection: 'sessions' | 'settings' | 'vines';
+		type: 'PUSH' | 'PULL';
+		timestamp: number;
+	}> = $state([]);
+	let settings_active = $state(false);
+	let vines_active = $state(false);
+	let sessions_active = $state(false);
 
 	onMount(() => {
-		db.syncable.on('statusChanged', (s) => {
-			switch (s) {
-				case -1:
-					status = 'ERROR';
-					break;
-				case 0:
-					status = 'OFFLINE';
-					break;
-				case 1:
-					status = 'CONNECTING';
-					break;
-				case 2:
-					status = 'ONLINE';
-					last_sync = DateTime.now();
-					break;
-				case 3:
-					status = 'SYNCING';
-					last_sync = DateTime.now();
-					break;
-				case 4:
-					status = 'ERROR_WILL_RETRY';
-					break;
+		settings_sync_state.sent$.subscribe((doc) => {
+			sync_history.push({ collection: 'settings', type: 'PUSH', timestamp: Date.now() });
+		});
+
+		settings_sync_state.received$.subscribe((doc) => {
+			sync_history.push({ collection: 'settings', type: 'PULL', timestamp: Date.now() });
+		});
+
+		settings_sync_state.active$.subscribe((bool) => {
+			if (bool) {
+				last_sync = DateTime.now();
 			}
+
+			settings_active = bool;
+		});
+
+		vines_sync_state.sent$.subscribe((doc) => {
+			sync_history.push({ collection: 'vines', type: 'PUSH', timestamp: Date.now() });
+		});
+
+		vines_sync_state.received$.subscribe((doc) => {
+			sync_history.push({ collection: 'vines', type: 'PULL', timestamp: Date.now() });
+		});
+
+		vines_sync_state.active$.subscribe((bool) => {
+			if (bool) {
+				last_sync = DateTime.now();
+			}
+
+			vines_active = bool;
+		});
+
+		sessions_sync_state.received$.subscribe((doc) => {
+			sync_history.push({ collection: 'sessions', type: 'PULL', timestamp: Date.now() });
+		});
+
+		sessions_sync_state.active$.subscribe((bool) => {
+			if (bool) {
+				last_sync = DateTime.now();
+			}
+
+			sessions_active = bool;
 		});
 	});
 
-	let status:
-		| 'ERROR'
-		| 'OFFLINE'
-		| 'CONNECTING'
-		| 'ONLINE'
-		| 'SYNCING'
-		| 'ERROR_WILL_RETRY'
-		| null = $state(null);
-
 	let last_sync: DateTime | undefined = $state(undefined);
-	let last_sync_str = $state('');
 </script>
 
-{#if status != null}
-	{#if status == 'ERROR'}
+{#if sessions_active || vines_active || settings_active}
+	<CloudDownload color="var(--color-primary)" class="size-[1.5em]" />
+	<!-- {#if status == 'ERROR'}
 		<CloudAlert color="var(--color-error)" class="size-[1.5em]" />
 	{:else if status == 'OFFLINE'}
 		<CloudOff class="size-[1.5em]" />
@@ -66,8 +84,10 @@
 			<CloudCheck color="var(--color-primary)" class="size-[1.5em] " />
 		</div>
 	{:else if status == 'SYNCING'}
-		<CloudDownload color="var(--color-primary)" class="size-[1.5em]" />
+		
 	{:else if status == 'ERROR_WILL_RETRY'}
 		<CloudAlert color="var(--color-error)" class="size-[1.5em]" />
-	{/if}
+	{/if} -->
+{:else}
+	<CloudCheck color="var(--color-primary)" class="size-[1.5em] " />
 {/if}
