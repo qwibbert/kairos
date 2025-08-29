@@ -17,4 +17,9 @@ export default defineConfig({
 	define: {
 		__KAIROS_VERSION__: `"${pkg.version}"`,
 	},
+	resolve: process.env.VITEST
+		? {
+				conditions: ['browser']
+			}
+		: undefined
 });
