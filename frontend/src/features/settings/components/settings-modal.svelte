@@ -11,10 +11,9 @@
 	import { _ } from 'svelte-i18n';
 
 	import { db } from '../../../db/db';
-	import { SettingsKey } from '../../../db/settings';
+	import type { SessionDocument } from '../../../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../../../db/settings/define';
 	import { Theme } from '../db';
-import type { SessionDocument } from '../../../db/sessions/define.svelte';
 
 	interface Props {
 		settings_modal?: HTMLDialogElement;
