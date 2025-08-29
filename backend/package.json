@@ -13,5 +13,16 @@
     "rxdb": "^16.17.2",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
-  }
+  },
+  "description": "Pocketbase backend for kairos",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qwibbert/kairos.git"
+  },
+  "author": "Quinten Libert",
+  "bugs": {
+    "url": "https://github.com/qwibbert/kairos/issues"
+  },
+  "homepage": "https://github.com/qwibbert/kairos#readme"
 }

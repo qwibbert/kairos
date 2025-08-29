@@ -1,5 +1,5 @@
 {
-	"name": "sveltekit",
+	"name": "kairos",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -55,5 +55,16 @@
 		"svelte-dnd-action": "^0.9.64",
 		"svelte-file-dropzone": "^2.0.9",
 		"svelte-i18n": "^4.0.1"
-	}
+	},
+	"description": "A pomodoro timer for college students",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/qwibbert/kairos.git"
+	},
+	"author": "Quinten Libert",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/qwibbert/kairos/issues"
+	},
+	"homepage": "https://github.com/qwibbert/kairos#readme"
 }
