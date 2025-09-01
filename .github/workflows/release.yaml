@@ -33,7 +33,7 @@ jobs:
           target: "/home/${{ secrets.USERNAME }}/kairos"
   
       - name: Deploy Docker containers using Docker Compose on remote server
-        uses: appleboy/ssh-action@v2.2
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
