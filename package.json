@@ -1,7 +1,17 @@
 {
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/config-workspace-scopes": "^19.8.1",
+    "@commitlint/cz-commitlint": "^19.8.1",
     "@types/culori": "^4.0.0",
-    "cz-conventional-changelog": "^3.3.0"
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "simple-git-hooks": "^2.13.1"
+  },
+  "scripts": {
+    "commit": "cz",
+    "build": "docker build ."
   },
   "workspaces": [
     "frontend",
@@ -11,5 +21,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "@simple-release/npm": "^2.3.0"
   }
 }
