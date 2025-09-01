@@ -40,7 +40,5 @@ jobs:
           key: ${{ secrets.KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           port: ${{ secrets.PORT }}
-          script: |
-            ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_SERVER_USERNAME }}@${{ secrets.REMOTE_SERVER_ADDRESS }} -p 7080 << 'ENDSSH'
-            docker compose -f ${{ secrets.REMOTE_SERVER_PATH }}/docker-compose.yaml up -d
-            ENDSSH
+          script: whoami
+            
