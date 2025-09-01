@@ -1,11 +1,12 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import topLevelAwait from "vite-plugin-top-level-await";
 
 import pkg from './package.json' with { type: 'json' };
 
 export default defineConfig({
-	plugins: [sveltekit(), tailwindcss()],
+	plugins: [topLevelAwait(), sveltekit(), tailwindcss()],
 	server: {
 		proxy: {
 			'^/(api|_)/': {
@@ -19,7 +20,14 @@ export default defineConfig({
 	},
 	resolve: process.env.VITEST
 		? {
-				conditions: ['browser']
+			conditions: ['browser'],
+
+			alias: {
+				$lib: 'src/lib',
+				$features: 'src/features',
+				$components: 'src/components',
+
 			}
+		}
 		: undefined
 });
