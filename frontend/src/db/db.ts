@@ -6,6 +6,7 @@ import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
+import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { setup_sessions_sync } from './sessions/client';
 import {
 	type SessionCollection,
@@ -40,10 +41,13 @@ export type KairosDB = RxDatabase<KairosCollections>;
 
 import fakeIndexedDB from 'fake-indexeddb';
 import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
+import { RxDBCleanupPlugin } from 'rxdb/plugins/cleanup';
 
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBStatePlugin);
+addRxPlugin(RxDBCleanupPlugin);
+addRxPlugin(RxDBMigrationSchemaPlugin);
 
 if (import.meta.env.DEV) {
 	addRxPlugin(RxDBDevModePlugin);
@@ -54,10 +58,12 @@ export const db: KairosDB = await init_db();
 export async function init_db(): Promise<KairosDB> {
 	const db: KairosDB = await createRxDatabase({
 		name: 'kairosdb',
-		storage: wrappedValidateAjvStorage({ storage: import.meta.env.MODE == 'test' ? getRxStorageDexie({
-			indexedDB: fakeIndexedDB,
-			IDBKeyRange: fakeIDBKeyRange
-		}) : getRxStorageDexie() }),
+		storage: wrappedValidateAjvStorage({
+			storage: import.meta.env.MODE == 'test' ? getRxStorageDexie({
+				indexedDB: fakeIndexedDB,
+				IDBKeyRange: fakeIDBKeyRange
+			}) : getRxStorageDexie()
+		}),
 		eventReduce: true,
 		closeDuplicates: true,
 	});
@@ -69,9 +75,14 @@ export async function init_db(): Promise<KairosDB> {
 			methods: settings_doc_methods, // (optional) ORM-functions for documents
 			attachments: {}, // (optional) ORM-functions for attachments
 			options: {}, // (optional) Custom parameters that might be used in plugins
-			migrationStrategies: {}, // (optional)
+			migrationStrategies: {
+				1: function (old_doc) {
+					old_doc.tour_completed = false;
+					return old_doc
+				}
+			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
 		},
 		sessions: {
 			schema: session_schema,
@@ -81,7 +92,7 @@ export async function init_db(): Promise<KairosDB> {
 			options: {}, // (optional) Custom parameters that might be used in plugins
 			migrationStrategies: {}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
 		},
 		vines: {
 			schema: vines_schema,
@@ -91,7 +102,7 @@ export async function init_db(): Promise<KairosDB> {
 			options: {}, // (optional) Custom parameters that might be used in plugins
 			migrationStrategies: {}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
 		},
 	});
 
@@ -114,6 +125,7 @@ if ((await db.settings.count().exec()) == 0) {
 		timer_finish_sound_volume: 100,
 		theme_active: 'light',
 		theme_inactive: 'dark',
+		tour_completed: false
 	} as SettingsDocType);
 }
 
@@ -126,7 +138,9 @@ if (!client_id) {
 	await kairos_state.set('client_id', () => client_id);
 }
 
+
 // Set up syncronisation
 await setup_settings_sync();
 await setup_vines_sync();
 await setup_sessions_sync();
+

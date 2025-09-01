@@ -55,6 +55,7 @@
 
 <input
 	type="text"
+	id="course-input"
 	disabled={!institution}
 	class="input"
 	placeholder={get(_)('search_course')}

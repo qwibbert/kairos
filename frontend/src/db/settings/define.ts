@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 0,
+	version: 1,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -77,6 +77,9 @@ export const settings_schema_literal = {
 			type: 'string',
 			maxLength: 100,
 			default: 'dark',
+		},
+		tour_completed: {
+			type: 'boolean'
 		},
 		status: {
 			type: 'string',

@@ -5,7 +5,6 @@
 	import SettingsModal from '$features/settings/components/settings-modal.svelte';
 	import Statsmodal from '$features/stats/components/stats-modal.svelte';
 	import VineModal from '$features/vines/components/vine-modal.svelte';
-	import { VineStatus } from '$features/vines/types';
 	import { shortcut } from '@svelte-put/shortcut';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import LogIn from 'lucide-svelte/icons/log-in';
@@ -19,6 +18,8 @@
 	import { onMount, setContext } from 'svelte';
 	import { _ } from 'svelte-i18n';
 
+	import '$features/tour/index';
+
 	import Alerts from '$lib/components/alerts.svelte';
 	import SyncIndicator from '$lib/components/sync-indicator.svelte';
 	import { authModel, logout } from '$lib/pocketbase';
@@ -31,7 +32,7 @@
 	import { on_session_syncable } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../db/settings/define';
-	import type { VinesDocument } from '../db/vines/define';
+	import { VineStatus, type VinesDocument } from '../db/vines/define';
 
 	// === STATE VARIABLES ===
 	let session: SessionDocument | null = $state(null);
@@ -54,7 +55,7 @@
 
 	// === DATABASE QUERIES ===
 	const settings_query = db.settings.findOne('1');
-	const sessions_query = db.sessions.find(); // Fixed: was db.settings.find()
+	const sessions_query = db.sessions.find();
 	const vines_query = db.vines.find();
 	const active_vine = $derived(vines ? vines.filter((v) => v.status == VineStatus.Active) : null);
 	const active_session_query = db.sessions.findOne({
@@ -140,8 +141,7 @@
 				return;
 			}
 
-			tick_count++;
-			await update_timer_tick(tick_count);
+			await update_timer_tick();
 		}, 1000);
 	}
 
@@ -166,7 +166,7 @@
 		await play_timer_tick_sound();
 
 		// Update database periodically
-		await session.incrementalUpdate({
+		session = await session.incrementalUpdate({
 			$set: {
 				time_elapsed: $state.snapshot(session.time_elapsed),
 				updated_at: new Date().toISOString().replace('T', ' '),
@@ -190,7 +190,7 @@
 		document.title = 'Kairos';
 		await play_timer_finish_sound();
 
-		await session.incrementalUpdate({
+		session = await session.incrementalUpdate({
 			$set: {
 				status: SessionStatus.Ready,
 				time_elapsed: $state.snapshot(session.time_elapsed),
@@ -312,18 +312,21 @@
 				<button
 					class="btn btn-soft md:btn-md join-item w-20 m md:w-36"
 					onclick={() => vineselector_modal?.showModal()}
+					id="tour-4"
 				>
 					<VinesIcon styles={['size-[1.2em]']} />
 					<span class="hidden md:block">{$_('vines')}</span>
 				</button>
 				<button
 					class="btn btn-soft md:btn-md join-item w-20 md:w-36"
+					id="tour-3"
 					onclick={() => stats_modal?.showModal()}
 				>
 					<ChartLine class="size-[1.2em]" />
 					<span class="hidden md:block">{$_('statistics')}</span>
 				</button>
 				<button
+					id="tour-2"
 					class="btn btn-soft join-item w-20 md:w-36"
 					onclick={() => settings_modal?.showModal()}
 				>
@@ -353,7 +356,7 @@
 			{/if}
 		{/if}
 	</header>
-	<main class="flex flex-col justify-around items-center h-[80dvh]">
+	<main id="tour-1" class="flex flex-col justify-around items-center h-[80dvh]">
 		<section class="flex flex-col gap-5 items-center">
 			<div class="flex flex-row justify-center gap-2">
 				{@render type_control(PomoType.Pomo)}
