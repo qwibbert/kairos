@@ -306,6 +306,7 @@
 			<KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
 				>Kairos</span
 			>
+			<span class="badge">{__KAIROS_VERSION__}</span>
 		</div>
 		{#if session?.status != SessionStatus.Active}
 			<div class="join">
