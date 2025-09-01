@@ -13,7 +13,7 @@ func init() {
 		// for all available settings fields you could check
 		// https://github.com/pocketbase/pocketbase/blob/develop/core/settings_model.go#L121-L130
 		settings.Meta.AppName = "Kairos"
-		settings.Meta.AppURL = "http://localhost:8090"
+		settings.Meta.AppURL = "https://localhost:8090"
 		settings.Logs.MaxDays = 3
 		settings.Logs.LogAuthId = true
 		settings.Logs.LogIP = false
