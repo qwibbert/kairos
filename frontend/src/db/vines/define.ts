@@ -6,6 +6,7 @@ import {
 	toTypedRxJsonSchema,
 } from 'rxdb';
 
+import type { VinesDocument } from '../../db/vines/define';
 import { VinesErrorFactory } from './errors';
 
 export const vines_schema_literal = {
@@ -98,6 +99,23 @@ export type VinesDocMethods = {
 };
 
 export type VinesDocument = RxDocument<VinesDocType, VinesDocMethods>;
+
+export type VineID = string;
+
+export interface VineTreeItem extends VinesDocument {
+	children?: VineTreeItem[];
+}
+
+export enum VineStatus {
+	Active = 'ACTIVE',
+	InActive = 'INACTIVE',
+}
+
+export enum VineType {
+	Course = 'COURSE',
+	Task = 'TASK',
+}
+
 
 export type VinesCollectionMethods = {
 	get_vine: (id: string) => Promise<VinesDocument | null>;

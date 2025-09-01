@@ -19,9 +19,8 @@
 
 	import { db } from '../../../db/db';
 	import { PomoType, SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
-	import type { VinesDocument } from '../../../db/vines/define';
+	import { VineStatus, VineType, type VinesDocument, type VineTreeItem } from '../../../db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
-	import { VineStatus, VineType, type VineTreeItem } from '../types';
 	import ImportCourseModal from './import-course-modal.svelte';
 
 	interface Props {
@@ -332,7 +331,7 @@
 {/snippet}
 
 {#await parent_vine then resolved_parent_vine}
-	<dialog bind:this={vineselector_modal} class="modal">
+	<dialog bind:this={vineselector_modal} class="modal" id="vines">
 		<div class="modal-box max-h-[90dvh]">
 			<div class="flex flex-row justify-between items-center w-full">
 				<h3 class="text-lg font-bold self-baseline">Vines</h3>
@@ -342,8 +341,8 @@
 			</div>
 
 			<div class="my-5 flex flex-row justify-center join w-full">
-				<details bind:this={add_vine_details} class="dropdown">
-					<summary class="btn btn-soft join-item"
+				<details bind:this={add_vine_details} class="dropdown" id="tour-5-box">
+					<summary class="btn btn-soft join-item" id="tour-5-button"
 						><ChevronDown class="size-[1.2em]" /> {$_('add')}</summary
 					>
 					<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
@@ -355,6 +354,7 @@
 						<li>
 							<a
 								href="."
+								id="tour-5-course"
 								onclick={() => {
 									import_course_modal?.showModal();
 									add_vine_details!.open = false;
@@ -437,6 +437,7 @@
 					onconsider={handleDndConsider}
 					onfinalize={handleDndFinalize}
 					class="list w-full"
+					id="vines-container"
 				>
 					{#each paginated_vines as vine (vine.id)}
 						{#if vine.children && vine.children?.length > 0}

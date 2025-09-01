@@ -1,5 +1,4 @@
 /* eslint-disable svelte/prefer-svelte-reactivity */
-import { VineStatus } from '$features/vines/types';
 import { DateTime } from 'luxon';
 import {
 	type ExtractDocumentTypeFromTypedRxJsonSchema,
@@ -10,7 +9,7 @@ import {
 } from 'rxdb';
 
 import { db } from '../db';
-import type { VinesDocType } from '../vines/define';
+import { VineStatus, type VinesDocType } from '../vines/define';
 import { on_session_syncable } from './client';
 import { SessionError, SessionErrorFactory, SessionErrorType } from './errors';
 
@@ -131,10 +130,6 @@ export type SessionCollectionMethods = {
 	 * Get the last session with a resumable state
 	 */
 	get_last_resumable: () => Promise<SessionDocument | null>;
-	/**
-	 * Starts the last session with a resumable state
-	 */
-	start: () => Promise<void>;
 };
 
 export type SessionCollection = RxCollection<
@@ -175,8 +170,6 @@ export interface Pauses {
 
 export const session_doc_methods: SessionDocMethods = {
 	start: async function (this: SessionDocument, increment_cycle: boolean): Promise<TimerInterval> {
-		this.getLatest();
-
 		if (
 			this.status == SessionStatus.Ready ||
 			this.status == SessionStatus.Active ||
@@ -199,7 +192,6 @@ export const session_doc_methods: SessionDocMethods = {
 			);
 		}
 
-		const elapsed_local_storage = JSON.parse(localStorage.getItem(this.id) ?? '{}');
 		const today = new Date().toDateString();
 
 		if (this.status == SessionStatus.Paused) {
@@ -230,7 +222,7 @@ export const session_doc_methods: SessionDocMethods = {
 					time_end:
 						Date.now() +
 						(this.time_target -
-							Math.max(this.get_time_elapsed(), elapsed_local_storage[today] ?? 0)) *
+							this.get_time_elapsed()) *
 							1000,
 				},
 			});
@@ -259,7 +251,6 @@ export const session_doc_methods: SessionDocMethods = {
 		});
 	},
 	pause: async function (this: SessionDocument): Promise<void> {
-		this.getLatest();
 		if (this.status != SessionStatus.Active) {
 			throw SessionErrorFactory.invalid_state(
 				'tried to pause an non-active session',
@@ -283,11 +274,8 @@ export const session_doc_methods: SessionDocMethods = {
 				updated_at: new Date().toISOString().replace('T', ' '),
 			},
 		});
-
-		localStorage.removeItem(this.id);
 	},
 	skip: async function (this: SessionDocument, override_type?: PomoType): Promise<void> {
-		this.getLatest();
 		if (this.status == SessionStatus.Ready) {
 			throw SessionErrorFactory.invalid_state(
 				'cannot skip an already finished session',
@@ -448,16 +436,7 @@ export const session_collection_methods: SessionCollectionMethods = {
 			},
 			sort: [{ created_at: 'desc' }],
 		}).exec();
-	},
-	start: async function (this: SessionCollection): Promise<void> {
-		const resumeable_session = await this.get_last_resumable();
-
-		if (resumeable_session) {
-			// TODO: invoke session start
-		} else {
-			// TODO: Throw error
-		}
-	},
+	}
 };
 
 function get_next_session_type(current_type: PomoType, cycle: number): PomoType {

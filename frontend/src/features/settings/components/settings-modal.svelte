@@ -11,7 +11,7 @@
 	import { _ } from 'svelte-i18n';
 
 	import { db } from '../../../db/db';
-	import type { SessionDocument } from '../../../db/sessions/define.svelte';
+	import { SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../../../db/settings/define';
 	import { Theme } from '../db';
 
@@ -108,7 +108,7 @@
 								value={settings.pomo_time / 60}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.pomo_time,
+										'pomo_time',
 										parseInt((e.target as HTMLInputElement).value) * 60,
 									)}
 							/>
@@ -123,7 +123,7 @@
 								value={settings.short_break_time / 60}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.short_break_time,
+										'short_break_time',
 										parseInt((e.target as HTMLInputElement).value) * 60,
 									)}
 							/>
@@ -138,7 +138,7 @@
 								value={settings.long_break_time / 60}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.long_break_time,
+										'long_break_time',
 										parseInt((e.target as HTMLInputElement).value) * 60,
 									)}
 							/>
@@ -154,7 +154,7 @@
 								checked={settings.ui_sounds}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.ui_sounds,
+										'ui_sounds',
 										(e.target as HTMLInputElement).checked,
 									)}
 								class="toggle"
@@ -187,7 +187,7 @@
 								max="100"
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.ui_sounds_volume,
+										'ui_sounds_volume',
 										parseInt((e.target as HTMLInputElement).value),
 									)}
 								value={settings.ui_sounds_volume}
@@ -203,7 +203,7 @@
 								checked={settings.timer_tick_sound}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.timer_tick_sound,
+										'timer_tick_sound',
 										(e.target as HTMLInputElement).checked,
 									)}
 								class="toggle"
@@ -235,7 +235,7 @@
 								value={settings.timer_tick_sound_volume}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.timer_tick_sound_volume,
+										'timer_tick_sound_volume',
 										parseInt((e.target as HTMLInputElement).value),
 									)}
 								class="range w-3/4 md:w-[30%]"
@@ -250,7 +250,7 @@
 								checked={settings.timer_finish_sound}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.timer_finish_sound,
+										'timer_finish_sound',
 										(e.target as HTMLInputElement).checked,
 									)}
 								class="toggle"
@@ -282,7 +282,7 @@
 								value={settings.timer_finish_sound_volume}
 								onchange={async (e) =>
 									await settings.modify_setting(
-										SettingsKey.timer_finish_sound_volume,
+										'timer_finish_sound_volume',
 										parseInt((e.target as HTMLInputElement).value),
 									)}
 								class="range w-3/4 md:w-[30%]"
@@ -305,7 +305,7 @@
 									}
 
 									await settings.modify_setting(
-										SettingsKey.theme_inactive,
+										'theme_inactive',
 										e.target.value as Theme,
 									);
 								}}
@@ -330,7 +330,7 @@
 										document.documentElement.setAttribute('data-theme', e.target.value);
 									}
 
-									await settings.modify_setting(SettingsKey.theme_active, e.target.value as Theme);
+									await settings.modify_setting('theme_active', e.target.value as Theme);
 								}}
 							>
 								{#each Object.values(Theme) as theme (theme)}

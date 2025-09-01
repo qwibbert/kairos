@@ -1,4 +1,3 @@
-import { VineType } from '$features/vines/types';
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
 
@@ -6,7 +5,7 @@ import { alert_dialog, push_toast } from '$lib/components/alerts.svelte';
 import { client } from '$lib/pocketbase';
 
 import { db } from '../db';
-import type { VinesDocType } from './define';
+import { VineType, type VinesDocType } from './define';
 
 export let vines_sync_state: RxReplicationState<VinesDocType, unknown> = null;
 const vines_stream$ = new Subject();

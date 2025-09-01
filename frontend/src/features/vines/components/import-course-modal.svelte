@@ -9,14 +9,13 @@
 	import InstitutionSelector from '$lib/pocketbase/institution-selector.svelte';
 	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
 
-	import type { Vine } from '../../../db/appdb';
 	import { db } from '../../../db/db';
-	import { VineStatus, VineType } from '../types';
+	import { VineStatus, VineType, type VinesDocument } from '../../../db/vines/define';
 
 	interface Props {
 		import_course_modal: HTMLDialogElement | undefined;
 		parent_id: string | undefined;
-		vines: Vine[] | undefined;
+		vines: VinesDocument[] | undefined;
 	}
 
 	let { import_course_modal = $bindable(), parent_id, vines }: Props = $props();
@@ -51,7 +50,7 @@
 	}
 </script>
 
-<dialog bind:this={import_course_modal} class="modal">
+<dialog bind:this={import_course_modal} class="modal" id="import-course">
 	<div class="modal-box h-[70dvh]">
 		<div class="flex flex-row justify-between items-center w-full">
 			<h3 class="text-lg font-bold self-baseline">Import Course</h3>
@@ -86,7 +85,7 @@
 							Courses {item_count > 0 ? `(${item_count} results)` : ''}
 						</li>
 						{#each courses_result?.items as course (course.id)}
-							<li class="list-row">
+							<li class="list-row" id={course.title == 'Inleiding tot het programmeren' ? 'tour-course' : ''}>
 								<div>
 									<BookText class="size-[1.2em]" />
 								</div>
@@ -97,7 +96,7 @@
 										{course.instructor}
 									</div>
 								</div>
-								{#if vines?.findIndex((vine) => vine.id == course.id) == -1}
+								{#if vines?.findIndex((vine) => vine.course_id == course.id) == -1}
 									<button
 										class="btn btn-square btn-ghost"
 										onclick={async () => await import_course(course)}

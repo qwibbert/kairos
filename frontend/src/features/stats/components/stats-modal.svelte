@@ -19,7 +19,11 @@
 	import { _ } from 'svelte-i18n';
 
 	import { db } from '../../../db/db';
-	import { PomoType, SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
+	import {
+		PomoType,
+		type SessionDocument,
+		SessionStatus,
+	} from '../../../db/sessions/define.svelte';
 	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../data';
 	import { day_options, year_options } from '../graph-options';
 
@@ -141,7 +145,7 @@
 			});
 	}
 
-	function load_colors() {
+	export function load_colors() {
 		const style = window.getComputedStyle(document.body);
 
 		const colors = [
@@ -216,6 +220,14 @@
 
 		load_colors();
 	}
+
+	new MutationObserver(function (mutations) {
+		mutations.forEach(function (mutation) {
+			if (mutation.type === 'attributes') {
+				load_colors();
+			}
+		});
+	}).observe(document.documentElement, { attributes: true });
 </script>
 
 <svelte:window on:resize={() => histogram?.resize()} />
