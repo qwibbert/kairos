@@ -40,5 +40,7 @@ jobs:
           key: ${{ secrets.KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           port: ${{ secrets.PORT }}
-          script: echo ${{ secrets.PASSWORD }} | sudo -S docker compose -f /home/${{ secrets.USERNAME }}/kairos/docker-compose.yaml up -d
+          script: |
+            docker load -i /home/${{ secrets.USERNAME }}/kairos/kairos.tar 
+            echo ${{ secrets.PASSWORD }} | sudo -S docker compose -f /home/${{ secrets.USERNAME }}/kairos/docker-compose.yaml up -d
             
