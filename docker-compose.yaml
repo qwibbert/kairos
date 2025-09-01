@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  app:
+    container_name: kairos
+    image: kairos:latest
+    restart: always
+
+    ports:
+      - 8090:80

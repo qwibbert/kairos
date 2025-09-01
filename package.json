@@ -7,11 +7,13 @@
     "@types/culori": "^4.0.0",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
+    "release-it": "^19.0.4",
     "simple-git-hooks": "^2.13.1"
   },
   "scripts": {
     "commit": "cz",
-    "build": "docker build ."
+    "build": "docker build .",
+    "release": "release-it"
   },
   "workspaces": [
     "frontend",
