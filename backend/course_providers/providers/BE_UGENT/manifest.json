@@ -1,0 +1,9 @@
+{
+    "name": "Universiteit Gent",
+    "country": "Belgium",
+    "alpha_two_code": "BE",
+    "state-province": "",
+    "domains": ["ugent.be", "rug.ac.be"],
+    "web_pages": ["https://www.ugent.be/", "http://www.rug.ac.be/"],
+    "sem_start": 9
+}
