@@ -8,13 +8,12 @@ export default async function upload(
   backend_url: string,
   superuser_token: string,
 ) {
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb2xsZWN0aW9uSWQiOiJwYmNfMzE0MjYzNTgyMyIsImV4cCI6MTc1NDIxNTkwNSwiaWQiOiI4Y2NvbmIwem45aDgxYWwiLCJyZWZyZXNoYWJsZSI6ZmFsc2UsInR5cGUiOiJhdXRoIn0.01Rjp_em94e9x7XeZw19P2R6ezUfuFlj84ekny1tU18";
 
   let client: Pocketbase | undefined;
   try {
     client = new Pocketbase(backend_url);
-    client.authStore.save(token, null);
+    client.authStore.save(superuser_token, null);
+    await client.collection('_superusers').authRefresh();
 
     // Test client
     await client.health.check();
