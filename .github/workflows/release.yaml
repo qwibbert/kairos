@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - '*'
+  workflow_dispatch:
+    
 
 jobs:
   deploy:
