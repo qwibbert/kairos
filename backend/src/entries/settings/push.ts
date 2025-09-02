@@ -12,10 +12,10 @@ export default function (e: core.RequestEvent) {
         return e.json(426, ServerErrorFactory.version('settings.push', e.requestInfo().body.id, { request_version: version, server_version: __KAIROS_VERSION__ }))
     }
 
-    console.log(JSON.stringify(e.request));
-
     $app.runInTransaction((tx) => {
         let change_rows: Array<any> = e.requestInfo().body.change_rows;
+
+        $app.logger().error(JSON.stringify(change_rows));
 
         const conflicts = [];
         const event = {

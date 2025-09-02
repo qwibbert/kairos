@@ -26,5 +26,6 @@ vite.config.ts.timestamp-*
 # Backend
 pb_data
 pb_hooks
+pb_public
 kairos
 
