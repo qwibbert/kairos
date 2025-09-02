@@ -25,7 +25,7 @@ export default function (e: core.RequestEvent) {
             let settings_collection = null;
 
             try {
-                settings_collection = tx.findCollectionByNameOrId('settings');
+                settings_collection = tx.findCollectionByNameOrId('setting');
             } catch (err) {
                 return e.error(500, err.toString(), err);
             }
