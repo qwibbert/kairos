@@ -21,5 +21,8 @@ FROM alpine:3.22.1
 WORKDIR /app
 RUN apk --update add ca-certificates
 COPY --from=backend /app/kairos /app/kairos
+COPY --from=backend /app/pb_hooks /app/pb_hooks
+RUN ls
+RUN ls /app/pb_hooks
 EXPOSE 8090
 CMD ["./kairos", "serve", "--http=0.0.0.0:8090"]
