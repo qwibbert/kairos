@@ -7,3 +7,11 @@ services:
 
     ports:
       - 8090:8090
+
+    volumes:
+      - type: bind
+        source: pb_data
+        target: /app/pb_data
+
+volumes:
+  db-data:
