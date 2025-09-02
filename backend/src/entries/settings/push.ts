@@ -15,8 +15,6 @@ export default function (e: core.RequestEvent) {
     $app.runInTransaction((tx) => {
         let change_rows: Array<any> = e.requestInfo().body.change_rows;
 
-        $app.logger().error(JSON.stringify(change_rows));
-
         const conflicts = [];
         const event = {
             id: last_event_id++,
@@ -24,7 +22,14 @@ export default function (e: core.RequestEvent) {
             checkpoint: null
         };
         for (const change_row of change_rows) {
-            const settings_collection = tx.findCollectionByNameOrId('settings');
+            let settings_collection = null;
+
+            try {
+                settings_collection = tx.findCollectionByNameOrId('settings');
+            } catch (err) {
+                return e.error(500, err.toString(), err);
+            }
+            
             let real_master_state = null;
             let new_record = false;
             try {
@@ -35,6 +40,8 @@ export default function (e: core.RequestEvent) {
 
                     real_master_state = new Record(settings_collection, { id: $security.randomStringByRegex('[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'), created_at: new Date().toISOString().replace('T', ' '), updated_at: new Date().toISOString().replace('T', ' ') });
                     new_record = true;
+                } else {
+                    return e.error(500, err.toString(), err);
                 }
             }
 
@@ -57,16 +64,26 @@ export default function (e: core.RequestEvent) {
                     conflicts.push(copy);
                 } else {
                     // no conflict -> write the document
-                    real_master_state.load({ ...change_row.newDocumentState, id: real_master_state?.id, user: e.auth?.id });
-                    tx.save(real_master_state);
+                    try {
+                        real_master_state.load({ ...change_row.newDocumentState, id: real_master_state?.id, user: e.auth?.id });
+                        tx.save(real_master_state);
+                    } catch (err) {
+                        return e.error(500, err.toString(), err);
+                    }
+                    
 
                     event.documents.push(change_row.newDocumentState);
                     event.checkpoint = { id: '1', updated_at: change_row.newDocumentState.updated_at };
                 }
             } else {
                 // no conflict -> write the document
-                real_master_state.load({ ...change_row.newDocumentState, id: real_master_state?.id, user: e.auth?.id });
+                try {
+                    real_master_state.load({ ...change_row.newDocumentState, id: real_master_state?.id, user: e.auth?.id });
                 tx.save(real_master_state);
+                } catch (err) {
+                    return e.error(500, err.toString(), err);
+                }
+                
 
                 event.documents.push(change_row.newDocumentState);
                 event.checkpoint = { id: '1', updated_at: change_row.newDocumentState.updated_at };
