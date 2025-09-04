@@ -123,8 +123,8 @@ if ((await db.settings.count().exec()) == 0) {
 		ui_sounds_volume: 100,
 		timer_tick_sound_volume: 100,
 		timer_finish_sound_volume: 100,
-		theme_active: 'light',
-		theme_inactive: 'dark',
+		theme_active: 'nord',
+		theme_inactive: 'coffee',
 		tour_completed: false
 	} as SettingsDocType);
 }
