@@ -246,12 +246,11 @@ export async function get_day_histogram_echarts(
 				});
 				legend.push({ name: vine.vine_title });
 
-				if (!source[0][vine_i + 1]) {
-					source[0][vine_i + 1] = vine.vine_title;
-				}
-				source[i + 1][vine_i + 1] = vine.time / 3600;
+				source[0][source[0].length] = vine.vine_title;
+
+				source[i + 1][source[i + 1].length] = vine.time / 3600;
 			} else {
-				source[i + 1][vine_i + 1] = vine.time / 3600;
+				source[i + 1][source[i + 1].length] = vine.time / 3600;
 			}
 
 			vine_i++;
@@ -392,12 +391,10 @@ export async function get_year_histogram_echarts(
 				});
 				legend.push({ name: vine.vine_title });
 
-				if (!source[0][vine_i + 1]) {
-					source[0][vine_i + 1] = vine.vine_title;
-				}
-				source[i + 1][vine_i + 1] = vine.time / 3600;
+				source[0][source[0].length] = vine.vine_title;
+				source[i + 1][source[i+1].length] = vine.time / 3600;
 			} else {
-				source[i + 1][vine_i + 1] = vine.time / 3600;
+				source[i + 1][source[i+1].length] = vine.time / 3600;
 			}
 
 			vine_i++;
