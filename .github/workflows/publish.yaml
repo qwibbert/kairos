@@ -1,9 +1,8 @@
-name: 'main'
+name: 'publish'
 on:
   push:
-    branches: [main]
-    paths:
-      - '*'
+    branches:
+      - master
   workflow_dispatch:
 
 
