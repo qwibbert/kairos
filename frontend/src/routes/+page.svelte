@@ -4,6 +4,7 @@
 	import KairosLogo from '$components/ui/kairos-logo.svelte';
 	import SettingsModal from '$features/settings/components/settings-modal.svelte';
 	import Statsmodal from '$features/stats/components/stats-modal.svelte';
+	import '$features/tour/index';
 	import VineModal from '$features/vines/components/vine-modal.svelte';
 	import { shortcut } from '@svelte-put/shortcut';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
@@ -18,19 +19,17 @@
 	import { onMount, setContext } from 'svelte';
 	import { _ } from 'svelte-i18n';
 
-	import '$features/tour/index';
-
 	import Alerts from '$lib/components/alerts.svelte';
 	import SyncIndicator from '$lib/components/sync-indicator.svelte';
 	import { authModel, logout } from '$lib/pocketbase';
 	import LoginRegister from '$lib/pocketbase/login-register.svelte';
 	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound } from '$lib/sounds';
-	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
 
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import { on_session_syncable } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
+	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../db/settings/define';
 	import { VineStatus, type VinesDocument } from '../db/vines/define';
 
@@ -300,9 +299,9 @@
 	{/snippet}
 
 	<header
-		class="h-[15dvh] flex flex-col gap-2 md:gap-0 md:flex-row justify-around items-center mt-[5dvh] md:mt-0 ml-auto mr-auto"
+		class="h-[15dvh] flex justify-between items-center"
 	>
-		<div class="flex flex-row gap-2 items-center">
+		<div class="grow-1 basis-0 flex items-center gap-2 justify-center">
 			<KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
 				>Kairos</span
 			>
@@ -336,7 +335,7 @@
 				</button>
 			</div>
 			{#if $authModel}
-				<div class="flex flex-row gap-4 items-center">
+				<div class="flex flex-row gap-4 items-center grow-1 basis-0 justify-center">
 					<SyncIndicator />
 					<details class="dropdown">
 						<summary class="btn m-1">
@@ -350,10 +349,10 @@
 					</details>
 				</div>
 			{:else}
-				<button class="btn" onclick={() => login_register?.showModal()}
-					><LogIn class="size-[1.2em]" />
-					<span class="hidden md:block">{$_('login_register')}</span></button
-				>
+					<button class="btn grow-1 basis-0 justify-center" onclick={() => login_register?.showModal()}
+						><LogIn class="size-[1.2em]" />
+						<span class="hidden md:block">{$_('login_register')}</span></button
+					>
 			{/if}
 		{/if}
 	</header>
@@ -434,11 +433,12 @@
 		</section>
 	</main>
 	{#if session.status != SessionStatus.Active}
-		<div class="h-[5dvh] flex-row w-full text-center">
+		<footer class="h-[5dvh] flex flex-row w-full items-center justify-center gap-4">
 			<a href="privacy.pdf" class="link link-hover text-sm">privacy</a>
-			<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm ml-5"
+			<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
 				>meld problemen</a
 			>
-		</div>
+			<a href="https://github.com/qwibbert/kairos" class="link link-hover text-sm">github</a>
+		</footer>
 	{/if}
 {/if}
