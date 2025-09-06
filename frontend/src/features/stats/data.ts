@@ -13,8 +13,7 @@ interface FocusTimeCounter {
 }
 
 interface VineTimeCount {
-	vine_id: string;
-	vine_title: string;
+	vine: VinesDocument,
 	time: number;
 }
 
@@ -45,12 +44,11 @@ export async function get_stats_day(
 			const vine = vine_map.get(vine_id);
 
 			if (entry.vine_id == vine_id) {
-				const vine_time_count = counter.per_vine.findIndex((vine) => vine.vine_id == vine_id);
+				const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == vine_id);
 
 				if (vine_time_count == -1) {
 					counter.per_vine.push({
-						vine_id: vine_id ?? '',
-						vine_title: vine?.title ?? 'Unknown vine',
+						vine,
 						time: elapsed_time,
 					});
 				} else {
@@ -59,13 +57,12 @@ export async function get_stats_day(
 				}
 			} else if (children_cache.get(vine_id)?.includes(entry.vine_id)) {
 				const vine_time_count = counter.per_vine.findIndex(
-					(vine_entry) => vine_entry.vine_id == vine_id,
+					(count) => count.vine.id == vine_id,
 				);
 
 				if (vine_time_count == -1) {
 					counter.per_vine.push({
-						vine_id: vine_id ?? '',
-						vine_title: vine?.title ?? 'Unknown vine',
+						vine,
 						time: elapsed_time,
 					});
 				} else {
@@ -76,20 +73,18 @@ export async function get_stats_day(
 		} else if (entry.vine_id) {
 			const vine = vine_map.get(entry.vine_id);
 
-			const vine_time_count = counter.per_vine.findIndex((vine) => vine.vine_id == entry.vine_id);
+			const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == entry.vine_id);
 
 			if (vine_time_count == -1 && !vine) {
 				// Previous entries did not yet encounter this specific vine id and it looks like the vine has been deleted
 				// We provide the user with a vine name of "Unknown vine"
 				counter.per_vine.push({
-					vine_id: entry.vine_id,
-					vine_title: 'Unknown vine',
+					vine: null,
 					time: elapsed_time,
 				});
 			} else if (vine_time_count == -1 && vine) {
 				counter.per_vine.push({
-					vine_id: entry.vine_id,
-					vine_title: vine.title,
+					vine,
 					time: elapsed_time,
 				});
 			} else {
@@ -128,15 +123,15 @@ export async function get_stats_month(
 
 		counter.no_vine += day_stats.no_vine;
 
-		for (const vine of day_stats.per_vine) {
+		for (const count of day_stats.per_vine) {
 			const vine_index = counter.per_vine.findIndex(
-				(vine_entry) => vine.vine_id == vine_entry.vine_id,
+				(vine_entry) => count.vine.id == vine_entry.vine.id,
 			);
 
 			if (vine_index == -1) {
-				counter.per_vine.push(vine);
+				counter.per_vine.push(count);
 			} else {
-				counter.per_vine[vine_index].time += vine.time;
+				counter.per_vine[vine_index].time += count.time;
 			}
 		}
 	}
@@ -152,14 +147,8 @@ export async function get_day_histogram_echarts(
 	day: DateTime,
 	pomo_type: PomoType,
 	vine_id: string | undefined,
-): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
+): Promise<[HistogramSourceType, HistogramSeriesType]> {
 	const start_day = day.startOf('week');
-
-	const source: HistogramSourceType = [['day']];
-
-	const series: HistogramSeriesType = [];
-
-	const legend = [];
 
 	const vines = await db.vines.find().exec();
 	const vine_map = new Map(vines.map((v) => [v.id, v]));
@@ -194,9 +183,11 @@ export async function get_day_histogram_echarts(
 			}),
 		);
 
+	const rows = [];
+	const elements: HistogramDataElement[] = [];
 	for (let i = 0; i < 7; i++) {
 		const day = start_day.plus({ days: i });
-		source[i + 1] = [day.toISODate()!];
+		rows.push(day.toISODate()!);
 		const day_stats = await get_stats_day(
 			day.startOf('day'),
 			vine_id,
@@ -205,91 +196,20 @@ export async function get_day_histogram_echarts(
 			vine_children_cache,
 		);
 
-		if (day_stats.no_vine != 0 && !series.some((s) => s.id == 'NO_VINE') && !vine_id) {
-			series.push({
-				id: 'NO_VINE',
-				stack: 'x',
-				name: get(_)('no_vine'),
-				type: 'bar',
-			});
-
-			legend.push({ name: get(_)('no_vine') });
-
-			source[0][1] = get(_)('no_vine');
-
-			source[i + 1][1] = day_stats.no_vine / 3600;
-		} else if (day_stats.no_vine != 0 && !vine_id) {
-			source[i + 1][1] = day_stats.no_vine / 3600;
+		if (!vine_id) {
+			elements.push({ row: rows[rows.length - 1], vine: null, time: day_stats.no_vine });
 		}
 
-		let vine_i = 0;
-		for (const vine of day_stats.per_vine) {
-			const children = vine_children_cache
-				.get(vine.vine_id)
-				?.map((child_id) => vine_map.get(child_id));
-
-			if (
-				children &&
-				children.length > 0 &&
-				children.find((child) => child?.archived == 0) &&
-				!vine_id
-			) {
-				continue;
-			}
-
-			if (!series.some((s) => s.id == vine.vine_id)) {
-				series.push({
-					id: vine.vine_id,
-					stack: 'x',
-					name: vine.vine_title,
-					type: 'bar',
-				});
-				legend.push({ name: vine.vine_title });
-
-				source[0][source[0].length] = vine.vine_title;
-
-				source[i + 1][source[i + 1].length] = vine.time / 3600;
-			} else {
-				source[i + 1][source[i + 1].length] = vine.time / 3600;
-			}
-
-			vine_i++;
+		for (const count of day_stats.per_vine) {
+			elements.push({
+				row: rows[rows.length - 1],
+				vine: count.vine,
+				time: count.time
+			});
 		}
 	}
 
-	if (series.length == 0) {
-		if (vine_id) {
-			const vine = vine_map.get(vine_id);
-
-			series.push({
-				id: vine_id,
-				stack: 'x',
-				name: vine?.title ?? '',
-				type: 'bar',
-			});
-
-			legend.push({ name: vine?.title ?? '' });
-
-			source[0][1] = vine?.title ?? '';
-
-			source[1][1] = 0;
-		} else {
-			series.push({
-				id: 'NO_VINE',
-				stack: 'x',
-				name: get(_)('no_vine'),
-				type: 'bar',
-			});
-
-			legend.push({ name: get(_)('no_vine') });
-
-			source[0][1] = get(_)('no_vine');
-
-			source[1][1] = 0;
-		}
-	}
-
-	return [source, series, legend];
+	return build_histogram_sources({ rows, elements });
 }
 
 export async function get_year_histogram_echarts(
@@ -298,12 +218,6 @@ export async function get_year_histogram_echarts(
 	vine_id: string | undefined,
 ): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
 	const start_day = day.startOf('month');
-
-	const source: HistogramSourceType = [['month']];
-
-	const series: HistogramSeriesType = [];
-
-	const legend = vine_id ? [] : [{ name: get(_)('no_vine') }];
 
 	const vines = await db.vines.find().exec();
 	const vine_map = new Map(vines.map((v) => [v.id, v]));
@@ -338,10 +252,12 @@ export async function get_year_histogram_echarts(
 			}),
 		);
 
+	const rows = [];
+	const elements: HistogramDataElement[] = [];
 	for (let i = 0; i <= 11; i++) {
 		const month = start_day.plus({ months: i });
+		rows.push(month.toISODate()!);
 
-		source[i + 1] = [month.toISODate()!];
 		const month_stats = await get_stats_month(
 			month.startOf('month'),
 			vine_id,
@@ -350,90 +266,23 @@ export async function get_year_histogram_echarts(
 			vine_children_cache,
 		);
 
-		if (month_stats.no_vine != 0 && !series.some((s) => s.id == 'NO_VINE') && !vine_id) {
-			series.push({
-				id: 'NO_VINE',
-				stack: 'x',
-				name: get(_)('no_vine'),
-				type: 'bar',
-			});
-
-			legend.push({ name: get(_)('no_vine') });
-
-			source[0][1] = get(_)('no_vine');
-
-			source[i + 1][1] = month_stats.no_vine / 3600;
-		} else if (month_stats.no_vine != 0 && !vine_id) {
-			source[i + 1][1] = month_stats.no_vine / 3600;
+		if (!vine_id) {
+			elements.push({ row: rows[rows.length - 1], vine: null, time: month_stats.no_vine });
 		}
 
-		let vine_i = 0;
-		for (const vine of month_stats.per_vine) {
-			const children = vine_children_cache
-				.get(vine.vine_id)
-				?.map((child_id) => vine_map.get(child_id));
-
-			if (
-				children &&
-				children.length > 0 &&
-				children.find((child) => child?.archived == 0) &&
-				!vine_id
-			) {
-				continue;
-			}
-
-			if (!series.some((s) => s.id == vine.vine_id)) {
-				series.push({
-					id: vine.vine_id,
-					stack: 'x',
-					name: vine.vine_title,
-					type: 'bar',
-				});
-				legend.push({ name: vine.vine_title });
-
-				source[0][source[0].length] = vine.vine_title;
-				source[i + 1][source[i+1].length] = vine.time / 3600;
-			} else {
-				source[i + 1][source[i+1].length] = vine.time / 3600;
-			}
-
-			vine_i++;
+		for (const count of month_stats.per_vine) {
+			elements.push({
+				row: rows[rows.length - 1],
+				vine: count.vine,
+				time: count.time
+			});
 		}
 	}
 
-	if (series.length == 0) {
-		if (vine_id) {
-			const vine = vine_map.get(vine_id);
+	console.log('rows', rows)
+	console.log('elements', elements)
 
-			series.push({
-				id: vine_id,
-				stack: 'x',
-				name: vine?.title ?? '',
-				type: 'bar',
-			});
-
-			legend.push({ name: vine?.title ?? '' });
-
-			source[0][1] = vine?.title ?? '';
-
-			source[1][1] = 0;
-		} else {
-			series.push({
-				id: 'NO_VINE',
-				stack: 'x',
-				name: get(_)('no_vine'),
-				type: 'bar',
-			});
-
-			legend.push({ name: get(_)('no_vine') });
-
-			source[0][1] = get(_)('no_vine');
-
-			source[1][1] = 0;
-		}
-	}
-
-	return [source, series, legend];
+	return build_histogram_sources({ rows, elements });
 }
 
 type PieChartData = { name: string; value: number }[];
@@ -529,4 +378,58 @@ export function vines_pie_chart(
 	}
 
 	return data;
+}
+
+interface HistogramData {
+	rows: string[],
+	elements: HistogramDataElement[]
+}
+
+interface HistogramDataElement {
+	row: string,
+	vine: VinesDocument | null,
+	time: number
+}
+
+function build_histogram_sources(data: HistogramData) {
+	const source = [
+		['date', undefined]
+	];
+	const series = [];
+
+	// Add undefined vine to series
+	series.push({ type: 'bar', stack: 'x', name: get(_)('no_vine'), emphasis: { focus: 'series' } })
+
+	const vine_h_map = new Map<string, number>();
+
+	// Create date rows
+	for (const row of data.rows) {
+		source[source.length] = [row];
+	}
+
+	for (const element of data.elements) {
+		// Start counting after 'date'
+		const v_pos = data.rows.findIndex(e => e == element.row) + 1;
+		if (element.vine) {
+			let vine_h_pos = vine_h_map.get(element.vine.id);
+
+			if (vine_h_pos) {
+				// Use the existing horizontal position of the time
+				source[v_pos][vine_h_pos] = element.time / 3600;
+			} else {
+				// Claim a new horizontal position for this vine
+				vine_h_pos = source[0].length;
+				source[0][vine_h_pos] = element.vine.id;
+				source[v_pos][vine_h_pos] = element.time / 3600;
+
+				series.push({ type: 'bar', stack: 'x', name: element.vine.title, emphasis: { focus: 'series' } });
+			}
+		} else {
+			// Count this element as an undefined vine
+			const vine_h_pos = 1;
+			source[v_pos][vine_h_pos] = element.time / 3600;
+		}
+	}
+
+	return [source, series]
 }

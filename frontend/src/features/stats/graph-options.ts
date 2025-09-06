@@ -3,9 +3,10 @@ import { DateTime } from 'luxon';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-import type { LegendType, SeriesType, SourceType } from './data';
+import type { SeriesType, SourceType } from './data';
 
 export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
+
 	let htmlString = '';
 	if (params.length > 1) {
 		if (mode == 'WEEKS') {
@@ -19,17 +20,20 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 
 	params.forEach((param: any) => {
 		const focusTime = param.value[param.encode.y[0]];
-		total_time += focusTime;
+
+		if (focusTime) {
+			total_time += focusTime;
+		}
 
 		if (focusTime === undefined) return;
 		if (param.dimensionNames[param.seriesIndex + 1] == undefined) return;
 
 		if (focusTime < 1) {
 			htmlString += `
-                                <div>
-                        ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
+                                <div class="flex justify-between gap-2">
+                        <span>${param.marker} ${param.seriesName}</span> <span class="font-bold">${Math.floor(
 													focusTime * 60,
-												)} min
+												)} min</span>
                                 </div>
                             `;
 			return;
@@ -48,11 +52,11 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 		return htmlString;
 	}
 	if (total_time < 1) {
-		htmlString += `<div><strong>Totale tijd: ${Math.floor(total_time * 60)} min</strong></div>`;
+		htmlString += `<div class="flex justify-between gap-2"><span>Totale tijd</span> <span class="font-bold">${Math.floor(total_time * 60)} min</span></div>`;
 	} else {
-		htmlString += `<div><strong>Totale tijd: ${Math.floor(
+		htmlString += `<div class="flex justify-between gap-2"><span>Totale tijd</span> <span class="font-bold">${Math.floor(
 			total_time,
-		)} h ${Math.floor((total_time % 1) * 60)} min</strong></div>`;
+		)} h ${Math.floor((total_time % 1) * 60)} min</span></div>`;
 	}
 	return htmlString;
 };
@@ -62,7 +66,6 @@ export const day_options = {
 	legend: {
 		padding: [0, 0, 0, 0],
 		type: 'scroll',
-		data: [] as LegendType,
 		textStyle: {
 			color: '#333' as string,
 		},
@@ -127,8 +130,8 @@ export const day_options = {
 	tooltip: {
 		trigger: 'axis',
 		confine: true,
-		formatter: tooltip_formatter,
 		backgroundColor: '',
+		formatter: (params) => tooltip_formatter(params, "WEEKS"),
 		borderColor: '',
 		textStyle: {
 			color: '',

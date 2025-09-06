@@ -201,7 +201,7 @@
 		}
 
 		if (view == 'DAY') {
-			[day_options.dataset.source, day_options.series, day_options.legend.data] =
+			[day_options.dataset.source, day_options.series] =
 				await get_day_histogram_echarts(
 					today.minus({ weeks: delta_weeks }),
 					PomoType.Pomo,
