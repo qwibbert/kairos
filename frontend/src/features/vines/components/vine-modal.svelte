@@ -239,6 +239,11 @@
 							});
 						}
 					}
+					await db.vines.get_vine(vine.id).then(async v => await v?.incrementalUpdate({
+						$set: {
+							status: VineStatus.Active
+						}
+					}));
 				}}
 				class="checkbox"
 			/>

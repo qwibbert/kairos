@@ -282,7 +282,6 @@
 									? 'short_break_time'
 									: 'long_break_time',
 						),
-						vine: active_vine?.id,
 						cycle: 0,
 					});
 				}
