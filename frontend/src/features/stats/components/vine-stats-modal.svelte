@@ -9,8 +9,9 @@
 	import { db } from '../../../db/db';
 	import { PomoType } from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
-	import { get_day_histogram_echarts, get_year_histogram_echarts, vines_pie_chart } from '../data';
 	import { vine_day_options, vine_pie_options, vine_year_options } from '../graph-options';
+	import { get_day_histogram_echarts, get_year_histogram_echarts } from '../graphs/histogram';
+import { vines_pie_chart } from '../graphs/pie';
 
 	interface Props {
 		vine_stats_modal?: HTMLDialogElement;

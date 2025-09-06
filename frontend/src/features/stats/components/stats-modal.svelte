@@ -24,8 +24,8 @@
 		type SessionDocument,
 		SessionStatus,
 	} from '../../../db/sessions/define.svelte';
-	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../data';
 	import { day_options, year_options } from '../graph-options';
+	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../graphs/histogram';
 
 	interface Props {
 		stats_modal?: HTMLDialogElement;

@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-import type { SeriesType, SourceType } from './data';
+import type { SeriesType, SourceType } from './graphs/histogram';
 
 export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
 
@@ -175,9 +175,9 @@ export const vine_pie_options = {
 					const value = data.value;
 
 					if (value >= 3600) {
-						return `${data.marker} ${data.name}: <b>${Math.floor(value / 3600)} h ${Math.floor((value % 3600) / 60)}</b>`;
+						return `<div class="flex gap-2 items-center"><span>${data.marker} ${data.name}</span> <span class="font-bold">${Math.floor(value / 3600)} h ${Math.floor((value % 3600) / 60)}</span></div>`;
 					} else {
-						return `${data.marker} ${data.name}: <b>${Math.floor(value / 60)} min</b>`;
+						return `<div class="flex gap-2 items-center">${data.marker} ${data.name}</span> <span class="font-bold">${Math.floor(value / 60)} min</span></div>`;
 					}
 				},
 			},

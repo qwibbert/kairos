@@ -1,21 +1,35 @@
-import type { VineID } from '$features/vines/types';
 import { DateTime } from 'luxon';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
-import { db } from '../../db/db';
-import { PomoType, type SessionDocument } from '../../db/sessions/define.svelte';
-import type { VinesDocument } from '../../db/vines/define';
+import { db } from '../../../db/db';
+import { PomoType, type SessionDocument } from '../../../db/sessions/define.svelte';
+import type { VinesDocument } from '../../../db/vines/define';
+
+interface VineTimeCount {
+	vine: VinesDocument,
+	time: number;
+}
 
 interface FocusTimeCounter {
 	per_vine: VineTimeCount[];
 	no_vine: number;
 }
 
-interface VineTimeCount {
-	vine: VinesDocument,
-	time: number;
+interface HistogramDataElement {
+	row: string,
+	vine: VinesDocument | null,
+	time: number
 }
+
+interface HistogramData {
+	rows: string[],
+	elements: HistogramDataElement[]
+}
+
+export type HistogramSeriesType = { id: string; stack: string; name: string; type: string }[];
+export type HistogramSourceType = (string | number)[][];
+export type HistogramLegendType = { name: string }[];
 
 export async function get_stats_day(
 	day: DateTime,
@@ -138,10 +152,6 @@ export async function get_stats_month(
 
 	return counter;
 }
-
-export type HistogramSeriesType = { id: string; stack: string; name: string; type: string }[];
-export type HistogramSourceType = (string | number)[][];
-export type HistogramLegendType = { name: string }[];
 
 export async function get_day_histogram_echarts(
 	day: DateTime,
@@ -285,111 +295,7 @@ export async function get_year_histogram_echarts(
 	return build_histogram_sources({ rows, elements });
 }
 
-type PieChartData = { name: string; value: number }[];
 
-export function vines_pie_chart(
-	vine_id: VineID | undefined,
-	entries: SessionDocument[],
-	vine_map: Map<string, VinesDocument>,
-	children_map: Map<string, string[]>,
-): PieChartData {
-	const data: PieChartData = [];
-	const parent_vine = vine_map.get(vine_id ?? '');
-
-	for (const entry of entries) {
-		if (vine_id && !children_map.get(vine_id)?.includes(entry?.vine_id ?? '')) {
-			continue;
-		}
-
-		const vine = vine_map.get(entry.vine_id ?? '');
-
-		if (vine?.archived) {
-			continue;
-		}
-
-		const parent_vine = vine_map.get(vine?.parent_id ?? '');
-
-		const data_index = data.findIndex((data_entry) =>
-			vine_id || !parent_vine
-				? data_entry.name == vine?.title
-				: data_entry.name == parent_vine?.title,
-		);
-
-		if (data_index == -1) {
-			// Calculate the elapsed_time of all the child tasks
-			const children = children_map.get(entry?.vine_id ?? '');
-			let children_elapsed_time = 0;
-
-			if (children) {
-				for (const child_id of children) {
-					const child = vine_map.get(child_id);
-
-					if (child?.archived) {
-						continue;
-					}
-
-					if (child) {
-						const entries_with_child = entries.filter((e) => e.vine_id == child.id);
-
-						for (const child_entry of entries_with_child) {
-							children_elapsed_time += child_entry.get_time_elapsed();
-						}
-					}
-				}
-			}
-
-			data.push({
-				name: vine_id || !parent_vine ? (vine?.title ?? '') : (parent_vine?.title ?? ''),
-				value: children_elapsed_time + entry.get_time_elapsed(),
-			});
-		} else {
-			data[data_index] = {
-				...data[data_index],
-				value: data[data_index].value + entry.get_time_elapsed(),
-			};
-		}
-	}
-
-	// No data was found, we need to distribute the pie chart evenly
-	if (data.length == 0) {
-		if (parent_vine) {
-			for (const child_id of children_map.get(parent_vine.id) ?? []) {
-				const child = vine_map.get(child_id);
-
-				if (child?.archived) {
-					continue;
-				}
-
-				data.push({
-					name: child?.title ?? 'Unknown Task',
-					value: 0,
-				});
-			}
-		} else {
-			for (const parentless_vine of vine_map
-				.values()
-				.filter((entry) => (entry.parent_id ? false : true) && entry.archived == 0)) {
-				data.push({
-					name: parentless_vine.title,
-					value: 0,
-				});
-			}
-		}
-	}
-
-	return data;
-}
-
-interface HistogramData {
-	rows: string[],
-	elements: HistogramDataElement[]
-}
-
-interface HistogramDataElement {
-	row: string,
-	vine: VinesDocument | null,
-	time: number
-}
 
 function build_histogram_sources(data: HistogramData) {
 	const source = [
