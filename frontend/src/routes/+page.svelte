@@ -297,9 +297,7 @@
 		>
 	{/snippet}
 
-	<header
-		class="h-[15dvh] flex justify-between items-center"
-	>
+	<header class="h-[15dvh] flex justify-between items-center">
 		<div class="grow-1 basis-0 flex items-center gap-2 justify-center">
 			<KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
 				>Kairos</span
@@ -348,10 +346,14 @@
 					</details>
 				</div>
 			{:else}
-					<button class="btn grow-1 basis-0 justify-center" onclick={() => login_register?.showModal()}
+				<div class="flex grow-1 basis-0 justify-center">
+					<button
+						class="btn"
+						onclick={() => login_register?.showModal()}
 						><LogIn class="size-[1.2em]" />
 						<span class="hidden md:block">{$_('login_register')}</span></button
 					>
+				</div>
 			{/if}
 		{/if}
 	</header>
