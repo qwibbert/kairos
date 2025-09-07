@@ -11,7 +11,20 @@ if (db) {
         await db.settings.get_settings().then((settings) => settings?.modify_setting('tour_completed', true));
       },
       steps: [
-        { popover: { title: 'Hallo daar!', description: 'Kairos is een applicatie waarmee je studietijd beter kan indelen en bijhouden aan de hand van de Pomodoro techniek.' } },
+        {
+          popover: {
+            onPopoverRender: (popover, { config, state }) => {
+              const skip_button = document.createElement("button");
+              skip_button.innerText = "Sla over";
+              popover.footerButtons.appendChild(skip_button);
+
+              skip_button.addEventListener("click", () => {
+                driverObj.destroy();
+              });
+
+            }, title: 'Hallo daar!', description: 'Kairos is een applicatie waarmee je studietijd beter kan indelen en bijhouden aan de hand van de Pomodoro techniek.'
+          }
+        },
         { element: '#tour-1', popover: { title: 'Timer', description: 'In dit gedeelte kan je de timer bedienen. Na elke Pomodoro sessie volgt er een korte pauze. Na 4 sessies krijg je een langere pauze!' } },
         {
           element: '#tour-2', popover: {
@@ -28,6 +41,11 @@ if (db) {
               const settings_modal: HTMLDialogElement = document.getElementById('settings');
               settings_modal.close();
               driverObj.moveNext();
+            },
+            onPrevClick: () => {
+              const settings_modal: HTMLDialogElement = document.getElementById('settings');
+              settings_modal.close();
+              driverObj.movePrevious();
             }
           }
         },
@@ -37,6 +55,11 @@ if (db) {
               const stats_modal: HTMLDialogElement = document.getElementById('stats');
               stats_modal.show();
               driverObj.moveNext();
+            },
+            onPrevClick: () => {
+              const settings_modal: HTMLDialogElement = document.getElementById('settings');
+              settings_modal.show();
+              driverObj.movePrevious();
             }
           }
         },
@@ -46,6 +69,11 @@ if (db) {
               const stats_modal: HTMLDialogElement = document.getElementById('stats');
               stats_modal.close();
               driverObj.moveNext();
+            },
+            onPrevClick: () => {
+              const stats_modal: HTMLDialogElement = document.getElementById('stats');
+              stats_modal.close();
+              driverObj.movePrevious();
             }
           }
         },
@@ -56,89 +84,41 @@ if (db) {
               vines_modal.show();
 
               driverObj.moveNext();
+            },
+            onPrevClick: () => {
+              const stats_modal: HTMLDialogElement = document.getElementById('stats');
+              stats_modal.show();
+              driverObj.movePrevious();
             }
           }
         },
         {
           element: '#tour-5-box', popover: {
-            title: 'Vak toevoegen', description: 'Laten we eens proberen om een vak toe te voegen!', onNextClick: () => {
-              const box: HTMLDetailsElement = document.getElementById('tour-5-box');
-              box.open = true;
-
-              const course_button: HTMLDialogElement = document.getElementById('tour-5-course');
-              course_button.addEventListener('click', (e) => {
-                e.preventDefault();
-
-                const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                vines_modal.close();
-
-                const import_course: HTMLDialogElement = document.getElementById('import-course');
-                import_course.show();
-
-                const box: HTMLDetailsElement = document.getElementById('tour-5-box');
-                box.open = false;
-
-                driverObj.moveNext();
-              });
-
-              driverObj.moveNext();
-            }
-          }
-        },
-        {
-          element: '#tour-5-course', popover: {
-            title: 'Vak toevoegen', description: 'Klik op "vak toevoegen" om verder te gaan.', showButtons: ['previous']
-          }
-        },
-        {
-          element: '#import-course', popover: {
-            title: 'Vak toevoegen', description: 'Na je onderwijsinstelling te selecteren, kan je zoeken naar vakken. Laten we het vak "Programmeren" toevoegen.', onNextClick: () => {
-              document.getElementById('course-input')?.addEventListener('input', (e) => {
-                console.log(e.target.value, toString(e.srcElement.value).toLowerCase())
-                if (e.srcElement.value.toLowerCase() == 'programmeren') {
-                  console.log('yeahhh')
-                  driverObj.moveNext();
-                }
-              });
-
-              driverObj.moveNext();
-            }
-          },
-
-        },
-        { element: '#course-input', popover: { title: 'Vak toevoegen', description: 'Typ "programmeren" in de zoekbalk.', showButtons: ['previous'] }, },
-        {
-          element: '#tour-course', popover: {
-            title: 'Vak toevoegen', description: 'Dit is het vak dat we zoeken!', onNextClick: () => {
-              document.querySelector('#tour-course > button').addEventListener('click', () => {
-                console.log('test!')
-                const import_course: HTMLDialogElement = document.getElementById('import-course');
-                import_course.close();
-
-                const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                vines_modal.show();
-
-
-
-                driverObj.moveNext();
-              })
-
-              driverObj.moveNext();
-            }
-          },
-        },
-        { element: '#tour-course > button', popover: { title: 'Vak toevoegen', description: 'Klik op deze knop om verder te gaan!' } },
-        { element: '#vines', popover: { title: 'Vak toevoegen', description: 'Het is je gelukt! Je kan vakken en taken ook omzetten naar mappen. Dit is bijvoorbeeld handig wanneer je wil bijhouden hoe lang je precies aan een hoofdstuk zit of je vakken wil bundelen per studiejaar en / of per semester.' } },
-        {
-          element: '#vines-container > li:nth-child(1) > div.join.bg-base-300.rounded-box > button:nth-child(2)', popover: {
-            title: 'Mappen', description: 'Dat doe je door op deze knop te klikken.', onNextClick: () => {
+            title: 'Vak toevoegen', description: 'Via deze knop kan je taken of vakken toevoegen',
+            onNextClick: () => {
               const vines_modal: HTMLDialogElement = document.getElementById('vines');
               vines_modal.close();
+
               driverObj.moveNext();
+            },
+            onPrevClick: () => {
+              const vines_modal: HTMLDialogElement = document.getElementById('vines');
+              vines_modal.close();
+
+              driverObj.movePrevious();
+            }
+          },
+        },
+        {
+          popover: {
+            title: 'Tour voltooid!', description: 'Bedankt om deze tour te volgen! Hopelijk kan dit programma wat voor je betekenen :)', onPrevClick: () => {
+              const vines_modal: HTMLDialogElement = document.getElementById('vines');
+              vines_modal.close();
+
+              driverObj.movePrevious();
             }
           }
-        },
-        { popover: { title: 'Einde', description: 'Bedankt om deze tutorial te volgen! Hopelijk kan dit programma wat voor je betekenen :)' } }
+        }
       ]
     });
 
