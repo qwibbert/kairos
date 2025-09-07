@@ -15,7 +15,8 @@ export default {
           'release'   // for release commits
         ]
       ]
-    }
+    },
+    'body-max-line-length': [2, "always", Infinity]
   },
   prompt: {
     settings: {
