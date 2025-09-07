@@ -322,13 +322,6 @@
 		>
 		<button
 			class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
-			onclick={() => {
-				vine_to_view = vine;
-				vine_stats_modal?.showModal();
-			}}><ChartLine class="size-[1.2em]" /></button
-		>
-		<button
-			class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
 			onclick={async () => await db.vines.delete_vine(vine.id)}
 			><Trash class="size-[1.2em]" /></button
 		>
@@ -403,6 +396,7 @@
 								<button
 									class="btn btn-link text-base-content"
 									onclick={() => {
+										vine_to_view = undefined;
 										parent_vine = undefined;
 										page = 1;
 									}}><Home class="size-[1em]" />{$_('vines')}</button
@@ -422,6 +416,7 @@
 									<button
 										class="btn btn-link text-base-content flex items-center"
 										onclick={() => {
+											vine_to_view = parent;
 											parent_override = parent.id;
 											page = 1;
 										}}>{parent.title}</button

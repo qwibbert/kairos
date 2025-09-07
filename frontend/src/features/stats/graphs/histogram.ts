@@ -36,7 +36,8 @@ export async function get_stats_day(
 	vine_id: string | undefined,
 	entries: SessionDocument[],
 	vine_map: Map<string, VinesDocument>,
-	children_cache: Map<string, string[]>,
+	children_cache: Map<string, VinesDocument[]>,
+	vine_stats: boolean
 ): Promise<FocusTimeCounter> {
 	const entries_subset = entries.filter(
 		(entry) => entry.time_elapsed[day.toJSDate().toDateString()],
@@ -55,28 +56,16 @@ export async function get_stats_day(
 		}
 
 		if (entry.vine_id && vine_id) {
-			const vine = vine_map.get(vine_id);
+			const child_vine = children_cache.get(vine_id)?.find(child => child.id == entry.vine_id);
 
-			if (entry.vine_id == vine_id) {
-				const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == vine_id);
-
-				if (vine_time_count == -1) {
-					counter.per_vine.push({
-						vine,
-						time: elapsed_time,
-					});
-				} else {
-					const object = counter.per_vine[vine_time_count];
-					counter.per_vine[vine_time_count] = { ...object, time: object.time + elapsed_time };
-				}
-			} else if (children_cache.get(vine_id)?.includes(entry.vine_id)) {
+			if (child_vine) {
 				const vine_time_count = counter.per_vine.findIndex(
-					(count) => count.vine.id == vine_id,
+					(count) => count.vine.id == entry.vine_id,
 				);
 
 				if (vine_time_count == -1) {
 					counter.per_vine.push({
-						vine,
+						vine: child_vine,
 						time: elapsed_time,
 					});
 				} else {
@@ -85,9 +74,15 @@ export async function get_stats_day(
 				}
 			}
 		} else if (entry.vine_id) {
-			const vine = vine_map.get(entry.vine_id);
+			let vine = vine_map.get(entry.vine_id);
+			if (vine_stats) {
+				// If this vine has a parent, we will count the vine time towards the parent
+				if (vine?.parent_id) {
+					vine = vine_map.get(vine?.parent_id ?? '');
+				}
+			}
 
-			const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == entry.vine_id);
+			const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == vine.id);
 
 			if (vine_time_count == -1 && !vine) {
 				// Previous entries did not yet encounter this specific vine id and it looks like the vine has been deleted
@@ -120,6 +115,7 @@ export async function get_stats_month(
 	entries: SessionDocument[],
 	vine_map: Map<string, VinesDocument>,
 	children_cache: Map<string, string[]>,
+	vine_stats: boolean
 ): Promise<FocusTimeCounter> {
 	const counter: FocusTimeCounter = {
 		per_vine: [],
@@ -133,6 +129,7 @@ export async function get_stats_month(
 			entries,
 			vine_map,
 			children_cache,
+			vine_stats
 		);
 
 		counter.no_vine += day_stats.no_vine;
@@ -157,12 +154,13 @@ export async function get_day_histogram_echarts(
 	day: DateTime,
 	pomo_type: PomoType,
 	vine_id: string | undefined,
+	vine_stats: boolean
 ): Promise<[HistogramSourceType, HistogramSeriesType]> {
 	const start_day = day.startOf('week');
 
 	const vines = await db.vines.find().exec();
 	const vine_map = new Map(vines.map((v) => [v.id, v]));
-	const vine_children_cache = new Map<string, string[]>();
+	const vine_children_cache = new Map<string, VinesDocument[]>();
 
 	// Precompute vine children for all vine_ids
 	for (const vine of vines) {
@@ -185,8 +183,12 @@ export async function get_day_histogram_echarts(
 		.exec()
 		.then((results) =>
 			results.filter((res) => {
-				if (vine_id) {
-					return res.vine_id == vine_id || vine_children_cache.has(res?.vine_id ?? '');
+				if (vine_stats) {
+					if (vine_id) {
+						return vine_children_cache.get(vine_id ?? '')?.find(child => child.id == res.vine_id);
+					} else {
+						return res.vine_id;
+					}
 				} else {
 					return true;
 				}
@@ -204,9 +206,10 @@ export async function get_day_histogram_echarts(
 			all_entries,
 			vine_map,
 			vine_children_cache,
+			vine_stats
 		);
 
-		if (!vine_id) {
+		if (!vine_stats) {
 			elements.push({ row: rows[rows.length - 1], vine: null, time: day_stats.no_vine });
 		}
 
@@ -226,18 +229,19 @@ export async function get_year_histogram_echarts(
 	day: DateTime,
 	pomo_type: PomoType,
 	vine_id: string | undefined,
+	vine_stats: boolean
 ): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
 	const start_day = day.startOf('month');
 
 	const vines = await db.vines.find().exec();
 	const vine_map = new Map(vines.map((v) => [v.id, v]));
-	const vine_children_cache = new Map<string, string[]>();
+	const vine_children_cache = new Map<string, VinesDocument[]>();
 
 	// Precompute vine children for all vine_ids
 	for (const vine of vines) {
 		vine_children_cache.set(
 			vine.id,
-			await db.vines.get_vine().then((vine) => vine?.get_all_children(vine.id)),
+			await db.vines.get_vine(vine.id).then((v) => v?.get_all_children(vine.id)),
 		);
 	}
 
@@ -254,8 +258,12 @@ export async function get_year_histogram_echarts(
 		.exec()
 		.then((results) =>
 			results.filter((res) => {
-				if (vine_id) {
-					return res.vine_id == vine_id || vine_children_cache.has(res?.vine_id ?? '');
+				if (vine_stats) {
+					if (vine_id) {
+						return vine_children_cache.get(vine_id ?? '')?.find(child => child.id == res.vine_id);
+					} else {
+						return res.vine_id;
+					}
 				} else {
 					return true;
 				}
@@ -274,9 +282,10 @@ export async function get_year_histogram_echarts(
 			all_entries,
 			vine_map,
 			vine_children_cache,
+			vine_stats
 		);
 
-		if (!vine_id) {
+		if (!vine_stats) {
 			elements.push({ row: rows[rows.length - 1], vine: null, time: month_stats.no_vine });
 		}
 
@@ -289,9 +298,6 @@ export async function get_year_histogram_echarts(
 		}
 	}
 
-	console.log('rows', rows)
-	console.log('elements', elements)
-
 	return build_histogram_sources({ rows, elements });
 }
 
@@ -299,12 +305,15 @@ export async function get_year_histogram_echarts(
 
 function build_histogram_sources(data: HistogramData) {
 	const source = [
-		['date', undefined]
+		['date']
 	];
 	const series = [];
 
-	// Add undefined vine to series
-	series.push({ type: 'bar', stack: 'x', name: get(_)('no_vine'), emphasis: { focus: 'series' } })
+	// Check if we need to add a series for sessions without a vine
+	if (data.elements.find(el => !el.vine)) {
+		series.push({ type: 'bar', stack: 'x', name: get(_)('no_vine'), emphasis: { focus: 'series' } });
+		source[0][1] = undefined;
+	}
 
 	const vine_h_map = new Map<string, number>();
 
