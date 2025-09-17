@@ -1,30 +1,24 @@
 <script lang="ts">
 	// === IMPORTS ===
-	import '$components/style.css';
 	import KairosLogo from '$components/ui/kairos-logo.svelte';
 	import SettingsModal from '$features/settings/components/settings-modal.svelte';
 	import Statsmodal from '$features/stats/components/stats-modal.svelte';
-	import '$features/tour/index';
 	import VineModal from '$features/vines/components/vine-modal.svelte';
 	import { shortcut } from '@svelte-put/shortcut';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
-	import LogIn from 'lucide-svelte/icons/log-in';
 	import Pause from 'lucide-svelte/icons/pause';
 	import Play from 'lucide-svelte/icons/play';
 	import Settings from 'lucide-svelte/icons/settings';
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
-	import User from 'lucide-svelte/icons/user';
 	import { onMount, setContext } from 'svelte';
 	import { _ } from 'svelte-i18n';
 
 	import Alerts from '$lib/components/alerts.svelte';
-	import SyncIndicator from '$lib/components/sync-indicator.svelte';
-	import { authModel, logout } from '$lib/pocketbase';
-	import LoginRegister from '$lib/pocketbase/login-register.svelte';
 	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound } from '$lib/sounds';
 
+	import AccountButton from '$lib/components/account-button.svelte';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import { on_session_syncable } from '../db/sessions/client';
@@ -46,7 +40,6 @@
 	const seconds = $derived(remaining_time % 60);
 
 	// Modal references
-	let login_register = $state<HTMLDialogElement | undefined>();
 	let settings_modal = $state<HTMLDialogElement | undefined>();
 	let stats_modal = $state<HTMLDialogElement | undefined>();
 	let vineselector_modal = $state<HTMLDialogElement | undefined>();
@@ -251,7 +244,6 @@
 	<Statsmodal bind:stats_modal {vines} {sessions} />
 	<VineModal bind:vineselector_modal {vines} />
 	<SettingsModal bind:settings_modal {settings} />
-	<LoginRegister bind:login_register />
 	<Alerts />
 
 	{#snippet type_control(type: PomoType)}
@@ -297,15 +289,15 @@
 		>
 	{/snippet}
 
-	<header class="h-[15dvh] flex justify-between items-center">
+	<header class="h-[10dvh] flex justify-between items-center">
 		<div class="grow-1 basis-0 flex items-center gap-2 justify-center">
 			<KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold"
 				>Kairos</span
 			>
-			<span class="badge">{__KAIROS_VERSION__}</span>
+			<span class="badge hidden md:block">{__KAIROS_VERSION__}</span>
 		</div>
 		{#if session?.status != SessionStatus.Active}
-			<div class="join">
+			<div class="join hidden md:block">
 				<button
 					class="btn btn-soft md:btn-md join-item w-20 m md:w-36"
 					onclick={() => vineselector_modal?.showModal()}
@@ -331,33 +323,12 @@
 					<span class="hidden md:block">{$_('settings')}</span>
 				</button>
 			</div>
-			{#if $authModel}
-				<div class="flex flex-row gap-4 items-center grow-1 basis-0 justify-center">
-					<SyncIndicator />
-					<details class="dropdown">
-						<summary class="btn m-1">
-							<User class="size-[1.2em]" />
-							{$authModel?.surname}
-						</summary>
-						<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-[10dvw] p-2 shadow-sm">
-							<li><button>Account</button></li>
-							<li><button onclick={() => logout()}>Log uit</button></li>
-						</ul>
-					</details>
-				</div>
-			{:else}
-				<div class="flex grow-1 basis-0 justify-center">
-					<button
-						class="btn"
-						onclick={() => login_register?.showModal()}
-						><LogIn class="size-[1.2em]" />
-						<span class="hidden md:block">{$_('login_register')}</span></button
-					>
-				</div>
-			{/if}
+			<div class="hidden md:flex grow-1 basis-0 justify-center">
+				<AccountButton />
+			</div>
 		{/if}
 	</header>
-	<main id="tour-1" class="flex flex-col justify-around items-center h-[80dvh]">
+	<main id="tour-1" class="flex flex-col justify-around items-center h-[70dvh]">
 		<section class="flex flex-col gap-5 items-center">
 			<div class="flex flex-row justify-center gap-2">
 				{@render type_control(PomoType.Pomo)}
@@ -433,13 +404,4 @@
 			{/if}
 		</section>
 	</main>
-	{#if session.status != SessionStatus.Active}
-		<footer class="h-[5dvh] flex flex-row w-full items-center justify-center gap-4">
-			<a href="privacy.pdf" class="link link-hover text-sm">privacy</a>
-			<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
-				>meld problemen</a
-			>
-			<a href="https://github.com/qwibbert/kairos" class="link link-hover text-sm">github</a>
-		</footer>
-	{/if}
 {/if}

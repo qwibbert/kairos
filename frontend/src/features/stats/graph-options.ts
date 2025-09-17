@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import { _ } from 'svelte-i18n';
 import { get } from 'svelte/store';
 
+import type { LegendOption, TooltipOption, XAXisOption, YAXisOption } from 'echarts/types/dist/shared';
 import type { SeriesType, SourceType } from './graphs/histogram';
 
 export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
@@ -69,7 +70,7 @@ export const day_options = {
 		textStyle: {
 			color: '#333' as string,
 		},
-	},
+	} as LegendOption,
 	datazoom: [],
 	xAxis: {
 		type: 'category',
@@ -92,7 +93,7 @@ export const day_options = {
 				color: '#333' as string,
 			},
 		},
-	},
+	} as XAXisOption,
 	dataset: {
 		source: [] as SourceType,
 	},
@@ -125,7 +126,7 @@ export const day_options = {
 				color: '#333' as string,
 			},
 		},
-	},
+	} as YAXisOption,
 	series: [] as SeriesType,
 	tooltip: {
 		trigger: 'axis',
@@ -136,8 +137,8 @@ export const day_options = {
 		textStyle: {
 			color: '',
 		},
-	},
-} as EChartsOption;
+	} as TooltipOption,
+};
 
 export const year_options = {
 	...day_options,
@@ -150,12 +151,12 @@ export const year_options = {
 					month: 'short',
 				}),
 		},
-	},
+	}as XAXisOption,
 	tooltip: {
 		...day_options.tooltip,
 		formatter: (params) => tooltip_formatter(params, 'MONTHS'),
-	},
-} as EChartsOption;
+	} as TooltipOption,
+};
 
 export const vine_day_options = day_options;
 export const vine_year_options = year_options;

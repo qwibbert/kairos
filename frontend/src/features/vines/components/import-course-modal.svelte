@@ -15,7 +15,7 @@
 	interface Props {
 		import_course_modal: HTMLDialogElement | undefined;
 		parent_id: string | undefined;
-		vines: VinesDocument[] | undefined;
+		vines: VinesDocument[] | null;
 	}
 
 	let { import_course_modal = $bindable(), parent_id, vines }: Props = $props();
