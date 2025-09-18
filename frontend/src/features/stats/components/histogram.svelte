@@ -177,6 +177,7 @@
 			histogram = echarts.init(document.getElementById('histogram'), null, {
 				height: 'auto',
 				width: 'auto',
+				renderer: 'canvas'
 			});
 		}
 

@@ -3,12 +3,12 @@
 	import Check from 'lucide-svelte/icons/check';
 	import Import from 'lucide-svelte/icons/import';
 	import type { ListResult } from 'pocketbase';
-	import { _ } from 'svelte-i18n';
 
 	import CourseSearch from '$lib/pocketbase/course-search.svelte';
 	import InstitutionSelector from '$lib/pocketbase/institution-selector.svelte';
 	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
 
+	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import { VineStatus, VineType, type VinesDocument } from '../../../db/vines/define';
 
@@ -61,11 +61,11 @@
 		<div class="flex flex-col items-center gap-2 w-full h-[90%]">
 			<div class="flex flex-row gap-2">
 				<fieldset class="fieldset">
-					<legend class="fieldset-legend">{$_('institution')}</legend>
+					<legend class="fieldset-legend">{i18next.t('vines:institution')}</legend>
 					<InstitutionSelector bind:selected_institution />
 				</fieldset>
 				<fieldset class="fieldset">
-					<legend class="fieldset-legend">{$_('search')}</legend>
+					<legend class="fieldset-legend">{i18next.t('common:search')}</legend>
 					<CourseSearch
 						bind:courses_result
 						bind:loading_results
@@ -115,18 +115,18 @@
 					{#if page_count > 1}
 						<div class="join mb-[5%]">
 							<button class="join-item btn" disabled={page == 1} onclick={() => page--}>«</button>
-							<button class="join-item btn">{$_('page')} {page}</button>
+							<button class="join-item btn">{i18next.t('common:page')} {page}</button>
 							<button class="join-item btn" disabled={page == page_count} onclick={() => page++}
 								>»</button
 							>
 						</div>
 					{/if}
 				{:else if courses_result == 'ERROR'}
-					{$_('error_course_fetch')}
+					{i18next.t('vines:error_course_fetch')}
 				{:else}
 					<div class="flex flex-col gap-2 my-auto items-center">
 						<BookText class="size-[5em] stroke-base-content" />
-						<span class="text-xl text-base-content">{$_('type_for_results')}</span>
+						<span class="text-xl text-base-content">{i18next.t('common:type_for_results')}</span>
 					</div>
 				{/if}
 			</div>

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { LogIn } from 'lucide-svelte';
 	import User from 'lucide-svelte/icons/user';
-	import { _ } from 'svelte-i18n';
 
 	import { authModel, logout } from '$lib/pocketbase';
 
 	import LoginRegister from '$lib/pocketbase/login-register.svelte';
+	import i18next from 'i18next';
 	import SyncIndicator from './sync-indicator.svelte';
 
 	let login_register = $state<HTMLDialogElement | undefined>();
@@ -31,7 +31,7 @@
 	<div class="flex grow-1 basis-0 justify-center">
 		<button class="btn" onclick={() => login_register?.showModal()}
 			><LogIn class="size-[1.2em]" />
-			<span class="hidden md:block">{$_('login_register')}</span></button
+			<span class="hidden md:block">{i18next.t('account:login_register')}</span></button
 		>
 	</div>
 {/if}

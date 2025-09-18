@@ -5,9 +5,9 @@
 	import Volume2 from 'lucide-svelte/icons/volume-2';
 	import VolumeX from 'lucide-svelte/icons/volume-x';
 	import { getContext } from 'svelte';
-	import { _ } from 'svelte-i18n';
 
 	import AccountButton from '$lib/components/account-button.svelte';
+	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import { type SessionDocument, SessionStatus } from '../../../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../../../db/settings/define';
@@ -25,10 +25,10 @@
 		<AccountButton />
 	</div>
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
-		<legend class="fieldset-legend">{$_('focus_times')}</legend>
+		<legend class="fieldset-legend">{i18next.t('statistics:focus_time')}</legend>
 		<div class="flex flex-col md:flex-row gap-2">
 			<div class="flex flex-col">
-				<label for="pomo" class="label">{$_('pomodoro')}</label>
+				<label for="pomo" class="label">{i18next.t('session:pomodoro')}</label>
 				<input
 					id="pomo"
 					type="number"
@@ -43,7 +43,7 @@
 				/>
 			</div>
 			<div class="flex flex-col">
-				<label for="short_break" class="label">{$_('break')}</label>
+				<label for="short_break" class="label">{i18next.t('session:break')}</label>
 				<input
 					id="short_break"
 					type="number"
@@ -58,7 +58,7 @@
 				/>
 			</div>
 			<div class="flex flex-col">
-				<label for="long_break" class="label">{$_('long_break')}</label>
+				<label for="long_break" class="label">{i18next.t('session:long_break')}</label>
 				<input
 					id="long_break"
 					type="number"
@@ -75,7 +75,7 @@
 		</div>
 	</fieldset>
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
-		<legend class="fieldset-legend">{$_('sound')}</legend>
+		<legend class="fieldset-legend">{i18next.t('settings:sound')}</legend>
 		<div class="flex flex-col md:flex-row gap-2 justify-evenly items-center">
 			<label class="label">
 				<input
@@ -85,7 +85,7 @@
 						await settings!.modify_setting('ui_sounds', (e.target as HTMLInputElement).checked)}
 					class="toggle"
 				/>
-				{$_('ui_sounds')}
+				{i18next.t('settings:ui_sounds')}
 			</label>
 
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
@@ -134,7 +134,7 @@
 						)}
 					class="toggle"
 				/>
-				{$_('tick_sound')}
+				{i18next.t('settings:tick_sound')}
 			</label>
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
@@ -181,7 +181,7 @@
 						)}
 					class="toggle"
 				/>
-				{$_('timer_sound')}
+				{i18next.t('settings:timer_sound')}
 			</label>
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
@@ -219,10 +219,10 @@
 	<fieldset
 		class="fieldset flex flex-row justify-evenly bg-base-100 border-base-300 rounded-box w-full border p-4"
 	>
-		<legend class="fieldset-legend">{$_('appearance')}</legend>
+		<legend class="fieldset-legend">{i18next.t('settings:appearance')}</legend>
 		<div class="flex flex-col gap-2 items-center">
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">{$_('inactive')}</legend>
+				<legend class="fieldset-legend">{i18next.t('settings:inactive')}</legend>
 				<select
 					class="select"
 					onchange={async (e) => {
@@ -251,7 +251,7 @@
 		<ArrowRightLeft class="size-[2.5em] self-center" />
 		<div class="flex flex-col gap-2 items-center">
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">{$_('active')}</legend>
+				<legend class="fieldset-legend">{i18next.t('settings:active')}</legend>
 				<select
 					class="select"
 					onchange={async (e) => {

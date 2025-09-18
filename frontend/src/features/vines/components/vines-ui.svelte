@@ -13,10 +13,10 @@
 	import Trash from 'lucide-svelte/icons/trash';
 	import { getContext } from 'svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { _ } from 'svelte-i18n';
 
 	import { alert_dialog } from '$lib/components/alerts.svelte';
 
+	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import {
 		PomoType,
@@ -169,7 +169,7 @@
 
 	async function action_add_vine(resolved_parent_vine: string | undefined) {
 		const vine = await db.vines.add_vine({
-			title: $_('new_vine'),
+			title: i18next.t('vines:new_vine'),
 			status: VineStatus.InActive,
 			position: vines?.length ?? 0,
 			public: true,
@@ -305,7 +305,7 @@
 			class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
 			onclick={async () => {
 				const child_vine = await db.vines.add_vine({
-					title: $_('new_vine'),
+					title: i18next.t('vines:new_vine'),
 					type: vine.type,
 					parent_id: vine.id,
 					position: 0,
@@ -339,12 +339,12 @@
 	<div class="my-5 flex flex-row justify-center join w-full">
 		<details bind:this={add_vine_details} class="dropdown" id="tour-5-box">
 			<summary class="btn btn-soft join-item" id="tour-5-button"
-				><ChevronDown class="size-[1.2em]" /> {$_('add')}</summary
+				><ChevronDown class="size-[1.2em]" /> {i18next.t('common:add')}</summary
 			>
 			<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
 				<li>
 					<a onclick={async () => await action_add_vine(resolved_parent_vine)}
-						><SquareCheck class="size-[1.2em]" /> {$_('add_task')}</a
+						><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
 					>
 				</li>
 				<li>
@@ -353,7 +353,7 @@
 						onclick={() => {
 							import_course_modal?.showModal();
 							add_vine_details!.open = false;
-						}}><BookText class="size-[1.2em]" /> {$_('add_course')}</a
+						}}><BookText class="size-[1.2em]" /> {i18next.t('vines:add_course')}</a
 					>
 				</li>
 			</ul>
@@ -368,7 +368,7 @@
 				}
 
 				vine_stats_modal?.showModal();
-			}}><ChartLine class="size-[1.2em]" />{$_('statistics')}</button
+			}}><ChartLine class="size-[1.2em]" />{i18next.t('statistics:statistics')}</button
 		>
 	</div>
 
@@ -396,7 +396,7 @@
 								vine_to_view = undefined;
 								parent_vine = undefined;
 								page = 1;
-							}}><Home class="size-[1em]" />{$_('vines')}</button
+							}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
 						>
 					</li>
 					{#each parents as parent (parent.id)}
@@ -460,7 +460,7 @@
 				<div class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]">
 					<VinesIcon styles={['size-[5em]']} />
 					<p class="text-lg font-bold">
-						{$_('no_vines_found')}
+						{i18next.t('vines:no_vines_found')}
 					</p>
 				</div>
 			{/each}
@@ -482,7 +482,7 @@
 					onclick={() => (page -= 1)}
 					disabled={page <= 1}>«</button
 				>
-				<button class="join-item btn">{$_('page')} {page}</button>
+				<button class="join-item btn">{i18next.t('common:page')} {page}</button>
 				<button
 					use:dndzone={{
 						items: [],

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { _ } from 'svelte-i18n';
 
+	import i18next from 'i18next';
 	import { login } from '.';
 
 	interface Props {
@@ -32,18 +32,18 @@
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
 		</form>
-		<h3 class="text-lg font-bold self-baseline">{$_('login_register')}</h3>
+		<h3 class="text-lg font-bold self-baseline">{i18next.t('account:login_register')}</h3>
 		<div class="flex flex-col mt-5 items-center gap-3 w-full">
 			<div role="tablist" class="tabs tabs-box">
 				<a
 					role="tab"
 					onclick={() => (active_tab = 'LOGIN')}
-					class={['tab', active_tab == 'LOGIN' ? 'tab-active' : '']}>{$_('login')}</a
+					class={['tab', active_tab == 'LOGIN' ? 'tab-active' : '']}>{i18next.t('account:login')}</a
 				>
 				<a
 					role="tab"
 					onclick={() => (active_tab = 'REGISTER')}
-					class={['tab', active_tab == 'REGISTER' ? 'tab-active' : '']}>{$_('register')}</a
+					class={['tab', active_tab == 'REGISTER' ? 'tab-active' : '']}>{i18next.t('account:register')}</a
 				>
 			</div>
 		</div>
@@ -51,51 +51,51 @@
 			{#if active_tab == 'REGISTER'}
 				<div class="flex flex-row gap-2">
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">{$_('surname')}</legend>
+						<legend class="fieldset-legend">{i18next.t('account:surname')}</legend>
 						<input
 							bind:value={surname}
 							type="text"
 							class="input"
-							placeholder={$_('surname_placeholder')}
+							placeholder={i18next.t('account:surname_placeholder')}
 						/>
 					</fieldset>
 					<fieldset class="fieldset">
-						<legend class="fieldset-legend">{$_('name')}</legend>
+						<legend class="fieldset-legend">{i18next.t('account:name')}</legend>
 						<input
 							bind:value={name}
 							type="text"
 							class="input"
-							placeholder={$_('name_placeholder')}
+							placeholder={i18next.t('account:name_placeholder')}
 						/>
 					</fieldset>
 				</div>
 			{/if}
 			<fieldset class="fieldset">
-				<legend class="fieldset-legend">{$_('e_mail')}</legend>
+				<legend class="fieldset-legend">{i18next.t('account:e_mail')}</legend>
 				<input
 					bind:value={email}
 					type="text"
 					class="input"
-					placeholder={$_('e_mail_placeholder')}
+					placeholder={i18next.t('account:e_mail_placeholder')}
 				/>
 			</fieldset>
 			<fieldset class="fieldset">
-				<legend class="fieldset-legend">{$_('password')}</legend>
+				<legend class="fieldset-legend">{i18next.t('account:password')}</legend>
 				<input
 					bind:value={password}
 					type="password"
 					class="input"
-					placeholder={$_('password_placeholder')}
+					placeholder={i18next.t('account:password_placeholder')}
 				/>
 			</fieldset>
 			{#if active_tab == 'REGISTER'}
 				<fieldset class="fieldset">
-					<legend class="fieldset-legend">{$_('password_confirm')}</legend>
+					<legend class="fieldset-legend">{i18next.t('account:password_confirm')}</legend>
 					<input
 						bind:value={password_confirm}
 						type="password"
 						class="input"
-						placeholder={$_('password_confirm_placeholder')}
+						placeholder={i18next.t('account:password_confirm_placeholder')}
 					/>
 				</fieldset>
 				<p>
@@ -119,7 +119,7 @@
 					active_tab == 'LOGIN'
 						? await handle_login(email, password)
 						: await handle_register(email, password, surname, name)}
-				>{active_tab == 'LOGIN' ? $_('login') : $_('register')}</button
+				>{active_tab == 'LOGIN' ? i18next.t('account:login') : i18next.t('account:register')}</button
 			>
 		</form>
 	</div>

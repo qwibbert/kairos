@@ -4,14 +4,16 @@
 	import '$components/style.css';
 	import VinesIcon from '$components/ui/vines-icon.svelte';
 	import '$features/tour/index';
+	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { getContext } from 'svelte';
-	import { _ } from 'svelte-i18n';
-
+	import { db } from '../db/db';
 	let { children } = $props();
 
+	db.name;
+	
 	const session = getContext('session');
 
     let dock_active: "HOME" | "VINES" | "STATISTICS" | "SETTINGS" = $state(page.url.pathname == '/' ? 'HOME' : page.url.pathname.replace('/', ''));
@@ -32,20 +34,20 @@
 <footer class="dock md:hidden h-[10dvh]">
 	<button class:dock-active={dock_active == 'HOME'} onclick={() => { dock_active = 'HOME'; goto('/') }}>
 		<Home class="size-[1.2em]" />
-		<span class="dock-label">{$_('home')}</span>
+		<span class="dock-label">{i18next.t('common:home')}</span>
 	</button>
 	<button class:dock-active={dock_active == 'VINES'} onclick={() => { dock_active = 'VINES'; goto('/vines') }}>
 		<VinesIcon styles={['size-[1.2em]']} />
-		<span class="dock-label">{$_('vines')}</span>
+		<span class="dock-label">{i18next.t('vines:vines')}</span>
 	</button>
 
 	<button class:dock-active={dock_active == 'STATISTICS'} onclick={() => { dock_active = 'STATISTICS'; goto('/statistics')  }}>
 		<ChartLine class="size-[1.2em]" />
-		<span class="dock-label">{$_('statistics')}</span>
+		<span class="dock-label">{i18next.t('statistics:statistics')}</span>
 	</button>
 
 	<button class:dock-active={dock_active == 'SETTINGS'} onclick={() => {dock_active = 'SETTINGS'; goto('settings') }}>
 		<Settings class="size-[1.2em]" />
-		<span class="dock-label">{$_('settings')}</span>
+		<span class="dock-label">{i18next.t('settings:settings')}</span>
 	</button>
 </footer>

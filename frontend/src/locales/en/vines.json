@@ -1,0 +1,14 @@
+{
+    "vine": "Vine",
+	"vines": "Vines",
+	"no_vines_found": "No vines found",
+    "new_vine": "New vine",
+	"no_vine": "No vine",
+    "institution": "Institution",
+    "error_course_fetch": "Problem occured while fetching courses",
+    "add_task": "Add task",
+	"add_course": "Add course",
+    "search_course": "Search for a course",
+    "loading_institutions": "Loading institutions",
+	"error_institutions_fetch": "Problem occured while fetching institutions"
+}

@@ -1,0 +1,14 @@
+{
+    "vine": "Tros",
+	"vines": "Trossen",
+	"no_vines_found": "Geen trossen gevonden",
+    "new_vine": "Nieuwe tros",
+	"no_vine": "Geen tros",
+    "institution": "Onderwijsinstelling",
+    "error_course_fetch": "Probleem opgetreden bij het ophalen van vakken",
+    "add_task": "Voeg taak toe",
+	"add_course": "Voeg vak toe",
+    "search_course": "Zoek naar vakken",
+    "loading_institutions": "Onderwijsinstellingen laden",
+	"error_institutions_fetch": "Probleem opgetreden bij het ophalen van onderwijsinstellingen"
+}

@@ -1,0 +1,15 @@
+{
+    "login_register": "Login / Register",
+	"login": "Login",
+	"register": "Register",
+	"e_mail": "Email adress",
+	"e_mail_placeholder": "Enter your email adress here",
+	"password": "Password",
+	"password_placeholder": "Enter your password here",
+	"password_confirm": "Confirm password",
+	"password_confirm_placeholder": "Please enter your password again",
+	"surname": "Surname",
+	"surname_placeholder": "John",
+	"name": "Name",
+	"name_placeholder": "Dough"
+}

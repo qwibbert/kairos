@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon';
-import { _ } from 'svelte-i18n';
-import { get } from 'svelte/store';
 
+import i18next from 'i18next';
 import { db } from '../../../db/db';
 import { PomoType, type SessionDocument } from '../../../db/sessions/define.svelte';
 import type { VinesDocument } from '../../../db/vines/define';
@@ -311,7 +310,7 @@ function build_histogram_sources(data: HistogramData) {
 
 	// Check if we need to add a series for sessions without a vine
 	if (data.elements.find(el => !el.vine)) {
-		series.push({ type: 'bar', stack: 'x', name: get(_)('no_vine'), emphasis: { focus: 'series' } });
+		series.push({ type: 'bar', stack: 'x', name: i18next.t('vines:no_vine'), emphasis: { focus: 'series' } });
 		source[0][1] = undefined;
 	}
 

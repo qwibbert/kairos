@@ -1,0 +1,15 @@
+{
+    "login_register": "Log In / Registreer",
+	"login": "Log In",
+	"register": "Registreer",
+	"e_mail": "Email-adres",
+	"e_mail_placeholder": "Vul hier je email-adres in",
+	"password": "Wachtwoord",
+	"password_placeholder": "Vul hier je wachtwoord in",
+	"password_confirm": "Bevestig je wachtwoord",
+	"password_confirm_placeholder": "Vul hier je wachtwoord opnieuw in",
+	"surname": "Voornaam",
+	"surname_placeholder": "John",
+	"name": "Familienaam",
+	"name_placeholder": "Dough"
+}

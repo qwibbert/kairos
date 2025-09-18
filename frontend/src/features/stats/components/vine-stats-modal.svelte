@@ -4,8 +4,8 @@
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { DateTime } from 'luxon';
-	import { _ } from 'svelte-i18n';
 
+	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import { PomoType } from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
@@ -110,6 +110,7 @@
 			histogram = echarts.init(document.getElementById('vine_histogram'), null, {
 				height: 'auto',
 				width: 'auto',
+				renderer: 'canvas'
 			});
 		}
 
@@ -159,6 +160,7 @@
 			pie_chart = echarts.init(document.getElementById('vine_pie_chart'), null, {
 				height: 'auto',
 				width: 'auto',
+				renderer: 'canvas'
 			});
 		}
 
@@ -194,13 +196,13 @@
 		<div class="flex flex-col mt-5 items-center gap-3 w-full">
 			<div class="flex flex-row justify-evenly w-full gap-2">
 				<select bind:value={chart} class="select">
-					<option value="PIE">{$_('pie_chart')}</option>
-						<option value="HISTOGRAM">{$_('histogram')}</option>
+					<option value="PIE">{i18next.t('statistics:pie_chart')}</option>
+						<option value="HISTOGRAM">{i18next.t('statistics:histogram')}</option>
 				</select>
 				{#if chart == 'HISTOGRAM'}
 					<select bind:value={view} class="select">
-						<option value="DAY">{$_('day_view')}</option>
-						<option value="YEAR">{$_('year_view')}</option>
+						<option value="DAY">{i18next.t('statistics:day_view')}</option>
+						<option value="YEAR">{i18next.t('statistics:year_view')}</option>
 					</select>
 				{/if}
 			</div>

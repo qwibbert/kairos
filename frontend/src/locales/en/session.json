@@ -1,0 +1,9 @@
+{
+    "pomodoro": "Pomodoro",
+	"break": "Break",
+	"long_break": "Long Break",
+	"start": "Start",
+	"resume": "Resume",
+	"pause": "Pause",
+	"skip": "Skip"
+}

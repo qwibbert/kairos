@@ -1,8 +1,8 @@
 <script lang="ts">
 	
 	
-	import { _ } from 'svelte-i18n';
 
+	import i18next from 'i18next';
 	import { type SessionDocument } from '../../../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../../../db/settings/define';
 	import SettingsUi from './settings-ui.svelte';
@@ -19,7 +19,7 @@
 <dialog bind:this={settings_modal} id="settings" class="modal">
 	<div class="modal-box max-h-[90dvh]">
 		<div class="flex flex-row items-center justify-between mb-2">
-			<h3 class="text-lg font-bold">{$_('settings')}</h3>
+			<h3 class="text-lg font-bold">{i18next.t('s')}</h3>
 			<form method="dialog">
 				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
 			</form>

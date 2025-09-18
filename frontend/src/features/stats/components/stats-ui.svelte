@@ -1,8 +1,8 @@
 <script lang="ts">
+	import i18next from 'i18next';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { DateTime } from "luxon";
-	import { _ } from "svelte-i18n";
 	import type { SessionDocument } from '../../../db/sessions/define.svelte';
 	import Histogram from "./histogram.svelte";
 
@@ -19,7 +19,7 @@
 
 <div class="stats text-primary shadow w-full">
 	<div class="stat">
-		<div class="stat-title">{$_('focus_time')}</div>
+		<div class="stat-title">{i18next.t('statistics:focus_time')}</div>
 		<div class="stat-value text-md md:text-3xl">
 			{#if time_today < 3600}
 				{Math.floor(time_today / 60)} min
@@ -28,20 +28,20 @@
 				h {Math.floor((time_today % 3600) / 60)} min
 			{/if}
 		</div>
-		<div class="stat-desc">{$_('today')}</div>
+		<div class="stat-desc">{i18next.t('common:today')}</div>
 	</div>
 
 	<div class="stat">
-		<div class="stat-title">{$_('focus_sessions')}</div>
+		<div class="stat-title">{i18next.t('statistics:focus_sessions')}</div>
 		<div class="stat-value">{sessions_today?.length ?? 0}</div>
-		<div class="stat-desc">{$_('today')}</div>
+		<div class="stat-desc">{i18next.t('statistics:today')}</div>
 	</div>
 </div>
 
 <div class="flex flex-col mt-5 items-center gap-3">
 	<select bind:value={view} class="select">
-		<option value="DAY">{$_('day_view')}</option>
-		<option value="YEAR">{$_('year_view')}</option>
+		<option value="DAY">{i18next.t('statistics:day_view')}</option>
+		<option value="YEAR">{i18next.t('statistics:year_view')}</option>
 	</select>
 	<div class="flex flex-row items-center justify-between mb-2">
 		<button

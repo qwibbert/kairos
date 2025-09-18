@@ -1,9 +1,8 @@
 import type { EChartsOption } from 'echarts';
 import { DateTime } from 'luxon';
-import { _ } from 'svelte-i18n';
-import { get } from 'svelte/store';
 
 import type { LegendOption, TooltipOption, XAXisOption, YAXisOption } from 'echarts/types/dist/shared';
+import i18next from 'i18next';
 import type { SeriesType, SourceType } from './graphs/histogram';
 
 export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
@@ -74,7 +73,7 @@ export const day_options = {
 	datazoom: [],
 	xAxis: {
 		type: 'category',
-		name: get(_)('date'),
+		name: i18next.t('statistics:date'),
 		nameLocation: 'middle',
 		nameGap: 30,
 		axisTick: {
@@ -99,7 +98,7 @@ export const day_options = {
 	},
 	yAxis: {
 		type: 'value',
-		name: get(_)('focus_time_hours'),
+		name: i18next.t('statistics:focus_time_hours'),
 		nameLocation: 'end',
 		nameTextStyle: {
 			padding: [0, 0, 0, 30],

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { ListResult } from 'pocketbase';
-	import { _ } from 'svelte-i18n';
-	import { get } from 'svelte/store';
 
+	import i18next from 'i18next';
 	import { client } from '.';
 	import type { CoursesResponse } from './pocketbase-types';
 
@@ -58,7 +57,7 @@
 	id="course-input"
 	disabled={!institution}
 	class="input"
-	placeholder={get(_)('search_course')}
+	placeholder={i18next.t('vines:search_course')}
 	bind:value={search_string}
 	onchange={run_search}
 />

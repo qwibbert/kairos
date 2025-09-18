@@ -1,0 +1,11 @@
+{
+    "settings": "Instellingen",
+    "focus_times": "Focustijden",
+	"sound": "Geluid",
+	"ui_sounds": "UI geluiden",
+	"tick_sound": "Tik geluiden",
+	"timer_sound": "Timer geluiden",
+	"appearance": "Uitstraling",
+	"inactive": "Inactief",
+	"active": "Actief"
+}

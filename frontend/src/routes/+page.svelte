@@ -13,12 +13,12 @@
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
 	import { onMount, setContext } from 'svelte';
-	import { _ } from 'svelte-i18n';
 
 	import Alerts from '$lib/components/alerts.svelte';
 	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound } from '$lib/sounds';
 
 	import AccountButton from '$lib/components/account-button.svelte';
+	import i18next from 'i18next';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import { on_session_syncable } from '../db/sessions/client';
@@ -280,11 +280,11 @@
 			}}
 		>
 			{#if type == PomoType.Pomo}
-				{$_('pomodoro')}
+				{i18next.t('session:pomodoro')}
 			{:else if type == PomoType.ShortBreak}
-				{$_('break')}
+				{i18next.t('session:break')}
 			{:else}
-				{$_('long_break')}
+				{i18next.t('session:long_break')}
 			{/if}</button
 		>
 	{/snippet}
@@ -304,7 +304,7 @@
 					id="tour-4"
 				>
 					<VinesIcon styles={['size-[1.2em]']} />
-					<span class="hidden md:block">{$_('vines')}</span>
+					<span class="hidden md:block">{i18next.t('vines:vines')}</span>
 				</button>
 				<button
 					class="btn btn-soft md:btn-md join-item w-20 md:w-36"
@@ -312,7 +312,7 @@
 					onclick={() => stats_modal?.showModal()}
 				>
 					<ChartLine class="size-[1.2em]" />
-					<span class="hidden md:block">{$_('statistics')}</span>
+					<span class="hidden md:block">{i18next.t('statistics:statistics')}</span>
 				</button>
 				<button
 					id="tour-2"
@@ -320,7 +320,7 @@
 					onclick={() => settings_modal?.showModal()}
 				>
 					<Settings class="size-[1.2em]" />
-					<span class="hidden md:block">{$_('settings')}</span>
+					<span class="hidden md:block">{i18next.t('settings:settings')}</span>
 				</button>
 			</div>
 			<div class="hidden md:flex grow-1 basis-0 justify-center">
@@ -365,14 +365,14 @@
 						}}
 					>
 						<Pause class="size-[1.2em]" />
-						{$_('pause')}
+						{i18next.t('session:pause')}
 					</button>
 					<button
 						class="btn btn-secondary btn-sm md:btn-md"
 						onclick={async () => {
 							await skip_session();
 							await play_button_sound();
-						}}><SkipForward class="size-[1.2em]" />{$_('skip')}</button
+						}}><SkipForward class="size-[1.2em]" />{i18next.t('session:skip')}</button
 					>
 				{:else if session.status == SessionStatus.Paused}
 					<button
@@ -384,21 +384,21 @@
 						}}
 					>
 						<Play class="size-[1.2em]" />
-						{$_('resume')}</button
+						{i18next.t('session:resume')}</button
 					>
 					<button
 						class="btn btn-secondary btn-sm md:btn-md"
 						onclick={async () => {
 							await skip_session();
 							await play_button_sound();
-						}}><SkipForward class="size-[1.2em]" /> {$_('skip')}</button
+						}}><SkipForward class="size-[1.2em]" /> {i18next.t('session:skip')}</button
 					>
 				{:else}
 					<button
 						bind:this={start_button}
 						class="btn btn-primary btn-wide btn-sm md:btn-md"
 						onclick={async () => await start_session()}
-						><Play class="size-[1.2em]" />{$_('start')}</button
+						><Play class="size-[1.2em]" />{i18next.t('session:start')}</button
 					>
 				{/if}
 			{/if}
