@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '$components/style.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import '$components/style.css';
@@ -11,8 +12,6 @@
 	import { getContext } from 'svelte';
 	import { db } from '../db/db';
 	let { children } = $props();
-
-	db.name;
 	
 	const session = getContext('session');
 

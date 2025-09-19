@@ -12,6 +12,7 @@
 	import type { VinesDocument } from '../../../db/vines/define';
 	import { day_options, year_options } from '../graph-options';
 	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../graphs/histogram';
+
 	echarts.use([
 		PieChart,
 		BarChart,
