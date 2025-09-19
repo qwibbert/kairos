@@ -25,7 +25,6 @@
     }
   },
   "dependencies": {
-    "@simple-release/npm": "^2.3.0",
-    "i18next": "^25.5.2"
+    "@simple-release/npm": "^2.3.0"
   }
 }
