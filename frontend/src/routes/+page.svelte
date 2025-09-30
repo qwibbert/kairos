@@ -1,5 +1,6 @@
 <script lang="ts">
 	// === IMPORTS ===
+	import { dev } from '$app/environment';
 	import KairosLogo from '$components/ui/kairos-logo.svelte';
 	import SettingsModal from '$features/settings/components/settings-modal.svelte';
 	import Statsmodal from '$features/stats/components/stats-modal.svelte';
@@ -17,6 +18,7 @@
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import Alerts from '$lib/components/alerts.svelte';
+	import TimerTravel from '$lib/components/timer-travel.svelte';
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
 
@@ -303,10 +305,12 @@
 					onclick={async () => {
 						await start_session();
 						await play_button_sound();
-					}}
-					><Play class="size-[1.2em]" />{i18next.t('session:start')}</button
+					}}><Play class="size-[1.2em]" />{i18next.t('session:start')}</button
 				>
 			{/if}
 		{/if}
 	</section>
+	{#if dev}
+		<TimerTravel {session} />
+	{/if}
 </main>
