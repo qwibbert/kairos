@@ -1,0 +1,20 @@
+{
+    "title_1": "Hi there!",
+    "text_1": "'Kairos is an application for organising your time spent studying using the Pomodoro technique.",
+    "title_2": "Timer",
+    "text_2": "Here you can find the controls for the timer. After every Pomodoro session follows a short break. You will earn a longer break after 4 completed sessions.",
+    "title_3": "Settings",
+    "text_3": "Here you can change many settings to change the behaviour of the application.",
+    "title_4": "Themes",
+    "text_4": "Take a look at the many available themes!",
+    "title_5": "Statistics",
+    "text_5": "Here you can view many statistics about your session",
+    "title_6": "Statistics",
+    "text_6": "Come back here after completing a few sessions!",
+    "title_7": "Vines",
+    "text_7": "Vines can be used to link sessions to a course or task.",
+    "title_8": "Courses",
+    "text_8": "You can use this button to add tasks or courses",
+    "title_9": "The end",
+    "text_9": "Thanks for completing the tour! Hopefully this app will help you to create better study habits."
+}

@@ -13,7 +13,7 @@ export const load: LayoutLoad = async () => {
 	await i18next.init({
 		debug: true,
 		lng: lang,
-		ns: ['account', 'common', 'session', 'settings', 'statistics', 'vines'],
+		ns: ['account', 'common', 'session', 'settings', 'statistics', 'vines', 'onboarding'],
 		resources: {
 			en,
 			nl

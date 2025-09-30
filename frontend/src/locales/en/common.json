@@ -5,5 +5,9 @@
 	"search": "Search",
 	"type_for_results": "Begin typing to view results",
 	"home": "Home",
-	"today": "Today"
+	"today": "Today",
+	"skip": "Skip",
+	"next": "Next",
+	"previous": "Previous",
+	"close": "Close"
 }

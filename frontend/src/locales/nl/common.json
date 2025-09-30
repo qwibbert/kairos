@@ -5,5 +5,9 @@
 	"search": "Zoek",
 	"type_for_results": "Begin met typen voor resultaten",
 	"home": "Thuis",
-	"today": "Vandaag"
+	"today": "Vandaag",
+	"skip": "Sla over",
+	"next": "Volgende",
+	"previous": "Vorige",
+	"close": "Sluit"
 }
