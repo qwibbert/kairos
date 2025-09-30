@@ -107,10 +107,10 @@ export type SessionDocType = ExtractDocumentTypeFromTypedRxJsonSchema<typeof sch
 export const session_schema: RxJsonSchema<SessionDocType> = session_schema_literal;
 
 export type SessionDocMethods = {
-	start: () => Promise<void>;
-	pause: () => Promise<void>;
-	skip: (override_type?: PomoType) => Promise<void>;
-	next: (override_type?: PomoType) => Promise<void>;
+	start: (increment_cycle: boolean) => Promise<SessionDocument>;
+	pause: () => Promise<SessionDocument>;
+	skip: (override_type?: PomoType) => Promise<SessionDocument | null>;
+	next: (override_type?: PomoType) => Promise<SessionDocument | null>;
 	get_time_elapsed: () => number;
 	upload: () => Promise<void>;
 };
@@ -169,7 +169,7 @@ export interface Pauses {
 
 
 export const session_doc_methods: SessionDocMethods = {
-	start: async function (this: SessionDocument, increment_cycle: boolean): Promise<TimerInterval> {
+	start: async function (this: SessionDocument, increment_cycle: boolean): Promise<SessionDocument> {
 		if (
 			this.status == SessionStatus.Ready ||
 			this.status == SessionStatus.Active ||
@@ -191,8 +191,6 @@ export const session_doc_methods: SessionDocMethods = {
 				{ time_target: this.time_target },
 			);
 		}
-
-		const today = new Date().toDateString();
 
 		if (this.status == SessionStatus.Paused) {
 			if (this.paused_at) {
@@ -249,8 +247,10 @@ export const session_doc_methods: SessionDocMethods = {
 				updated_at: new Date().toISOString().replace('T', ' '),
 			},
 		});
+
+		return this.getLatest();
 	},
-	pause: async function (this: SessionDocument): Promise<void> {
+	pause: async function (this: SessionDocument): Promise<SessionDocument> {
 		if (this.status != SessionStatus.Active) {
 			throw SessionErrorFactory.invalid_state(
 				'tried to pause an non-active session',
@@ -266,7 +266,7 @@ export const session_doc_methods: SessionDocMethods = {
 
 		this.time_elapsed[new Date().toDateString()] = this.time_target - remaining_seconds;
 
-		await this.incrementalUpdate({
+		return await this.incrementalUpdate({
 			$set: {
 				status: SessionStatus.Paused,
 				time_elapsed: $state.snapshot(this.time_elapsed),
@@ -275,7 +275,7 @@ export const session_doc_methods: SessionDocMethods = {
 			},
 		});
 	},
-	skip: async function (this: SessionDocument, override_type?: PomoType): Promise<void> {
+	skip: async function (this: SessionDocument, override_type?: PomoType): Promise<SessionDocument | null> {
 		if (this.status == SessionStatus.Ready) {
 			throw SessionErrorFactory.invalid_state(
 				'cannot skip an already finished session',
@@ -314,9 +314,9 @@ export const session_doc_methods: SessionDocMethods = {
 
 		on_session_syncable(this.id);
 
-		await this.next(override_type);
+		return await this.next(override_type);
 	},
-	next: async function (this: SessionDocument, override_type?: PomoType): Promise<void> {
+	next: async function (this: SessionDocument, override_type?: PomoType): Promise<SessionDocument | null> {
 		// Determine what the next session type should be
 		const next_type = override_type ?? get_next_session_type(this.pomo_type, this.cycle);
 
@@ -324,7 +324,7 @@ export const session_doc_methods: SessionDocMethods = {
 		const { time, cycle } = await get_session_config(next_type, this.cycle);
 
 		// Create the next session
-		await this.collection.new({
+		return await this.collection.new({
 			time_target: time,
 			pomo_type: next_type,
 			cycle,
