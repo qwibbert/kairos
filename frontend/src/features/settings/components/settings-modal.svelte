@@ -16,10 +16,10 @@
 	let { settings_modal = $bindable(), session, settings }: Props = $props();
 </script>
 
-<dialog bind:this={settings_modal} id="settings" class="modal">
+<dialog bind:this={settings_modal} id="settings-modal" class="modal">
 	<div class="modal-box max-h-[90dvh]">
 		<div class="flex flex-row items-center justify-between mb-2">
-			<h3 class="text-lg font-bold">{i18next.t('s')}</h3>
+			<h3 class="text-lg font-bold">{i18next.t('settings:settings')}</h3>
 			<form method="dialog">
 				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
 			</form>

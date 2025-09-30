@@ -1,5 +1,4 @@
 <script lang="ts">
-	import '$components/style.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import '$components/style.css';
@@ -10,7 +9,6 @@
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { getContext } from 'svelte';
-	import { db } from '../db/db';
 	let { children } = $props();
 	
 	const session = getContext('session');
@@ -31,21 +29,21 @@
 	<a href="https://github.com/qwibbert/kairos" class="link link-hover text-sm">github</a>
 </footer>
 <footer class="dock md:hidden h-[10dvh]">
-	<button class:dock-active={dock_active == 'HOME'} onclick={() => { dock_active = 'HOME'; goto('/') }}>
+	<button id="home-button" class:dock-active={dock_active == 'HOME'} onclick={() => { dock_active = 'HOME'; goto('/') }}>
 		<Home class="size-[1.2em]" />
 		<span class="dock-label">{i18next.t('common:home')}</span>
 	</button>
-	<button class:dock-active={dock_active == 'VINES'} onclick={() => { dock_active = 'VINES'; goto('/vines') }}>
+	<button id="tour-4-mobile" class:dock-active={dock_active == 'VINES'} onclick={() => { dock_active = 'VINES'; goto('/vines') }}>
 		<VinesIcon styles={['size-[1.2em]']} />
 		<span class="dock-label">{i18next.t('vines:vines')}</span>
 	</button>
 
-	<button class:dock-active={dock_active == 'STATISTICS'} onclick={() => { dock_active = 'STATISTICS'; goto('/statistics')  }}>
+	<button id="tour-3-mobile" class:dock-active={dock_active == 'STATISTICS'} onclick={() => { dock_active = 'STATISTICS'; goto('/statistics')  }}>
 		<ChartLine class="size-[1.2em]" />
 		<span class="dock-label">{i18next.t('statistics:statistics')}</span>
 	</button>
 
-	<button class:dock-active={dock_active == 'SETTINGS'} onclick={() => {dock_active = 'SETTINGS'; goto('settings') }}>
+	<button id="tour-2-mobile" class:dock-active={dock_active == 'SETTINGS'} onclick={() => {dock_active = 'SETTINGS'; goto('settings') }}>
 		<Settings class="size-[1.2em]" />
 		<span class="dock-label">{i18next.t('settings:settings')}</span>
 	</button>

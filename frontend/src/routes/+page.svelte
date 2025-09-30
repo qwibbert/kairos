@@ -372,7 +372,7 @@
 						onclick={async () => {
 							await skip_session();
 							await play_button_sound();
-						}}><SkipForward class="size-[1.2em]" />{i18next.t('session:skip')}</button
+						}}><SkipForward class="size-[1.2em]" />{i18next.t('common:skip')}</button
 					>
 				{:else if session.status == SessionStatus.Paused}
 					<button
@@ -391,7 +391,7 @@
 						onclick={async () => {
 							await skip_session();
 							await play_button_sound();
-						}}><SkipForward class="size-[1.2em]" /> {i18next.t('session:skip')}</button
+						}}><SkipForward class="size-[1.2em]" /> {i18next.t('common:skip')}</button
 					>
 				{:else}
 					<button
