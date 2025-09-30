@@ -146,7 +146,7 @@ i18next.on('initialized', async () => {
             }
           },
           {
-            element: '#tour-5-box', popover: {
+            element: mobile ? '#tour-5-fab' : '#tour-5-box', popover: {
               title: i18next.t('onboarding:title_8'), description: i18next.t('onboarding:text_7'),
               onNextClick: async () => {
                 if (mobile) {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import VinesIcon from '$components/ui/vines-icon.svelte';
 	import VineStatsModal from '$features/stats/components/vine-stats-modal.svelte';
+	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Check from 'lucide-svelte/icons/check';
@@ -9,6 +10,7 @@
 	import Home from 'lucide-svelte/icons/home';
 	import ListPlus from 'lucide-svelte/icons/list-plus';
 	import Pencil from 'lucide-svelte/icons/pencil';
+	import Plus from 'lucide-svelte/icons/plus';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
 	import Trash from 'lucide-svelte/icons/trash';
 	import { getContext } from 'svelte';
@@ -16,12 +18,8 @@
 
 	import { alert_dialog } from '$lib/components/alerts.svelte';
 
-	import i18next from 'i18next';
 	import { db } from '../../../db/db';
-	import {
-		PomoType,
-		SessionStatus
-	} from '../../../db/sessions/define.svelte';
+	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
 	import {
 		VineStatus,
 		type VineTreeItem,
@@ -183,7 +181,7 @@
 		// Make last vine editable
 		vine_editing = vine;
 
-        add_vine_details!.open = false;
+		add_vine_details!.open = false;
 	}
 
 	let add_vine_details: HTMLDetailsElement | undefined = $state(undefined);
@@ -220,7 +218,9 @@
 													: VineStatus.InActive,
 											});
 
-											app_state.session = await app_state.session?.skip(app_state.session.pomo_type as PomoType);
+											app_state.session = await app_state.session?.skip(
+												app_state.session.pomo_type as PomoType,
+											);
 										},
 									],
 								]),
@@ -331,12 +331,14 @@
 {/snippet}
 
 {#await parent_vine then resolved_parent_vine}
-	<div class="my-5 flex flex-row justify-center join w-full">
-		<details bind:this={add_vine_details} class="dropdown" id="tour-5-box">
+	<div class="my-5 flex flex-row justify-center md:join w-full">
+		<details bind:this={add_vine_details} class="dropdown hidden md:block" id="tour-5-box">
 			<summary class="btn btn-soft join-item" id="tour-5-button"
 				><ChevronDown class="size-[1.2em]" /> {i18next.t('common:add')}</summary
 			>
-			<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+			<ul
+				class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+			>
 				<li>
 					<a onclick={async () => await action_add_vine(resolved_parent_vine)}
 						><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
@@ -494,5 +496,28 @@
 				>
 			</div>
 		{/if}
+		<div class="fab mb-[10dvh] md:hidden" id="tour-5-fab">
+			<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
+			<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-success"><Plus /></div>
+
+			<!-- buttons that show up when FAB is open -->
+			<div>
+				{i18next.t('vines:add_task')}
+				<button
+					class="btn btn-lg btn-circle"
+					onclick={async () => await action_add_vine(resolved_parent_vine)}><SquareCheck /></button
+				>
+			</div>
+			<div>
+				{i18next.t('vines:add_course')}
+				<button
+					class="btn btn-lg btn-circle"
+					onclick={() => {
+						import_course_modal?.showModal();
+						add_vine_details!.open = false;
+					}}><BookText /></button
+				>
+			</div>
+		</div>
 	</div>
 {/await}
