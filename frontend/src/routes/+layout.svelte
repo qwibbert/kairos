@@ -4,17 +4,24 @@
 	import '$components/style.css';
 	import VinesIcon from '$components/ui/vines-icon.svelte';
 	import '$features/tour/index';
+	import Alerts from '$lib/components/alerts.svelte';
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
-	import { getContext } from 'svelte';
+	import { setContext } from 'svelte';
+	import type { SessionDocument } from '../db/sessions/define.svelte';
 	let { children } = $props();
 	
-	const session = getContext('session');
+	const app_state: { session: SessionDocument | null } = $state({
+		session: null
+	})
+	const session = setContext('app_state', app_state);
 
     let dock_active: "HOME" | "VINES" | "STATISTICS" | "SETTINGS" = $state(page.url.pathname == '/' ? 'HOME' : page.url.pathname.replace('/', ''));
 </script>
+
+<Alerts />
 
 <div class="h-[80dvh] m-[5dvh] overflow-y-auto">
 	{@render children()}

@@ -14,10 +14,9 @@
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
-	import { onMount, setContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 
 	import AccountButton from '$lib/components/account-button.svelte';
-	import Alerts from '$lib/components/alerts.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
@@ -30,14 +29,14 @@
 	import { type VinesDocument } from '../db/vines/define';
 
 	// === STATE VARIABLES ===
-	let session: SessionDocument | null = $state(null);
-	setContext('session', () => session);
+	const app_state = getContext('app_state');
+
 	let settings: SettingsDocument | null = $state(null);
 	let sessions: SessionDocument[] | null = $state(null);
 	let vines: VinesDocument[] | null = $state(null);
 	let timer_interval: ReturnType<typeof setTimeout> | undefined = $state(undefined);
 
-	const remaining_time = $derived(session ? session.time_target - session.get_time_elapsed() : 0);
+	const remaining_time = $derived(app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0);
 	const minutes = $derived(Math.floor(remaining_time / 60));
 	const seconds = $derived(remaining_time % 60);
 
@@ -64,15 +63,15 @@
 		const resumeable_session = await db.sessions.get_last_resumable();
 
 		if (resumeable_session) {
-			session = resumeable_session;
+			app_state.session = resumeable_session;
 
 			// Incase the session was interrupted, we can just resume it
 			// TODO: session locking
-			if (session?.status == SessionStatus.Active && !timer_interval) {
+			if (app_state.session?.status == SessionStatus.Active && !timer_interval) {
 				await start_timer();
 			}
 		} else {
-			session = await db.sessions.new({
+			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
 				time_target: await db.settings.get_setting('pomo_time'),
 				cycle: 0,
@@ -80,41 +79,39 @@
 		}
 	});
 
-	$inspect(session);
-
 	async function start_timer() {
-		if (timer_interval || !session) return; // Prevent multiple timers
+		if (timer_interval || !app_state.session) return; // Prevent multiple timers
 
 		timer_interval = setInterval(async () => {
-			if (!session || session.status !== SessionStatus.Active) {
+			if (!app_state.session || app_state.session.status !== SessionStatus.Active) {
 				clearInterval(timer_interval);
 				return;
 			} else if (!timer_interval) {
 				return;
 			}
 
-			session = await tick(session, timer_interval);
+			app_state.session = await tick(app_state.session, timer_interval);
 		}, 1000);
 	}
 
 	async function start_session() {
-		if (session) {
-			session = await session.start(true);
+		if (app_state.session) {
+			app_state.session = await app_state.session.start(true);
 			await start_timer();
 		}
 	}
 
 	async function pause_session() {
-		if (session) {
-			session = await session.pause();
+		if (app_state.session) {
+			app_state.session = await app_state.session.pause();
 			clearInterval(timer_interval);
 			timer_interval = undefined;
 		}
 	}
 
 	async function skip_session(override_type?: PomoType) {
-		if (session) {
-			session = await session.skip(override_type);
+		if (app_state.session) {
+			app_state.session = await app_state.session.skip(override_type);
 			clearInterval(timer_interval);
 			timer_interval = undefined;
 		}
@@ -150,26 +147,25 @@
 <Statsmodal bind:stats_modal {vines} {sessions} />
 <VineModal bind:vineselector_modal {vines} />
 <SettingsModal bind:settings_modal {settings} />
-<Alerts />
 
 {#snippet type_control(type: PomoType)}
 	<button
-		disabled={session?.status == SessionStatus.Active}
+		disabled={app_state.session?.status == SessionStatus.Active}
 		class={[
 			'btn btn-sm md:btn-md',
 			{
-				'btn-primary disabled:bg-primary': session?.pomo_type == type,
+				'btn-primary disabled:bg-primary': app_state.session?.pomo_type == type,
 			},
-			{ 'btn-neutral': session?.pomo_type != type },
+			{ 'btn-neutral': app_state.session?.pomo_type != type },
 			{
-				'disabled:!bg-primary disabled:text-neutral': session?.pomo_type == type,
+				'disabled:!bg-primary disabled:text-neutral': app_state.session?.pomo_type == type,
 			},
 		]}
 		onclick={async () => {
 			// Check if there is already an active session with a non-zero time_real
 			// If so, skip this session
-			if (session && session.get_time_elapsed() != 0) {
-				await session.skip(type);
+			if (app_state.session && app_state.session.get_time_elapsed() != 0) {
+				await app_state.session.skip(type);
 			} else {
 				await db.sessions.new({
 					pomo_type: type,
@@ -201,7 +197,7 @@
 		>
 		<span class="badge hidden md:block">{__KAIROS_VERSION__}</span>
 	</div>
-	{#if session?.status != SessionStatus.Active}
+	{#if app_state.session?.status != SessionStatus.Active}
 		<div class="join hidden md:block">
 			<button
 				class="btn btn-soft md:btn-md join-item w-20 m md:w-36"
@@ -240,9 +236,9 @@
 			{@render type_control(PomoType.ShortBreak)}
 			{@render type_control(PomoType.LongBreak)}
 		</div>
-		{#if session?.vine_title}
+		{#if app_state.session?.vine_title}
 			<span class="btn btn-primary btn-sm">
-				<SquareCheck class="size-[1.2em]" />{session?.vine_title}
+				<SquareCheck class="size-[1.2em]" />{app_state.session?.vine_title}
 			</span>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>
@@ -259,8 +255,8 @@
 	</section>
 
 	<section class="flex flex-row gap-2 justify-center">
-		{#if session}
-			{#if session.status == SessionStatus.Active}
+		{#if app_state.session}
+			{#if app_state.session.status == SessionStatus.Active}
 				<button
 					bind:this={start_button}
 					class="btn btn-primary btn-wide btn-sm md:btn-md"
@@ -279,7 +275,7 @@
 						await play_button_sound();
 					}}><SkipForward class="size-[1.2em]" />{i18next.t('common:skip')}</button
 				>
-			{:else if session.status == SessionStatus.Paused}
+			{:else if app_state.session.status == SessionStatus.Paused}
 				<button
 					bind:this={start_button}
 					class="btn btn-primary btn-wide btn-sm md:btn-md"
@@ -311,6 +307,6 @@
 		{/if}
 	</section>
 	{#if dev}
-		<TimerTravel {session} />
+		<TimerTravel session={app_state.session} />
 	{/if}
 </main>

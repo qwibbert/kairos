@@ -20,8 +20,7 @@
 	import { db } from '../../../db/db';
 	import {
 		PomoType,
-		type SessionDocument,
-		SessionStatus,
+		SessionStatus
 	} from '../../../db/sessions/define.svelte';
 	import {
 		VineStatus,
@@ -32,7 +31,7 @@
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 	import ImportCourseModal from './import-course-modal.svelte';
 
-	let session = getContext<() => SessionDocument | null>('session');
+	const app_state = getContext('app_state');
 
 	let vines: VinesDocument[] | null = $state(null);
 	const vines_query = db.vines.find();
@@ -202,10 +201,8 @@
 				type="checkbox"
 				checked={vine.status == VineStatus.Active}
 				onchange={async (e) => {
-					let current_session = session();
-
-					if (current_session) {
-						if (current_session.status != SessionStatus.Inactive) {
+					if (app_state.session) {
+						if (app_state.session.status != SessionStatus.Inactive) {
 							alert_dialog({
 								id: crypto.randomUUID(),
 								header: 'Change Vine',
@@ -223,17 +220,15 @@
 													: VineStatus.InActive,
 											});
 
-											await current_session?.skip(current_session.pomo_type as PomoType);
+											app_state.session = await app_state.session?.skip(app_state.session.pomo_type as PomoType);
 										},
 									],
 								]),
 							});
 						} else {
-							current_session = current_session?.getLatest();
-
 							const checked = (e.target as HTMLInputElement)?.checked;
 
-							await current_session.incrementalUpdate({
+							app_state.session = await app_state.session.incrementalUpdate({
 								$set: {
 									vine_id: checked ? vine.id : undefined,
 									vine_title: checked ? vine.title : undefined,
