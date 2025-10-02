@@ -153,9 +153,9 @@
 			// Check if there is already an active session with a non-zero time_real
 			// If so, skip this session
 			if (app_state.session && app_state.session.get_time_elapsed() != 0) {
-				await app_state.session.skip(type);
+				app_state.session = await app_state.session.skip(type);
 			} else {
-				await db.sessions.new({
+				app_state.session = await db.sessions.new({
 					pomo_type: type,
 					time_target: await db.settings.get_setting(
 						type == PomoType.Pomo
