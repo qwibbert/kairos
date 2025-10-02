@@ -5,13 +5,15 @@ import { play_timer_finish_sound } from "./sounds";
 export async function tick(session: SessionDocument, interval: ReturnType<typeof setTimeout>): Promise<SessionDocument | null> {
     const now = Date.now();
     const remaining_ms = Math.max(0, (session.time_end ?? 0) - now);
-    const remaining_seconds = Math.ceil(remaining_ms / 1000);
+    const remaining_seconds_total = Math.ceil(remaining_ms / 1000);
+    const remaining_minutes = Math.floor(remaining_seconds_total / 60);
+    const remaining_seconds = remaining_seconds_total % 60;
 
     const today = new Date().toDateString();
-    session.time_elapsed[today] = session.time_target - remaining_seconds;
+    session.time_elapsed[today] = session.time_target - remaining_seconds_total;
 
     const formatted_seconds = remaining_seconds < 10 ? `0${remaining_seconds}` : remaining_seconds;
-    document.title = `${remaining_seconds % 60}:${formatted_seconds} | Kairos`;
+    document.title = `${remaining_minutes}:${formatted_seconds} | Kairos`;
 
     // Check completion
     if (remaining_ms <= 0) {
