@@ -10,15 +10,30 @@
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { setContext } from 'svelte';
+	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
+	import type { SettingsDocument } from '../db/settings/define';
 	let { children } = $props();
 	
-	const app_state: { session: SessionDocument | null } = $state({
-		session: null
-	})
+	const app_state: { session: SessionDocument | null, settings: SettingsDocument | null, timer_interval: ReturnType<typeof setTimeout> | null } = $state({
+		session: null,
+		timer_interval: null,
+		settings: null
+	});
+
+	db.settings.findOne('1').$.subscribe((s) => (app_state.settings = s));
+	
 	const session = setContext('app_state', app_state);
 
     let dock_active: "HOME" | "VINES" | "STATISTICS" | "SETTINGS" = $state(page.url.pathname == '/' ? 'HOME' : page.url.pathname.replace('/', ''));
+
+	$effect(() => {
+		if (app_state.timer_interval) {
+			document.documentElement.setAttribute('data-theme', app_state.settings?.theme_active);
+		} else {
+			document.documentElement.setAttribute('data-theme', app_state.settings?.theme_inactive);
+		}
+	});
 </script>
 
 <Alerts />

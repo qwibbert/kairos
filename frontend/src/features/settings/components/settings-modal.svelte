@@ -3,17 +3,13 @@
 	
 
 	import i18next from 'i18next';
-	import { type SessionDocument } from '../../../db/sessions/define.svelte';
-	import type { SettingsDocument } from '../../../db/settings/define';
 	import SettingsUi from './settings-ui.svelte';
 
 	interface Props {
 		settings_modal?: HTMLDialogElement;
-		settings: SettingsDocument;
-		session?: SessionDocument;
 	}
 
-	let { settings_modal = $bindable(), session, settings }: Props = $props();
+	let { settings_modal = $bindable() }: Props = $props();
 </script>
 
 <dialog bind:this={settings_modal} id="settings-modal" class="modal">

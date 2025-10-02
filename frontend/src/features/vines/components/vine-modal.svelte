@@ -1,6 +1,4 @@
 <script lang="ts">
-
-
 	import VinesUi from './vines-ui.svelte';
 
 	interface Props {

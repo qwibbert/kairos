@@ -25,16 +25,13 @@
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
-	import type { SettingsDocument } from '../db/settings/define';
 	import { type VinesDocument } from '../db/vines/define';
 
 	// === STATE VARIABLES ===
 	const app_state = getContext('app_state');
 
-	let settings: SettingsDocument | null = $state(null);
 	let sessions: SessionDocument[] | null = $state(null);
 	let vines: VinesDocument[] | null = $state(null);
-	let timer_interval: ReturnType<typeof setTimeout> | undefined = $state(undefined);
 
 	const remaining_time = $derived(app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0);
 	const minutes = $derived(Math.floor(remaining_time / 60));
@@ -67,7 +64,7 @@
 
 			// Incase the session was interrupted, we can just resume it
 			// TODO: session locking
-			if (app_state.session?.status == SessionStatus.Active && !timer_interval) {
+			if (app_state.session?.status == SessionStatus.Active && !app_state.timer_interval) {
 				await start_timer();
 			}
 		} else {
@@ -80,17 +77,17 @@
 	});
 
 	async function start_timer() {
-		if (timer_interval || !app_state.session) return; // Prevent multiple timers
+		if (app_state.timer_interval || !app_state.session) return; // Prevent multiple timers
 
-		timer_interval = setInterval(async () => {
+		app_state.timer_interval = setInterval(async () => {
 			if (!app_state.session || app_state.session.status !== SessionStatus.Active) {
-				clearInterval(timer_interval);
+				clearInterval(app_state.timer_interval);
 				return;
-			} else if (!timer_interval) {
+			} else if (!app_state.timer_interval) {
 				return;
 			}
 
-			app_state.session = await tick(app_state.session, timer_interval);
+			app_state.session = await tick(app_state.session, app_state.timer_interval);
 		}, 1000);
 	}
 
@@ -104,27 +101,18 @@
 	async function pause_session() {
 		if (app_state.session) {
 			app_state.session = await app_state.session.pause();
-			clearInterval(timer_interval);
-			timer_interval = undefined;
+			clearInterval(app_state.timer_interval);
+			app_state.timer_interval = null;
 		}
 	}
 
 	async function skip_session(override_type?: PomoType) {
 		if (app_state.session) {
 			app_state.session = await app_state.session.skip(override_type);
-			clearInterval(timer_interval);
-			timer_interval = undefined;
+			clearInterval(app_state.timer_interval);
+			app_state.timer_interval = null;
 		}
 	}
-
-	// === REACTIVE EFFECTS ===
-	$effect(() => {
-		if (timer_interval) {
-			document.documentElement.setAttribute('data-theme', settings?.theme_active);
-		} else {
-			document.documentElement.setAttribute('data-theme', settings?.theme_inactive);
-		}
-	});
 </script>
 
 <svelte:head>
@@ -144,9 +132,9 @@
 	}}
 />
 
-<Statsmodal bind:stats_modal {vines} {sessions} />
-<VineModal bind:vineselector_modal {vines} />
-<SettingsModal bind:settings_modal {settings} />
+<Statsmodal bind:stats_modal />
+<VineModal bind:vineselector_modal />
+<SettingsModal bind:settings_modal />
 
 {#snippet type_control(type: PomoType)}
 	<button
