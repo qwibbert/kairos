@@ -28,7 +28,7 @@ export async function tick(session: SessionDocument, interval: ReturnType<typeof
 
 async function handle_session_complete(session: SessionDocument, interval: ReturnType<typeof setTimeout>): Promise<SessionDocument | null> {
     clearInterval(interval);
-
+    
     document.title = 'Kairos';
     
     await play_timer_finish_sound();

@@ -77,11 +77,17 @@
 	});
 
 	async function start_timer() {
-		if (app_state.timer_interval || !app_state.session) return; // Prevent multiple timers
+		if (!app_state.session) return;
+
+		if (app_state.timer_interval) {
+			clearInterval(app_state.timer_interval);
+			app_state.timer_interval = null;
+		}
 
 		app_state.timer_interval = setInterval(async () => {
 			if (!app_state.session || app_state.session.status !== SessionStatus.Active) {
 				clearInterval(app_state.timer_interval);
+				app_state.timer_interval == null;
 				return;
 			} else if (!app_state.timer_interval) {
 				return;
