@@ -16,6 +16,6 @@
 				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
 			</form>
 		</div>
-		<VinesUi />
+		<VinesUi mode={"OVERVIEW"}/>
 	</div>
 </dialog>

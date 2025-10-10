@@ -54,7 +54,7 @@
 		"echarts": "^5.6.0",
 		"fake-indexeddb": "^6.2.0",
 		"i18next": "^25.5.2",
-		"lucide-svelte": "^0.526.0",
+		"lucide-svelte": "^0.545.0",
 		"luxon": "^3.7.1",
 		"rxdb": "^16.18.0",
 		"svelte-dnd-action": "^0.9.64",

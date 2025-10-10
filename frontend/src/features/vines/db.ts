@@ -1,3 +1,5 @@
+import { db } from '../../db/db';
+import type { VinesSortBy } from '../../db/settings/define';
 import type { VinesDocument } from '../../db/vines/define';
 import { type VineTreeItem } from './types';
 
@@ -6,19 +8,37 @@ import { type VineTreeItem } from './types';
  * If root_id is undefined, returns the full tree.
  * If the root_id is not found, returns an empty array.
  */
-export const build_vine_subtree = (vines: VinesDocument[], root_id?: string): VineTreeItem[] => {
+export const build_vine_subtree = async (vines: VinesDocument[], root_id?: string, sort_by: VinesSortBy, search_string: string): Promise<VineTreeItem[]> => {
 	const vine_map: { [id: string]: VineTreeItem } = {};
 	const roots: VineTreeItem[] = [];
 
 	// Initialize map and add empty children arrays
-	vines.forEach((vine) => {
-		if (vine.id === 'NO_VINE') return;
-		vine_map[vine.id] = { ...vine.toJSON(), children: [] };
-	});
+	for await (const vine of vines.map(v => {
+		if (sort_by == 'LAST_USED_ASC' || sort_by == 'LAST_USED_DESC') {
+			return db.sessions
+				.findOne({
+					selector: {
+						vine_id: v.id,
+					},
+					sort: [{ updated_at: 'desc' }],
+				})
+				?.exec()
+				.then((v) => new Date(v?.updated_at ?? 0).getTime()).then((last_updated) => ({ ...v.toJSON(), last_updated }));
+		} else return { ...v.toJSON() };
+	})) {
+		if (vine.id === 'NO_VINE') continue;
+
+		if (search_string != "" && !vine.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) continue;
+
+		vine_map[vine.id] = { ...vine, children: [] };
+	}
 
 	// Build the tree
 	vines.forEach((vine) => {
 		if (vine.id === 'NO_VINE') return;
+
+		if (search_string != "" && !vine.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) return;
+
 		if (vine.parent_id && vine_map[vine.parent_id]) {
 			vine_map[vine.parent_id].children!.push(vine_map[vine.id]);
 		} else {
@@ -27,8 +47,26 @@ export const build_vine_subtree = (vines: VinesDocument[], root_id?: string): Vi
 	});
 
 	if (!root_id) {
-		return roots;
+		return roots.toSorted(
+		(a: VinesDocument, b: VinesDocument) => {
+			switch (sort_by) {
+				case 'LAST_USED_DESC':
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+				case 'LAST_USED_ASC':
+					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+				case 'CREATION_ASC':
+					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+				case 'CREATION_DESC':
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+				case 'NAME_ASC':
+					return a.title.localeCompare(b.title);
+				case 'NAME_DESC':
+					return b.title.localeCompare(a.title);
+			}
+		},
+	);
 	}
+
 
 	// Helper to find the subtree root
 	function find_subtree_array(nodes: VineTreeItem[], id: string): VineTreeItem[] {
@@ -46,7 +84,24 @@ export const build_vine_subtree = (vines: VinesDocument[], root_id?: string): Vi
 		return [];
 	}
 
-	return find_subtree_array(roots, root_id);
+	return find_subtree_array(roots, root_id).toSorted(
+		(a: VinesDocument, b: VinesDocument) => {
+			switch (sort_by) {
+				case 'LAST_USED_DESC':
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+				case 'LAST_USED_ASC':
+					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+				case 'CREATION_ASC':
+					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+				case 'CREATION_DESC':
+					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+				case 'NAME_ASC':
+					return a.title.localeCompare(b.title);
+				case 'NAME_DESC':
+					return b.title.localeCompare(a.title);
+			}
+		},
+	);
 };
 
 export function find_subtree(tree: VineTreeItem[], id: string): VineTreeItem | undefined {

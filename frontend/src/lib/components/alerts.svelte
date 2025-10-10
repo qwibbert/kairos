@@ -122,7 +122,10 @@
 	let dialogs: AlertDialog[] = $state([]);
 
 	export const alert_dialog = (options: AlertDialog) => {
-		dialogs = [...dialogs, { ...options, id: crypto.randomUUID() }];
+		const id = crypto.randomUUID();
+
+		dialogs = [...dialogs, { ...options, id}];
+		(document.getElementById(id) as HTMLDialogElement).showModal();
 	};
 
 	// function onunhandledrejection(e: PromiseRejectionEvent) {
@@ -154,7 +157,6 @@
 
 {#each dialogs as dialog (dialog.id)}
 	<dialog
-		open
 		id={dialog.id}
 		class="modal overflow-y-auto z-50"
 		onclose={() => {

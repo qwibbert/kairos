@@ -79,6 +79,14 @@ export async function init_db(): Promise<KairosDB> {
 				1: function (old_doc) {
 					old_doc.tour_completed = false;
 					return old_doc
+				},
+				2: function (old_doc) {
+					old_doc.vines_sort_by = "LAST_USED";
+					return old_doc;
+				},
+				3: function (old_doc) {
+					old_doc.vines_sort_dir = "DESC";
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -100,7 +108,12 @@ export async function init_db(): Promise<KairosDB> {
 			methods: vines_doc_methods, // (optional) ORM-functions for documents
 			attachments: {}, // (optional) ORM-functions for attachments
 			options: {}, // (optional) Custom parameters that might be used in plugins
-			migrationStrategies: {}, // (optional)
+			migrationStrategies: {
+				1: function (old_doc) {
+					delete old_doc.position;
+					return old_doc;
+				}
+			},
 			autoMigrate: true, // (optional) [default=true]
 			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
 		},
@@ -125,6 +138,7 @@ if ((await db.settings.count().exec()) == 0) {
 		timer_finish_sound_volume: 100,
 		theme_active: 'nord',
 		theme_inactive: 'coffee',
+		vines_sort_by: 'LAST_USED',
 		tour_completed: false
 	} as SettingsDocType);
 }

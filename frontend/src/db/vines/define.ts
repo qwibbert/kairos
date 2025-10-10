@@ -5,12 +5,10 @@ import {
 	type RxJsonSchema,
 	toTypedRxJsonSchema,
 } from 'rxdb';
-
-import type { VinesDocument } from '../../db/vines/define';
 import { VinesErrorFactory } from './errors';
 
 export const vines_schema_literal = {
-	version: 0,
+	version: 1,
 	title: 'vines',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -19,12 +17,6 @@ export const vines_schema_literal = {
 		id: {
 			type: 'string',
 			maxLength: 100,
-		},
-		position: {
-			type: 'number',
-			minimum: 0,
-			maximum: 100000,
-			multipleOf: 1,
 		},
 		type: {
 			type: 'string',
@@ -78,8 +70,8 @@ export const vines_schema_literal = {
 			format: 'date-time',
 		},
 	},
-	required: ['id', 'position', 'type', 'title', 'status', 'public', 'session_aim', 'created_at'],
-	indexes: ['position', 'type', 'title', 'status', 'public'],
+	required: ['id', 'type', 'title', 'status', 'public', 'session_aim', 'created_at'],
+	indexes: ['type', 'title', 'status', 'public'],
 } as const;
 
 const schema_typed = toTypedRxJsonSchema(vines_schema_literal);

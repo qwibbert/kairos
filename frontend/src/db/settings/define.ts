@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 1,
+	version: 3,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -78,6 +78,14 @@ export const settings_schema_literal = {
 			maxLength: 100,
 			default: 'dark',
 		},
+		vines_sort_by: {
+			type: 'string',
+			maxLength: 100
+		},
+		vines_sort_dir: {
+			type: 'string',
+			maxLength: 100
+		},
 		tour_completed: {
 			type: 'boolean'
 		},
@@ -96,6 +104,8 @@ export const settings_schema_literal = {
 	},
 	required: ['created_at'],
 } as const;
+
+export type VinesSortBy = "LAST_USED_ASC" | "LAST_USED_DESC" | "CREATION_ASC" | "CREATION_DESC" | "NAME_ASC" | "NAME_DESC";
 
 const schema_typed = toTypedRxJsonSchema(settings_schema_literal);
 

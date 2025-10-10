@@ -34,7 +34,6 @@
 		const length = query.length;
 
 		await db.vines.add_vine({
-			position: length,
 			type: VineType.Course,
 			title: course.title,
 			status: VineStatus.InActive,

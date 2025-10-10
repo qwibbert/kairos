@@ -13,17 +13,24 @@
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import type { SettingsDocument } from '../db/settings/define';
+	import type { VinesDocument } from '../db/vines/define';
 	let { children } = $props();
 	
-	const app_state: { session: SessionDocument | null, settings: SettingsDocument | null, timer_interval: ReturnType<typeof setTimeout> | null } = $state({
+	const app_state: { vines: VinesDocument[] | null, session: SessionDocument | null, settings: SettingsDocument | null, timer_interval: ReturnType<typeof setTimeout> | null } = $state({
 		session: null,
 		timer_interval: null,
-		settings: null
+		settings: null,
+		vines: null
 	});
 
 	db.settings.findOne('1').$.subscribe((s) => (app_state.settings = s));
+	db.vines.find().$.subscribe((e: VinesDocument[]) => {
+		if (e) {
+			app_state.vines = e;
+		}
+	});
 	
-	const session = setContext('app_state', app_state);
+	setContext('app_state', app_state);
 
     let dock_active: "HOME" | "VINES" | "STATISTICS" | "SETTINGS" = $state(page.url.pathname == '/' ? 'HOME' : page.url.pathname.replace('/', ''));
 
@@ -38,7 +45,7 @@
 
 <Alerts />
 
-<div class="h-[80dvh] m-[5dvh] overflow-y-auto">
+<div class="h-[80dvh] m-[5dvh]">
 	{@render children()}
 </div>
 
