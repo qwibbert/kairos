@@ -2,7 +2,7 @@ import { on_session_syncable } from "../db/sessions/client";
 import { SessionStatus, type SessionDocument } from "../db/sessions/define.svelte";
 import { play_timer_finish_sound } from "./sounds";
 
-export async function tick(session: SessionDocument, interval: ReturnType<typeof setTimeout>): Promise<SessionDocument | null> {
+export async function tick(session: SessionDocument, interval: ReturnType<typeof setTimeout>, wake_lock: WakeLockSentinel | null): Promise<SessionDocument | null> {
     const now = Date.now();
     const remaining_ms = Math.max(0, (session.time_end ?? 0) - now);
     const remaining_seconds_total = Math.ceil(remaining_ms / 1000);
@@ -17,7 +17,7 @@ export async function tick(session: SessionDocument, interval: ReturnType<typeof
 
     // Check completion
     if (remaining_ms <= 0) {
-        return await handle_session_complete(session, interval);
+        return await handle_session_complete(session, interval, wake_lock);
     } else return await session.incrementalUpdate({
         $set: {
             time_elapsed: JSON.parse(JSON.stringify(session.time_elapsed)),
@@ -26,9 +26,13 @@ export async function tick(session: SessionDocument, interval: ReturnType<typeof
     });
 }
 
-async function handle_session_complete(session: SessionDocument, interval: ReturnType<typeof setTimeout>): Promise<SessionDocument | null> {
+async function handle_session_complete(session: SessionDocument, interval: ReturnType<typeof setTimeout>, wake_lock: WakeLockSentinel | null): Promise<SessionDocument | null> {
     clearInterval(interval);
     
+    if (wake_lock) {
+		await wake_lock.release();
+	}
+
     document.title = 'Kairos';
     
     await play_timer_finish_sound();

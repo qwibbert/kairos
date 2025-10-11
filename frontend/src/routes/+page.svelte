@@ -21,6 +21,7 @@
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
 
+	import { push_toast } from '$lib/components/alerts.svelte';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -33,7 +34,9 @@
 	let sessions: SessionDocument[] | null = $state(null);
 	let vines: VinesDocument[] | null = $state(null);
 
-	const remaining_time = $derived(app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0);
+	const remaining_time = $derived(
+		app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0,
+	);
 	const minutes = $derived(Math.floor(remaining_time / 60));
 	const seconds = $derived(remaining_time % 60);
 
@@ -84,16 +87,28 @@
 			app_state.timer_interval = null;
 		}
 
+		if ('wakeLock' in navigator && !app_state.wake_lock) {
+			try {
+				app_state.wake_lock = await navigator.wakeLock.request('screen');
+			} catch (err) {
+				push_toast('error', { type: 'headed', header: 'Wakelock', text: `Failed to acquire a wakelock due to the following reason. ${err.name}: ${err.message}` })
+			}
+		}
+
 		app_state.timer_interval = setInterval(async () => {
 			if (!app_state.session || app_state.session.status !== SessionStatus.Active) {
 				clearInterval(app_state.timer_interval);
 				app_state.timer_interval == null;
+
+				if (app_state.wake_lock) {
+					await app_state.wake_lock.release();
+				}
 				return;
 			} else if (!app_state.timer_interval) {
 				return;
 			}
 
-			app_state.session = await tick(app_state.session, app_state.timer_interval);
+			app_state.session = await tick(app_state.session, app_state.timer_interval, app_state.wake_lock);
 		}, 1000);
 	}
 
@@ -109,6 +124,9 @@
 			app_state.session = await app_state.session.pause();
 			clearInterval(app_state.timer_interval);
 			app_state.timer_interval = null;
+			if (app_state.wake_lock) {
+				await app_state.wake_lock.release();
+			}
 		}
 	}
 
@@ -117,6 +135,9 @@
 			app_state.session = await app_state.session.skip(override_type);
 			clearInterval(app_state.timer_interval);
 			app_state.timer_interval = null;
+			if (app_state.wake_lock) {
+				await app_state.wake_lock.release();
+			}
 		}
 	}
 </script>

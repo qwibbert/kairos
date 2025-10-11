@@ -16,11 +16,12 @@
 	import type { VinesDocument } from '../db/vines/define';
 	let { children } = $props();
 	
-	const app_state: { vines: VinesDocument[] | null, session: SessionDocument | null, settings: SettingsDocument | null, timer_interval: ReturnType<typeof setTimeout> | null } = $state({
+	const app_state: { vines: VinesDocument[] | null, session: SessionDocument | null, settings: SettingsDocument | null, timer_interval: ReturnType<typeof setTimeout> | null, wake_lock: WakeLockSentinel | null } = $state({
 		session: null,
 		timer_interval: null,
 		settings: null,
-		vines: null
+		vines: null,
+		wake_lock: null
 	});
 
 	db.settings.findOne('1').$.subscribe((s) => (app_state.settings = s));
