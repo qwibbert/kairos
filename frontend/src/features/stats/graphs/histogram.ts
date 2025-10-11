@@ -74,6 +74,13 @@ export async function get_stats_day(
 			}
 		} else if (entry.vine_id) {
 			let vine = vine_map.get(entry.vine_id);
+
+			if (!vine) {
+				// The entry references a deleted vine, we have no choice but to skip this entry
+				// TODO: Due to RxDB not supporting querying for deleted documents, we should add our own deletion tracker logic
+				continue;
+			}
+
 			if (vine_stats) {
 				// If this vine has a parent, we will count the vine time towards the parent
 				if (vine?.parent_id) {
