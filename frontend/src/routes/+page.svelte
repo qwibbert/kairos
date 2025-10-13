@@ -14,7 +14,7 @@
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
-	import { getContext, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
@@ -22,6 +22,7 @@
 	import { tick } from '$lib/timer';
 
 	import { push_toast } from '$lib/components/alerts.svelte';
+	import { get_app_state } from '$lib/context';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -29,7 +30,7 @@
 	import { type VinesDocument } from '../db/vines/define';
 
 	// === STATE VARIABLES ===
-	const app_state = getContext('app_state');
+	const app_state = get_app_state();
 
 	let sessions: SessionDocument[] | null = $state(null);
 	let vines: VinesDocument[] | null = $state(null);
