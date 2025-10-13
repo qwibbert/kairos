@@ -261,9 +261,9 @@
 	</section>
 	<section>
 		<span class="countdown font-mono text-6xl md:text-7xl xl:text-8xl rounded w-full">
-			<span style={`--value:${minutes}`} aria-live="polite" aria-label={`${minutes}`}
+			<span style={`--value:${minutes}; --digits:2`} aria-live="polite" aria-label={`${minutes}`}
 				>{minutes}</span
-			>:<span style={`--value:${seconds}`} aria-live="polite" aria-label={`${seconds}`}
+			>:<span style={`--value:${seconds}; --digits:2`} aria-live="polite" aria-label={`${seconds}`}
 				>{seconds}</span
 			>
 		</span>
