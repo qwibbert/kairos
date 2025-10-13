@@ -7,6 +7,9 @@ import pkg from './package.json' with { type: 'json' };
 
 export default defineConfig({
 	plugins: [topLevelAwait(), sveltekit(), tailwindcss()],
+	build: {
+		sourcemap: true
+	},
 	server: {
 		proxy: {
 			'^/(api|_)/': {

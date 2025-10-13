@@ -41,6 +41,9 @@
 	let view = $state<'DAY' | 'YEAR'>('DAY');
 	let chart = $state<'HISTOGRAM' | 'PIE'>('HISTOGRAM');
 
+	let histogram_element: HTMLDivElement | null = $state(null);
+	let pie_element: HTMLDivElement | null = $state(null);
+
 	const today = DateTime.now();
 	let delta_weeks = $state(0);
 	let delta_years = $state(0);
@@ -51,13 +54,13 @@
 	let pie_chart = $state<echarts.EChartsType | undefined>();
 
 	$effect(() => {
-		if (chart == 'HISTOGRAM' && view == 'DAY' && delta_weeks >= 0) {
+		if (histogram && chart == 'HISTOGRAM' && view == 'DAY' && delta_weeks >= 0) {
 			load_histogram();
-		} else if (chart == 'HISTOGRAM' && view == 'YEAR' && delta_years >= 0) {
+		} else if (histogram && chart == 'HISTOGRAM' && view == 'YEAR' && delta_years >= 0) {
 			load_histogram();
 		}
 
-		if (chart == 'PIE') {
+		if (pie_chart && chart == 'PIE') {
 			load_pie_chart();
 		}
 	});
@@ -125,7 +128,7 @@
 	async function load_histogram() {
 		histogram?.clear();
 		if (!histogram) {
-			histogram = echarts.init(document.getElementById('vine_histogram'), null, {
+			histogram = echarts.init(histogram_element, null, {
 				height: 'auto',
 				width: 'auto',
 				renderer: 'canvas'
@@ -175,7 +178,7 @@
 			})
 			.exec();
 		if (!pie_chart) {
-			pie_chart = echarts.init(document.getElementById('vine_pie_chart'), null, {
+			pie_chart = echarts.init(pie_chart, null, {
 				height: 'auto',
 				width: 'auto',
 				renderer: 'canvas'
@@ -258,9 +261,9 @@
 				</div>
 			{/if}
 
-			<div id="vine_histogram" class="w-full h-[50vh]" class:hidden={chart != 'HISTOGRAM'}></div>
+			<div bind:this={histogram_element} class="w-full h-[50vh]" class:hidden={chart != 'HISTOGRAM'}></div>
 
-			<div id="vine_pie_chart" class="w-full h-[50vh]" class:hidden={chart != 'PIE'}></div>
+			<div bind:this={pie_element} class="w-full h-[50vh]" class:hidden={chart != 'PIE'}></div>
 		</div>
 	</div>
 </dialog>

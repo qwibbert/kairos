@@ -67,18 +67,12 @@
 	});
 
 	$effect(() => {
-		if (view == 'DAY' && delta_weeks >= 0) {
+		if (histogram && view == 'DAY' && delta_weeks >= 0) {
 			load_histogram();
-		} else if (view == 'YEAR' && delta_years >= 0) {
+		} else if ( histogram && view == 'YEAR' && delta_years >= 0) {
 			load_histogram();
 		}
 	});
-
-	$effect(() => {
-		if (histogram_element) {
-			new ResizeObserver(() => histogram?.resize()).observe(histogram_element);
-		}
-	})
 
 	async function load_day_stats(): Promise<void> {
 		await db.vines
@@ -175,7 +169,7 @@
 		histogram?.clear();
 
 		if (!histogram) {
-			histogram = echarts.init(document.getElementById('histogram'), null, {
+			histogram = echarts.init(histogram_element, null, {
 				height: 'auto',
 				width: 'auto',
 				renderer: 'canvas'
@@ -213,4 +207,4 @@
 	}).observe(document.documentElement, { attributes: true });
 </script>
 
-<div bind:this={histogram_element} id="histogram" class="w-full h-[50dvh]"></div>
+<div bind:this={histogram_element} class="w-full h-[50dvh]"></div>
