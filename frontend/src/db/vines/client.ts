@@ -1,9 +1,11 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
 
-import { alert_dialog, push_toast } from '$lib/components/alerts.svelte';
 import { client } from '$lib/pocketbase';
+import { push_toast } from '$lib/toasts';
 
+import Alert from '$lib/components/alert.svelte';
+import { modals } from 'svelte-modals';
 import { db } from '../db';
 import { VineType, type VinesDocType } from './define';
 
@@ -57,18 +59,13 @@ export async function setup_vines_sync() {
 
 						// This error implies that the user tried to link a course that has been deleted from upstream.
 						// We should inform the user and reset the affected vine to a task type
-						alert_dialog({
-							id: crypto.randomUUID(),
-							type: 'ERROR',
-							header: 'Sync Error',
-							text: `Failed to link course with ${
-								affected_vine?.newDocumentState.course_title
+						modals.open(Alert, {
+							type: 'ERROR', header: 'Sync Error', text: `Failed to link course with ${affected_vine?.newDocumentState.course_title
 									? 'title of ' + affected_vine.newDocumentState.course_title
 									: 'id of ' + err.context.additional_data.course
-							}. The course has probably been deleted since you last tried to add it.`,
-							dismissable: true,
-							actions: new Map(),
-						});
+								}. The course has probably been deleted since you last tried to add it.`, actions: new Map()
+						})
+
 
 						const db_vine = db.vines.findOne(err.entity_id);
 

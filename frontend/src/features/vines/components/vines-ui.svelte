@@ -13,8 +13,9 @@
 	import Plus from 'lucide-svelte/icons/plus';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
 	import Trash from 'lucide-svelte/icons/trash';
+	import { modals } from 'svelte-modals';
 
-	import { alert_dialog } from '$lib/components/alerts.svelte';
+	import Alert from '$lib/components/alert.svelte';
 	import { get_app_state } from '$lib/context';
 
 	import { db } from '../../../db/db';
@@ -48,9 +49,7 @@
 	let new_vine_input = $state<HTMLInputElement | null>(null);
 	let vine_title_input_value = $state('');
 	let vine_type_selector_value = $state<'TASK' | 'COURSE'>('TASK');
-	let vine_stats_modal = $state<HTMLDialogElement | undefined>();
-	let import_course_modal = $state<HTMLDialogElement | undefined>();
-	let vine_select_modal = $state<HTMLDialogElement | undefined>();
+
 	let vine_to_view = $state<VinesDocument | undefined>();
 	let add_vine_details: HTMLDetailsElement | undefined = $state(undefined);
 	let vines_sort_by: VinesSortBy = $derived(
@@ -59,11 +58,11 @@
 
 	let search_string = $state('');
 
-	let vines_list_state = $derived(
-		app_state.vines
+	let vines_list_state = $derived.by(async () => {
+		return app_state.vines
 			? await build_vine_subtree(app_state.vines, parent_vine, vines_sort_by, search_string)
-			: [],
-	);
+			: [];
+	});
 
 	$effect(() => {
 		if (new_vine_input && vine_editing) {
@@ -96,23 +95,6 @@
 	}
 </script>
 
-<VineStatsModal bind:vine={vine_to_view} bind:vine_stats_modal />
-<ImportCourseModal bind:import_course_modal vines={app_state.vines} parent_id={parent_vine} />
-
-<VineSelectModal
-	on_select={async (vine) => {
-		if (vine && vine_moving) {
-			await db.vines.update_vine(vine_moving.id, { parent_id: vine });
-		} else {
-			await db.vines.update_vine(vine_moving?.id, { parent_id: undefined });
-		}
-
-		vine_select_modal?.close();
-	}}
-	bind:vine_select_modal
-	bind:vine_moving
-/>
-
 {#snippet vine_list_item(vine: VineTreeItem)}
 	<div class="flex flex-row items-center gap-2">
 		{#if vine.children && vine.children.length > 0}
@@ -124,11 +106,10 @@
 				onchange={async (e) => {
 					if (app_state.session) {
 						if (app_state.session.status != SessionStatus.Inactive) {
-							alert_dialog({
-								id: crypto.randomUUID(),
+							modals.open(Alert, {
+								type: 'INFO',
 								header: 'Change Vine',
 								text: 'Changing vine will create a new session, are you sure you want to continue?',
-								type: 'INFO',
 								dismissable: false,
 								actions: new Map([
 									['Cancel', async () => {}],
@@ -222,8 +203,17 @@
 		<button
 			class="btn btn-square btn-sm md:btn-md btn-ghost join-item"
 			onclick={async () => {
-				vine_moving= vine;
-				vine_select_modal?.showModal();
+				vine_moving = vine;
+
+				const selected_vine = (await modals.open(VineSelectModal, {
+					vine_moving,
+				})) as VinesDocument | null;
+
+				if (selected_vine && vine_moving) {
+					await db.vines.update_vine(vine_moving.id, { parent_id: selected_vine.id });
+				} else {
+					await db.vines.update_vine(vine_moving?.id, { parent_id: undefined });
+				}
 			}}><FolderUp class="size-[1.2em]" /></button
 		>
 		<button
@@ -234,7 +224,7 @@
 	</div>
 {/snippet}
 
-{#await parent_vine then resolved_parent_vine}
+{#await vines_list_state then vines_list_state}
 	<div class="mt-5 flex flex-row justify-center md:join w-full">
 		<details bind:this={add_vine_details} class="dropdown hidden md:block" id="tour-5-box">
 			<summary class="btn btn-soft join-item" id="tour-5-button"
@@ -242,15 +232,15 @@
 			>
 			<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
 				<li>
-					<a onclick={async () => await action_add_vine(resolved_parent_vine)}
+					<a onclick={async () => await action_add_vine(parent_vine)}
 						><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
 					>
 				</li>
 				<li>
 					<a
 						id="tour-5-course"
-						onclick={() => {
-							import_course_modal?.showModal();
+						onclick={async () => {
+							modals.open(ImportCourseModal, { parent_id: parent_vine });
 							add_vine_details!.open = false;
 						}}><BookText class="size-[1.2em]" /> {i18next.t('vines:add_course')}</a
 					>
@@ -266,7 +256,7 @@
 					vine_to_view = undefined;
 				}
 
-				vine_stats_modal?.showModal();
+				modals.open(VineStatsModal, { vine: vine_to_view });
 			}}><ChartLine class="size-[1.2em]" />{i18next.t('statistics:statistics')}</button
 		>
 	</div>
@@ -357,9 +347,8 @@
 		<!-- buttons that show up when FAB is open -->
 		<div>
 			{i18next.t('vines:add_task')}
-			<button
-				class="btn btn-lg btn-circle"
-				onclick={async () => await action_add_vine(resolved_parent_vine)}><SquareCheck /></button
+			<button class="btn btn-lg btn-circle" onclick={async () => await action_add_vine(parent_vine)}
+				><SquareCheck /></button
 			>
 		</div>
 		<div>
@@ -367,7 +356,7 @@
 			<button
 				class="btn btn-lg btn-circle"
 				onclick={() => {
-					import_course_modal?.showModal();
+					modals.open(ImportCourseModal, { parent_id: parent_vine });
 					add_vine_details!.open = false;
 				}}><BookText /></button
 			>

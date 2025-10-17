@@ -21,8 +21,9 @@
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
 
-	import { push_toast } from '$lib/components/alerts.svelte';
 	import { get_app_state } from '$lib/context';
+	import { push_toast } from '$lib/toasts';
+	import { modals } from 'svelte-modals';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -41,10 +42,6 @@
 	const minutes = $derived(Math.floor(remaining_time / 60));
 	const seconds = $derived(remaining_time % 60);
 
-	// Modal references
-	let settings_modal = $state<HTMLDialogElement | undefined>();
-	let stats_modal = $state<HTMLDialogElement | undefined>();
-	let vineselector_modal = $state<HTMLDialogElement | undefined>();
 	let start_button = $state<HTMLButtonElement>();
 
 	// === DATABASE QUERIES ===
@@ -153,16 +150,12 @@
 			key: ' ',
 			modifier: false,
 			callback: () =>
-				settings_modal?.open || stats_modal?.open || vineselector_modal?.open
+				modals.stack.length != 0
 					? null
 					: start_button?.click(),
 		},
 	}}
 />
-
-<Statsmodal bind:stats_modal />
-<VineModal bind:vineselector_modal />
-<SettingsModal bind:settings_modal />
 
 {#snippet type_control(type: PomoType)}
 	<button
@@ -217,7 +210,7 @@
 		<div class="join hidden md:block">
 			<button
 				class="btn btn-soft md:btn-md join-item w-20 m md:w-36"
-				onclick={() => vineselector_modal?.showModal()}
+				onclick={() => modals.open(VineModal)}
 				id="tour-4"
 			>
 				<VinesIcon styles={['size-[1.2em]']} />
@@ -226,7 +219,7 @@
 			<button
 				class="btn btn-soft md:btn-md join-item w-20 md:w-36"
 				id="tour-3"
-				onclick={() => stats_modal?.showModal()}
+				onclick={() => modals.open(Statsmodal)}
 			>
 				<ChartLine class="size-[1.2em]" />
 				<span class="hidden md:block">{i18next.t('statistics:statistics')}</span>
@@ -234,7 +227,7 @@
 			<button
 				id="tour-2"
 				class="btn btn-soft join-item w-20 md:w-36"
-				onclick={() => settings_modal?.showModal()}
+				onclick={() => modals.open(SettingsModal)}
 			>
 				<Settings class="size-[1.2em]" />
 				<span class="hidden md:block">{i18next.t('settings:settings')}</span>

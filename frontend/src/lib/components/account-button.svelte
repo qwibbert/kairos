@@ -6,12 +6,10 @@
 
 	import LoginRegister from '$lib/pocketbase/login-register.svelte';
 	import i18next from 'i18next';
+	import { modals } from 'svelte-modals';
 	import SyncIndicator from './sync-indicator.svelte';
 
-	let login_register = $state<HTMLDialogElement | undefined>();
 </script>
-
-<LoginRegister bind:login_register />
 
 {#if $authModel}
 	<div class="flex flex-row gap-4 items-center">
@@ -29,7 +27,7 @@
 	</div>
 {:else}
 	<div class="flex grow-1 basis-0 justify-center">
-		<button class="btn" onclick={() => login_register?.showModal()}
+		<button class="btn" onclick={() => modals.open(LoginRegister)}
 			><LogIn class="size-[1.2em]" />
 			<span class="hidden md:block">{i18next.t('account:login_register')}</span></button
 		>

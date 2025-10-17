@@ -11,19 +11,32 @@
 	import { type VineTreeItem, VineType, type VinesDocument } from '../../../db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 
-	let {
-		on_select,
-		vine_moving = $bindable(),
-		vine_select_modal = $bindable()
-	}: {
-		on_select?: (vine: string | null) => Promise<void>;
+	interface Props {
+		isOpen: boolean;
+		close: (selected_vine: VinesDocument | null) => {};
 		vine_moving: VinesDocument | null;
-		vine_select_modal: HTMLDialogElement | undefined;
-	} = $props();
+	}
+	const {
+		// provided by <Modals />
+		isOpen,
+		close,
+		vine_moving = $bindable(),
+	}: Props = $props();
+
+	let dialog_el: HTMLDialogElement | null = $state(null);
+
+	$effect(() => {
+		if (dialog_el && isOpen && !dialog_el.open) {
+			dialog_el.showModal();
+		} else if (dialog_el && !isOpen && dialog_el.open) {
+			dialog_el.requestClose();
+		}
+	});
 
 	const app_state = get_app_state();
-	let parent_override: string | undefined = $state(undefined);
-	let parent_vine: string | undefined = $derived.by(() => {
+
+	let parent_override: VinesDocument | null = $state(null);
+	let parent_vine: VinesDocument | null = $derived.by(() => {
 		if (parent_override) {
 			return parent_override;
 		}
@@ -38,13 +51,20 @@
 
 	let vines_list_state = $derived(
 		app_state.vines
-			? await build_vine_subtree(app_state.vines, parent_vine, vines_sort_by, search_string)
+			? await build_vine_subtree(app_state.vines, parent_vine?.id, vines_sort_by, search_string)
 			: [],
 	);
-
 </script>
 
-<dialog bind:this={vine_select_modal} class="modal" id="vines">
+<dialog
+	bind:this={dialog_el}
+	class="modal"
+	id="vines"
+	onclose={(e) => {
+		e.preventDefault();
+		close(null);
+	}}
+>
 	<div class="modal-box max-h-[90dvh]">
 		<div class="flex flex-row justify-between items-center w-full">
 			<h3 class="text-lg font-bold self-baseline">Verplaats {vine_moving?.title}</h3>
@@ -58,7 +78,9 @@
 				<button
 					disabled={vine.id == vine_moving?.id}
 					class="btn"
-					onclick={() => (on_select ? on_select(vine.id) : {})}
+					onclick={() => {
+						close(vine);
+					}}
 				>
 					<FolderSymlink class="size-[1.5em]" />
 				</button>
@@ -68,10 +90,10 @@
 					<button
 						onclick={() => {
 							if (parent_override) {
-								parent_override = undefined;
+								parent_override = null;
 							}
 
-							parent_override = vine.id;
+							parent_override = vine;
 							page = 1;
 						}}
 						class=" link text-base-content">{vine.title}</button
@@ -92,7 +114,7 @@
 				<button
 					class="btn"
 					onclick={() => {
-						on_select ? on_select(resolved_parent_vine ?? null) : {};
+						close(resolved_parent_vine ?? null);
 					}}><FolderDown class="size-[1.2em]" /> Place Here</button
 				>
 			</div>
@@ -121,7 +143,7 @@
 				{#if parent_vine}
 					{@const parents = get_parent_nodes_from_flat_list(
 						app_state.vines ?? ([] as VinesDocument[]),
-						parent_vine,
+						parent_vine.id,
 					)}
 
 					<div class="breadcrumbs text-sm self-start">
@@ -131,7 +153,7 @@
 									class="btn btn-link text-base-content"
 									onclick={() => {
 										vine_to_view = undefined;
-										parent_vine = undefined;
+										parent_vine = null;
 										page = 1;
 									}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
 								>
@@ -142,7 +164,7 @@
 										class="btn btn-link text-base-content flex items-center"
 										onclick={() => {
 											vine_to_view = parent;
-											parent_override = parent.id;
+											parent_override = parent;
 											page = 1;
 										}}>{parent.title}</button
 									>

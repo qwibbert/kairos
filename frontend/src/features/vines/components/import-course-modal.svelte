@@ -1,4 +1,5 @@
 <script lang="ts">
+	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import Check from 'lucide-svelte/icons/check';
 	import Import from 'lucide-svelte/icons/import';
@@ -8,17 +9,34 @@
 	import InstitutionSelector from '$lib/pocketbase/institution-selector.svelte';
 	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
 
-	import i18next from 'i18next';
+	import { get_app_state } from '$lib/context';
 	import { db } from '../../../db/db';
-	import { VineStatus, VineType, type VinesDocument } from '../../../db/vines/define';
+	import { VineStatus, VineType } from '../../../db/vines/define';
+
+	const app_state = get_app_state();
 
 	interface Props {
-		import_course_modal: HTMLDialogElement | undefined;
+		isOpen: boolean;
+		close: () => {};
 		parent_id: string | undefined;
-		vines: VinesDocument[] | null;
 	}
+	const {
+		// provided by <Modals />
+		isOpen,
+		close,
+		parent_id,
+	}: Props = $props();
 
-	let { import_course_modal = $bindable(), parent_id, vines }: Props = $props();
+	let dialog_el: HTMLDialogElement | null = $state(null);
+
+	$effect(() => {
+		if (dialog_el && isOpen && !dialog_el.open) {
+			dialog_el.showModal();
+		} else if (dialog_el && !isOpen && dialog_el.open) {
+			dialog_el.requestClose();
+		}
+	});
+
 	let courses_result: ListResult<CoursesResponse> | 'ERROR' | undefined = $state(undefined);
 	let loading_results = $state(false);
 	let page: number = $state(1);
@@ -49,7 +67,15 @@
 	}
 </script>
 
-<dialog bind:this={import_course_modal} class="modal" id="import-course">
+<dialog
+	bind:this={dialog_el}
+	class="modal"
+	id="import-course"
+	onclose={(e) => {
+		e.preventDefault();
+		close();
+	}}
+>
 	<div class="modal-box h-[70dvh]">
 		<div class="flex flex-row justify-between items-center w-full">
 			<h3 class="text-lg font-bold self-baseline">Import Course</h3>
@@ -84,7 +110,10 @@
 							Courses {item_count > 0 ? `(${item_count} results)` : ''}
 						</li>
 						{#each courses_result?.items as course (course.id)}
-							<li class="list-row" id={course.title == 'Inleiding tot het programmeren' ? 'tour-course' : ''}>
+							<li
+								class="list-row"
+								id={course.title == 'Inleiding tot het programmeren' ? 'tour-course' : ''}
+							>
 								<div>
 									<BookText class="size-[1.2em]" />
 								</div>
@@ -95,7 +124,7 @@
 										{course.instructor}
 									</div>
 								</div>
-								{#if vines?.findIndex((vine) => vine.course_id == course.id) == -1}
+								{#if app_state.vines?.findIndex((vine) => vine.course_id == course.id) == -1}
 									<button
 										class="btn btn-square btn-ghost"
 										onclick={async () => await import_course(course)}

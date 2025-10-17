@@ -4,13 +4,13 @@
 	import '$components/style.css';
 	import VinesIcon from '$components/ui/vines-icon.svelte';
 	import '$features/tour/index';
+	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { setContext } from 'svelte';
-
-	import Alerts from '$lib/components/alerts.svelte';
+	import { Modals } from 'svelte-modals';
 
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -57,7 +57,8 @@
 	});
 </script>
 
-<Alerts />
+<Modals />
+<SvelteToast />
 
 <div class="h-[80dvh] m-[5dvh]">
 	{@render children()}

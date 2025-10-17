@@ -4,10 +4,24 @@
 	import { login } from '.';
 
 	interface Props {
-		login_register: HTMLDialogElement | undefined;
+isOpen: boolean, close: () => {}
 	}
+	const {
 
-	let { login_register = $bindable() }: Props = $props();
+    isOpen,
+    close,
+
+  }: Props = $props();
+
+  let dialog_el: HTMLDialogElement | null = $state(null);
+
+  $effect(() => {
+	if (dialog_el && isOpen && !dialog_el.open) {
+		dialog_el.showModal();
+	} else if (dialog_el && !isOpen && dialog_el.open) {
+		dialog_el.requestClose();
+	}
+  });
 
 	let active_tab: 'LOGIN' | 'REGISTER' = $state('LOGIN');
 	let email = $state('');
@@ -18,16 +32,16 @@
 
 	async function handle_register(email: string, password: string, surname: string, name: string) {
 		await login(email, password, true, { surname, name });
-		login_register?.close();
+		close();
 	}
 
 	async function handle_login(email: string, password: string) {
 		await login(email, password);
-		login_register?.close();
+		close();
 	}
 </script>
 
-<dialog bind:this={login_register} class="modal">
+<dialog bind:this={dialog_el} class="modal" onclose={(e) => {e.preventDefault(); close()}}>
 	<div class="modal-box flex flex-col items-center">
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>

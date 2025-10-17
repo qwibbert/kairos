@@ -1,15 +1,22 @@
 <script lang="ts">
 	import { formatHex } from 'culori';
+	import { BarChart, PieChart } from 'echarts/charts';
+	import {
+		DatasetComponent,
+		GridComponent,
+		LegendComponent,
+		TitleComponent,
+		TooltipComponent,
+		TransformComponent,
+	} from 'echarts/components';
 	import * as echarts from 'echarts/core';
+	import { LabelLayout, UniversalTransition } from 'echarts/features';
+	import { CanvasRenderer } from 'echarts/renderers';
+	import i18next from 'i18next';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { DateTime } from 'luxon';
 
-	import { BarChart, PieChart } from 'echarts/charts';
-	import { DatasetComponent, GridComponent, LegendComponent, TitleComponent, TooltipComponent, TransformComponent } from 'echarts/components';
-	import { LabelLayout, UniversalTransition } from 'echarts/features';
-	import { CanvasRenderer } from 'echarts/renderers';
-	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import { PomoType } from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
@@ -32,11 +39,26 @@
 	]);
 
 	interface Props {
-		vine_stats_modal?: HTMLDialogElement;
+		isOpen: boolean;
+		close: () => {};
 		vine: VinesDocument | undefined;
 	}
+	const {
+		// provided by <Modals />
+		isOpen,
+		close,
+		vine,
+	}: Props = $props();
 
-	let { vine_stats_modal = $bindable(), vine = $bindable() }: Props = $props();
+	let dialog_el: HTMLDialogElement | null = $state(null);
+
+	$effect(() => {
+		if (dialog_el && isOpen && !dialog_el.open) {
+			dialog_el.showModal();
+		} else if (dialog_el && !isOpen && dialog_el.open) {
+			dialog_el.requestClose();
+		}
+	});
 
 	let view = $state<'DAY' | 'YEAR'>('DAY');
 	let chart = $state<'HISTOGRAM' | 'PIE'>('HISTOGRAM');
@@ -131,25 +153,24 @@
 			histogram = echarts.init(histogram_element, null, {
 				height: 'auto',
 				width: 'auto',
-				renderer: 'canvas'
+				renderer: 'canvas',
 			});
 		}
 
 		if (view == 'DAY') {
-			[vine_day_options.dataset.source, vine_day_options.series] =
-				await get_day_histogram_echarts(
-					today.minus({ weeks: delta_weeks }),
-					PomoType.Pomo,
-					vine?.id,
-					true
-				);
+			[vine_day_options.dataset.source, vine_day_options.series] = await get_day_histogram_echarts(
+				today.minus({ weeks: delta_weeks }),
+				PomoType.Pomo,
+				vine?.id,
+				true,
+			);
 		} else if (view == 'YEAR') {
 			[vine_year_options.dataset.source, vine_year_options.series] =
 				await get_year_histogram_echarts(
 					today.startOf('year').minus({ years: delta_years }),
 					PomoType.Pomo,
 					vine?.id,
-					true
+					true,
 				);
 		}
 
@@ -181,7 +202,7 @@
 			pie_chart = echarts.init(pie_chart, null, {
 				height: 'auto',
 				width: 'auto',
-				renderer: 'canvas'
+				renderer: 'canvas',
 			});
 		}
 
@@ -208,7 +229,14 @@
 	}}
 />
 
-<dialog bind:this={vine_stats_modal} class="modal">
+<dialog
+	bind:this={dialog_el}
+	class="modal"
+	onclose={(e) => {
+		e.preventDefault();
+		close();
+	}}
+>
 	<div class="modal-box flex flex-col items-center">
 		<form method="dialog">
 			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -218,7 +246,7 @@
 			<div class="flex flex-row justify-evenly w-full gap-2">
 				<select bind:value={chart} class="select">
 					<option value="PIE">{i18next.t('statistics:pie_chart')}</option>
-						<option value="HISTOGRAM">{i18next.t('statistics:histogram')}</option>
+					<option value="HISTOGRAM">{i18next.t('statistics:histogram')}</option>
 				</select>
 				{#if chart == 'HISTOGRAM'}
 					<select bind:value={view} class="select">
@@ -261,7 +289,11 @@
 				</div>
 			{/if}
 
-			<div bind:this={histogram_element} class="w-full h-[50vh]" class:hidden={chart != 'HISTOGRAM'}></div>
+			<div
+				bind:this={histogram_element}
+				class="w-full h-[50vh]"
+				class:hidden={chart != 'HISTOGRAM'}
+			></div>
 
 			<div bind:this={pie_element} class="w-full h-[50vh]" class:hidden={chart != 'PIE'}></div>
 		</div>

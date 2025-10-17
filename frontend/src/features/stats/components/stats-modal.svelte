@@ -1,19 +1,38 @@
 <script lang="ts">
-
 	import i18next from 'i18next';
+
 	import StatsUi from './stats-ui.svelte';
-	
+
 	interface Props {
-		stats_modal?: HTMLDialogElement;
+		isOpen: boolean;
+		close: () => {};
 	}
+	const {
+		// provided by <Modals />
+		isOpen,
+		close,
+	}: Props = $props();
 
-	let { stats_modal = $bindable() }: Props = $props();
+	let dialog_el: HTMLDialogElement | null = $state(null);
 
-	
-
+	$effect(() => {
+		if (dialog_el && isOpen && !dialog_el.open) {
+			dialog_el.showModal();
+		} else if (dialog_el && !isOpen && dialog_el.open) {
+			dialog_el.requestClose();
+		}
+	});
 </script>
 
-<dialog bind:this={stats_modal} id="stats" class="modal overflow-y-auto">
+<dialog
+	bind:this={dialog_el}
+	id="stats"
+	class="modal overflow-y-auto"
+	onclose={(e) => {
+		e.preventDefault();
+		close();
+	}}
+>
 	<div class="modal-box">
 		<div class="flex flex-row items-center justify-between mb-2">
 			<h3 class="text-lg font-bold">{i18next.t('statistics:statistics')}</h3>

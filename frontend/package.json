@@ -59,6 +59,7 @@
 		"rxdb": "^16.18.0",
 		"svelte-dnd-action": "^0.9.64",
 		"svelte-file-dropzone": "^2.0.9",
+		"svelte-modals": "^2.0.1",
 		"vite-plugin-top-level-await": "^1.6.0"
 	},
 	"description": "A pomodoro timer for college students",
