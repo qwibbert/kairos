@@ -28,16 +28,12 @@ export const build_vine_subtree = async (vines: VinesDocument[], root_id?: strin
 	})) {
 		if (vine.id === 'NO_VINE') continue;
 
-		if (search_string != "" && !vine.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) continue;
-
 		vine_map[vine.id] = { ...vine, children: [] };
 	}
 
 	// Build the tree
 	vines.forEach((vine) => {
 		if (vine.id === 'NO_VINE') return;
-
-		if (search_string != "" && !vine.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) return;
 
 		if (vine.parent_id && vine_map[vine.parent_id]) {
 			vine_map[vine.parent_id].children!.push(vine_map[vine.id]);
@@ -47,27 +43,30 @@ export const build_vine_subtree = async (vines: VinesDocument[], root_id?: strin
 	});
 
 	if (!root_id) {
-		return roots.toSorted(
-		(a: VinesDocument, b: VinesDocument) => {
-			switch (sort_by) {
-				case 'LAST_USED_DESC':
-					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-				case 'LAST_USED_ASC':
-					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-				case 'CREATION_ASC':
-					return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-				case 'CREATION_DESC':
-					return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-				case 'NAME_ASC':
-					return a.title.localeCompare(b.title);
-				case 'NAME_DESC':
-					return b.title.localeCompare(a.title);
-			}
-		},
-	);
+		return roots.filter((v) => {
+			console.log('v', v)
+			if (search_string != "" && !v.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) return false;
+
+			return true;
+		}).toSorted(
+			(a: VinesDocument, b: VinesDocument) => {
+				switch (sort_by) {
+					case 'LAST_USED_DESC':
+						return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+					case 'LAST_USED_ASC':
+						return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+					case 'CREATION_ASC':
+						return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+					case 'CREATION_DESC':
+						return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+					case 'NAME_ASC':
+						return a.title.localeCompare(b.title);
+					case 'NAME_DESC':
+						return b.title.localeCompare(a.title);
+				}
+			},
+		);
 	}
-
-
 	// Helper to find the subtree root
 	function find_subtree_array(nodes: VineTreeItem[], id: string): VineTreeItem[] {
 		for (const node of nodes) {
@@ -84,7 +83,11 @@ export const build_vine_subtree = async (vines: VinesDocument[], root_id?: strin
 		return [];
 	}
 
-	return find_subtree_array(roots, root_id).toSorted(
+	return find_subtree_array(roots, root_id).filter((v) => {
+		if (search_string != "" && !v.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) return false;
+
+		return true;
+	}).toSorted(
 		(a: VinesDocument, b: VinesDocument) => {
 			switch (sort_by) {
 				case 'LAST_USED_DESC':

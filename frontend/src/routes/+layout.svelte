@@ -17,7 +17,7 @@
 	import type { AppState } from '$lib/context';
 	import type { UsersRecord } from '$lib/pocketbase/types';
 	import { db } from '../db/db';
-	import { VineStatus, type VinesDocument } from '../db/vines/define';
+	import { type VinesDocument } from '../db/vines/define';
 
 	let { children } = $props();
 
@@ -41,36 +41,7 @@
 
 	db.settings.findOne('1').$.subscribe((s) => (app_state.settings = s));
 	db.vines.find().$.subscribe(async (e: VinesDocument[]) => {
-		console.log('update!')
 		if (e) {
-			const active_vines = e.filter((v) => v.status == VineStatus.Active );
-
-			if (active_vines.length > 1) {
-				// Multiple vines have an active state. Is there a session with a defined vine?
-				// If yes, make this session the active one and deactivate all other vines
-				// If no, deactivate all other vines
-				for (const active_vine of active_vines) {
-					if (app_state.session && app_state.session.vine_id == active_vine.id && app_state.active_vine?.id != active_vine.id) {
-						app_state.active_vine = active_vine;
-						break;
-					}
-				}
-
-				// Since this function gets called everytime the vines change, the following code can be considered recursive
-				// Hence, we only need to inactivate one vine at a time
-				if (app_state.active_vine) {
-					const vines_to_inactivate = active_vines.filter((v) => v.id != app_state.active_vine?.id);
-					
-					if (vines_to_inactivate.length != 0) {
-						await db.vines.update_vine(vines_to_inactivate[0].id, { status: VineStatus.InActive });
-					}
-				} else {
-					await db.vines.update_vine(active_vines[0].id, { status: VineStatus.InActive });
-				}
-			} else if (active_vines.length == 1 && app_state.active_vine?.id != active_vines[0].id) {
-				app_state.active_vine = active_vines[0];
-			}
-
 			app_state.vines = e;
 		}
 	});

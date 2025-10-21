@@ -32,15 +32,12 @@
 	import VineSelectModal from './vine-select-modal.svelte';
 
 	const app_state = get_app_state();
-	let active_vine: VinesDocument | null = $derived(
-		app_state.vines?.find((vine) => vine.status == VineStatus.Active) ?? null,
-	);
 	let parent_override: string | undefined = $state(undefined);
 	let parent_vine: string | undefined = $derived.by(() => {
 		if (parent_override) {
 			return parent_override;
 		} else {
-			return active_vine?.parent_id;
+			return app_state.active_vine?.parent_id;
 		}
 	});
 	let page = $state(1);
@@ -102,7 +99,7 @@
 		{:else}
 			<input
 				type="checkbox"
-				checked={vine.status == VineStatus.Active}
+				checked={vine.id == app_state.active_vine?.id}
 				onchange={async (e) => {
 					if (app_state.session) {
 						if (app_state.session.status != SessionStatus.Inactive) {
@@ -116,15 +113,22 @@
 									[
 										'Change vine',
 										async () => {
-											await db.vines.update_vine(vine.id, {
-												status: (e.target as HTMLInputElement)?.checked
-													? VineStatus.Active
-													: VineStatus.InActive,
-											});
-
 											app_state.session = await app_state.session?.skip(
 												app_state.session.pomo_type as PomoType,
 											);
+
+											if (app_state.session) {
+												app_state.session = await app_state.session.incrementalUpdate({
+													$set: {
+														vine_id: vine.id,
+														vine_title: vine.title,
+														vine_course: vine.course_id,
+														vine_type: vine.type,
+													},
+												});
+
+												app_state.active_vine = vine;
+											}
 										},
 									],
 								]),
@@ -140,16 +144,12 @@
 									vine_type: checked ? vine.type : undefined,
 								},
 							});
+
+							app_state.active_vine = vine;
 						}
+
+						modals.close();
 					}
-					await db.vines.get_vine(vine.id).then(
-						async (v) =>
-							await v?.incrementalUpdate({
-								$set: {
-									status: VineStatus.Active,
-								},
-							}),
-					);
 				}}
 				class="checkbox"
 			/>
@@ -224,142 +224,140 @@
 	</div>
 {/snippet}
 
-{#await vines_list_state then vines_list_state}
-	<div class="mt-5 flex flex-row justify-center md:join w-full">
-		<details bind:this={add_vine_details} class="dropdown hidden md:block" id="tour-5-box">
-			<summary class="btn btn-soft join-item" id="tour-5-button"
-				><ChevronDown class="size-[1.2em]" /> {i18next.t('common:add')}</summary
-			>
-			<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-				<li>
-					<a onclick={async () => await action_add_vine(parent_vine)}
-						><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
-					>
-				</li>
-				<li>
-					<a
-						id="tour-5-course"
-						onclick={async () => {
-							modals.open(ImportCourseModal, { parent_id: parent_vine });
-							add_vine_details!.open = false;
-						}}><BookText class="size-[1.2em]" /> {i18next.t('vines:add_course')}</a
-					>
-				</li>
-			</ul>
-		</details>
-		<button
-			class="btn btn-soft join-item"
-			onclick={async () => {
-				if (parent_vine) {
-					vine_to_view = await db.vines.get_vine(parent_vine ?? '');
-				} else {
-					vine_to_view = undefined;
-				}
-
-				modals.open(VineStatsModal, { vine: vine_to_view });
-			}}><ChartLine class="size-[1.2em]" />{i18next.t('statistics:statistics')}</button
+<div class="mt-5 flex flex-row justify-center md:join w-full">
+	<details bind:this={add_vine_details} class="dropdown hidden md:block" id="tour-5-box">
+		<summary class="btn btn-soft join-item" id="tour-5-button"
+			><ChevronDown class="size-[1.2em]" /> {i18next.t('common:add')}</summary
 		>
-	</div>
+		<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+			<li>
+				<a onclick={async () => await action_add_vine(parent_vine)}
+					><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
+				>
+			</li>
+			<li>
+				<a
+					id="tour-5-course"
+					onclick={async () => {
+						modals.open(ImportCourseModal, { parent_id: parent_vine });
+						add_vine_details!.open = false;
+					}}><BookText class="size-[1.2em]" /> {i18next.t('vines:add_course')}</a
+				>
+			</li>
+		</ul>
+	</details>
+	<button
+		class="btn btn-soft join-item"
+		onclick={async () => {
+			if (parent_vine) {
+				vine_to_view = await db.vines.get_vine(parent_vine ?? '');
+			} else {
+				vine_to_view = undefined;
+			}
 
-	<div class="flex flex-row gap-2 my-5 justify-center">
-		<input placeholder="Zoek hier naar een vine" class="input" bind:value={search_string} />
-		<select
-			class="select"
-			bind:value={vines_sort_by}
-			onchange={async (e) =>
-				await app_state.settings?.modify_setting(
-					'vines_sort_by',
-					(e.target as HTMLSelectElement).value,
-				)}
-		>
-			<option value="LAST_USED_DESC">Last used</option>
-			<option value="LAST_USED_ASC">First used</option>
-			<option value="CREATION_DESC">Newest</option>
-			<option value="CREATION_ASC">Oldest</option>
-			<option value="NAME_DESC">Name (descending)</option>
-			<option value="NAME_ASC">Name (ascending)</option>
-		</select>
-	</div>
+			modals.open(VineStatsModal, { vine: vine_to_view });
+		}}><ChartLine class="size-[1.2em]" />{i18next.t('statistics:statistics')}</button
+	>
+</div>
 
-	<div class="rounded-box bg-base-200 shadow-md">
-		{#if parent_vine}
-			{@const parents = get_parent_nodes_from_flat_list(
-				app_state.vines ?? ([] as VinesDocument[]),
-				parent_vine,
+<div class="flex flex-row gap-2 my-5 justify-center">
+	<input placeholder="Zoek hier naar een vine" class="input" bind:value={search_string} />
+	<select
+		class="select"
+		bind:value={vines_sort_by}
+		onchange={async (e) =>
+			await app_state.settings?.modify_setting(
+				'vines_sort_by',
+				(e.target as HTMLSelectElement).value,
 			)}
+	>
+		<option value="LAST_USED_DESC">Last used</option>
+		<option value="LAST_USED_ASC">First used</option>
+		<option value="CREATION_DESC">Newest</option>
+		<option value="CREATION_ASC">Oldest</option>
+		<option value="NAME_DESC">Name (descending)</option>
+		<option value="NAME_ASC">Name (ascending)</option>
+	</select>
+</div>
 
-			<div class="breadcrumbs text-sm self-start">
-				<ul>
+<div class="rounded-box bg-base-200 shadow-md">
+	{#if parent_vine}
+		{@const parents = get_parent_nodes_from_flat_list(
+			app_state.vines ?? ([] as VinesDocument[]),
+			parent_vine,
+		)}
+
+		<div class="breadcrumbs text-sm self-start">
+			<ul>
+				<li>
+					<button
+						class="btn btn-link text-base-content"
+						onclick={() => {
+							vine_to_view = undefined;
+							parent_vine = undefined;
+							page = 1;
+						}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
+					>
+				</li>
+				{#each parents as parent (parent.id)}
 					<li>
 						<button
-							class="btn btn-link text-base-content"
+							class="btn btn-link text-base-content flex items-center"
 							onclick={() => {
-								vine_to_view = undefined;
-								parent_vine = undefined;
+								vine_to_view = parent;
+								parent_override = parent.id;
 								page = 1;
-							}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
+							}}>{parent.title}</button
 						>
 					</li>
-					{#each parents as parent (parent.id)}
-						<li>
-							<button
-								class="btn btn-link text-base-content flex items-center"
-								onclick={() => {
-									vine_to_view = parent;
-									parent_override = parent.id;
-									page = 1;
-								}}>{parent.title}</button
-							>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/if}
-		<ul
-			aria-label="Vine List"
-			class="list w-full max-h-[calc(0.8*80dvh)] overflow-y-auto"
-			id="vines-container"
-		>
-			{#each vines_list_state as vine (vine.id)}
-				{#if vine.children && vine.children?.length > 0}
-					<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
-						{@render vine_list_item(vine)}
-					</li>
-				{:else}
-					<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
-						{@render vine_list_item(vine)}
-					</li>
-				{/if}
+				{/each}
+			</ul>
+		</div>
+	{/if}
+	<ul
+		aria-label="Vine List"
+		class="list w-full max-h-[calc(0.8*80dvh)] overflow-y-auto"
+		id="vines-container"
+	>
+		{#each await vines_list_state as vine (vine.id)}
+			{#if vine.children && vine.children?.length > 0}
+				<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
+					{@render vine_list_item(vine)}
+				</li>
 			{:else}
-				<div class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]">
-					<VinesIcon styles={['size-[5em]']} />
-					<p class="text-lg font-bold">
-						{i18next.t('vines:no_vines_found')}
-					</p>
-				</div>
-			{/each}
-		</ul>
-	</div>
-	<div class="fab mb-[10dvh] md:hidden" id="tour-5-fab">
-		<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
-		<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-success"><Plus /></div>
+				<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
+					{@render vine_list_item(vine)}
+				</li>
+			{/if}
+		{:else}
+			<div class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]">
+				<VinesIcon styles={['size-[5em]']} />
+				<p class="text-lg font-bold">
+					{i18next.t('vines:no_vines_found')}
+				</p>
+			</div>
+		{/each}
+	</ul>
+</div>
+<div class="fab mb-[10dvh] md:hidden" id="tour-5-fab">
+	<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
+	<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-success"><Plus /></div>
 
-		<!-- buttons that show up when FAB is open -->
-		<div>
-			{i18next.t('vines:add_task')}
-			<button class="btn btn-lg btn-circle" onclick={async () => await action_add_vine(parent_vine)}
-				><SquareCheck /></button
-			>
-		</div>
-		<div>
-			{i18next.t('vines:add_course')}
-			<button
-				class="btn btn-lg btn-circle"
-				onclick={() => {
-					modals.open(ImportCourseModal, { parent_id: parent_vine });
-					add_vine_details!.open = false;
-				}}><BookText /></button
-			>
-		</div>
+	<!-- buttons that show up when FAB is open -->
+	<div>
+		{i18next.t('vines:add_task')}
+		<button class="btn btn-lg btn-circle" onclick={async () => await action_add_vine(parent_vine)}
+			><SquareCheck /></button
+		>
 	</div>
-{/await}
+	<div>
+		{i18next.t('vines:add_course')}
+		<button
+			class="btn btn-lg btn-circle"
+			onclick={() => {
+				modals.open(ImportCourseModal, { parent_id: parent_vine });
+				add_vine_details!.open = false;
+			}}><BookText /></button
+		>
+	</div>
+</div>

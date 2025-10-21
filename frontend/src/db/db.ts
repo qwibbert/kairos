@@ -112,6 +112,10 @@ export async function init_db(): Promise<KairosDB> {
 				1: function (old_doc) {
 					delete old_doc.position;
 					return old_doc;
+				},
+				2: function (old_doc) {
+					delete old_doc.status;
+					return old_doc;
 				}
 			},
 			autoMigrate: true, // (optional) [default=true]

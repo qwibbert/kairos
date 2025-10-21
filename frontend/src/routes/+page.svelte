@@ -61,6 +61,8 @@
 			if (app_state.session?.status == SessionStatus.Active && !app_state.timer_interval) {
 				await start_timer();
 			}
+
+			app_state.active_vine = resumeable_session.vine_id ? await db.vines.get_vine(resumeable_session.vine_id) : null;
 		} else {
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,

@@ -8,7 +8,7 @@ import {
 import { VinesErrorFactory } from './errors';
 
 export const vines_schema_literal = {
-	version: 1,
+	version: 2,
 	title: 'vines',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -25,10 +25,6 @@ export const vines_schema_literal = {
 		title: {
 			type: 'string',
 			maxLength: 200,
-		},
-		status: {
-			type: 'string',
-			maxLength: 100,
 		},
 		parent_id: {
 			type: 'string',
@@ -70,8 +66,8 @@ export const vines_schema_literal = {
 			format: 'date-time',
 		},
 	},
-	required: ['id', 'type', 'title', 'status', 'public', 'session_aim', 'created_at'],
-	indexes: ['type', 'title', 'status', 'public'],
+	required: ['id', 'type', 'title', 'public', 'session_aim', 'created_at'],
+	indexes: ['type', 'title', 'public'],
 } as const;
 
 const schema_typed = toTypedRxJsonSchema(vines_schema_literal);
