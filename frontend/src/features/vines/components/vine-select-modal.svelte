@@ -74,9 +74,23 @@
 		</div>
 
 		{#snippet vine_list_item(vine: VineTreeItem)}
-			<div class="flex flex-row items-center gap-2">
+			<div
+				class={[
+					'flex flex-row items-center gap-2',
+					vine.id == vine_moving?.id ||
+					(vine_moving?.type == VineType.Course && vine.type == VineType.Course)
+						? 'lg:tooltip lg:tooltip-right'
+						: '',
+				]}
+				data-tip={vine.id == vine_moving?.id
+					? 'Cannot place a vine inside itself'
+					: vine_moving?.type == VineType.Course && vine.type == VineType.Course
+						? 'Cannot place a course inside another course.'
+						: ''}
+			>
 				<button
-					disabled={vine.id == vine_moving?.id}
+					disabled={vine.id == vine_moving?.id ||
+						(vine_moving?.type == VineType.Course && vine.type == VineType.Course)}
 					class="btn"
 					onclick={() => {
 						close(vine);

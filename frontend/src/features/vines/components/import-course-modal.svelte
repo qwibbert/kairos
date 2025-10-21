@@ -11,7 +11,7 @@
 
 	import { get_app_state } from '$lib/context';
 	import { db } from '../../../db/db';
-	import { VineStatus, VineType } from '../../../db/vines/define';
+	import { VineType } from '../../../db/vines/define';
 
 	const app_state = get_app_state();
 
@@ -54,7 +54,6 @@
 		await db.vines.add_vine({
 			type: VineType.Course,
 			title: course.title,
-			status: VineStatus.InActive,
 			parent_id: parent_id ?? '',
 			public: true,
 			course_id: course.id,
@@ -64,6 +63,8 @@
 			course_instructor: course.instructor,
 			session_aim: 0,
 		});
+
+		close();
 	}
 </script>
 

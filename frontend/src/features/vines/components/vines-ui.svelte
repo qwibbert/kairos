@@ -17,16 +17,12 @@
 
 	import Alert from '$lib/components/alert.svelte';
 	import { get_app_state } from '$lib/context';
+	import { push_toast } from '$lib/toasts';
 
 	import { db } from '../../../db/db';
 	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
 	import type { VinesSortBy } from '../../../db/settings/define';
-	import {
-		VineStatus,
-		type VineTreeItem,
-		VineType,
-		type VinesDocument,
-	} from '../../../db/vines/define';
+	import { type VineTreeItem, VineType, type VinesDocument } from '../../../db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 	import ImportCourseModal from './import-course-modal.svelte';
 	import VineSelectModal from './vine-select-modal.svelte';
@@ -78,7 +74,6 @@
 	async function action_add_vine(resolved_parent_vine: string | undefined) {
 		const vine = await db.vines.add_vine({
 			title: i18next.t('vines:new_vine'),
-			status: VineStatus.InActive,
 			public: true,
 			session_aim: 0,
 			type: VineType.Task,
@@ -210,6 +205,21 @@
 				})) as VinesDocument | null;
 
 				if (selected_vine && vine_moving) {
+					if (
+						vine_moving.id == selected_vine?.id ||
+						(vine_moving.type == VineType.Course && selected_vine.type == VineType.Course)
+					) {
+						push_toast('error', {
+							type: 'headed',
+							header: 'Invalid Move Operation',
+							text:
+								vine.id == vine_moving?.id
+									? 'Cannot place a vine inside itself'
+									: vine_moving?.type == VineType.Course && vine.type == VineType.Course
+										? 'Cannot place a course inside another course.'
+										: '',
+						});
+					}
 					await db.vines.update_vine(vine_moving.id, { parent_id: selected_vine.id });
 				} else {
 					await db.vines.update_vine(vine_moving?.id, { parent_id: undefined });

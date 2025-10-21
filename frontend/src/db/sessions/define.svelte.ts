@@ -9,7 +9,7 @@ import {
 } from 'rxdb';
 
 import { db } from '../db';
-import { VineStatus, type VinesDocType } from '../vines/define';
+import type { VinesDocType } from '../vines/define';
 import { on_session_syncable } from './client';
 import { SessionError, SessionErrorFactory, SessionErrorType } from './errors';
 
@@ -376,20 +376,6 @@ export const session_collection_methods: SessionCollectionMethods = {
 			});
 		}
 
-		const active_vine = await db.vines
-			.find({
-				selector: { status: VineStatus.Active },
-				limit: 1,
-			})
-			.exec()
-			.then((r) => {
-				if (r.length != 0) {
-					return r[0];
-				} else {
-					return undefined;
-				}
-			});
-
 		const session: SessionDocType = {
 			id: crypto.randomUUID(),
 			date_finished: undefined,
@@ -402,10 +388,10 @@ export const session_collection_methods: SessionCollectionMethods = {
 			pomo_type: opts.pomo_type,
 			cycle: opts.cycle,
 			paused_at: undefined,
-			vine_id: active_vine?.id,
-			vine_title: active_vine?.title,
-			vine_type: active_vine?.type,
-			vine_course: active_vine?.course_id,
+			vine_id: opts.vine?.id,
+			vine_title: opts.vine?.title,
+			vine_type: opts.vine?.type,
+			vine_course: opts.vine?.course_id,
 		};
 
 		// TODO: normalize RxDB errors

@@ -94,11 +94,6 @@ export interface VineTreeItem extends VinesDocument {
 	children?: VineTreeItem[];
 }
 
-export enum VineStatus {
-	Active = 'ACTIVE',
-	InActive = 'INACTIVE',
-}
-
 export enum VineType {
 	Course = 'COURSE',
 	Task = 'TASK',
