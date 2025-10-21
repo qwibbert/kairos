@@ -1,17 +1,33 @@
 <script lang="ts">
 	import { formatHex } from 'culori';
 	import { BarChart, PieChart } from 'echarts/charts';
-	import { DatasetComponent, GridComponent, LegendComponent, TitleComponent, TooltipComponent, TransformComponent } from 'echarts/components';
+	import {
+		DatasetComponent,
+		GridComponent,
+		LegendComponent,
+		TitleComponent,
+		TooltipComponent,
+		TransformComponent,
+	} from 'echarts/components';
 	import * as echarts from 'echarts/core';
 	import { LabelLayout, UniversalTransition } from 'echarts/features';
 	import { CanvasRenderer } from 'echarts/renderers';
 	import { DateTime } from 'luxon';
 	import { onMount } from 'svelte';
+
 	import { db } from '../../../db/db';
-	import { PomoType, SessionStatus, type SessionDocument } from '../../../db/sessions/define.svelte';
+	import {
+		PomoType,
+		type SessionDocument,
+		SessionStatus,
+	} from '../../../db/sessions/define.svelte';
 	import type { VinesDocument } from '../../../db/vines/define';
 	import { day_options, year_options } from '../graph-options';
-	import { get_day_histogram_echarts, get_stats_day, get_year_histogram_echarts } from '../graphs/histogram';
+	import {
+		get_day_histogram_echarts,
+		get_stats_day,
+		get_year_histogram_echarts,
+	} from '../graphs/histogram';
 
 	echarts.use([
 		PieChart,
@@ -27,7 +43,19 @@
 		LegendComponent,
 	]);
 
-	let { view, delta_weeks, delta_years, time_today = $bindable(), sessions_today = $bindable() }: { view: "DAY" | "YEAR", delta_weeks: number, delta_years: number, time_today: number, sessions_today: SessionDocument[] } = $props();
+	let {
+		view,
+		delta_weeks,
+		delta_years,
+		time_today = $bindable(),
+		sessions_today = $bindable(),
+	}: {
+		view: 'DAY' | 'YEAR';
+		delta_weeks: number;
+		delta_years: number;
+		time_today: number;
+		sessions_today: SessionDocument[];
+	} = $props();
 
 	let histogram = $state<echarts.EChartsType | undefined>(undefined);
 	let histogram_element: HTMLDivElement | null = $state(null);
@@ -69,7 +97,7 @@
 	$effect(() => {
 		if (histogram && view == 'DAY' && delta_weeks >= 0) {
 			load_histogram();
-		} else if ( histogram && view == 'YEAR' && delta_years >= 0) {
+		} else if (histogram && view == 'YEAR' && delta_years >= 0) {
 			load_histogram();
 		}
 	});
@@ -172,7 +200,7 @@
 			histogram = echarts.init(histogram_element, null, {
 				height: 'auto',
 				width: 'auto',
-				renderer: 'canvas'
+				renderer: 'canvas',
 			});
 		}
 
@@ -181,7 +209,7 @@
 				DateTime.now().minus({ weeks: delta_weeks }),
 				PomoType.Pomo,
 				undefined,
-				false
+				false,
 			);
 		} else if (view == 'YEAR') {
 			[year_options.dataset.source, year_options.series, year_options.legend.data] =
@@ -189,7 +217,7 @@
 					DateTime.now().startOf('year').minus({ years: delta_years }),
 					PomoType.Pomo,
 					undefined,
-					false
+					false,
 				);
 		}
 

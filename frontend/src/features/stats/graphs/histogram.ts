@@ -176,6 +176,8 @@ export async function get_day_histogram_echarts(
 		);
 	}
 
+	
+
 	const all_entries = await db.sessions
 		.find({
 			selector: {

@@ -1,3 +1,4 @@
+import { push_toast } from '$lib/toasts';
 import {
 	type ExtractDocumentTypeFromTypedRxJsonSchema,
 	type RxCollection,
@@ -163,6 +164,17 @@ export const vines_doc_methods: VinesDocMethods = {
 		const all_descendants = [...direct_children];
 
 		for (const child of direct_children) {
+			if (child.id == this.id) {
+
+				push_toast("error", { type: 'simple', text: "Found recursive vine! Trying to fix! " })
+				await child.incrementalUpdate({
+					$set: {
+						parent_id: undefined
+					}
+				});
+				continue;
+			}
+
 			const child_descendants = await child.get_all_children();
 			all_descendants.push(...child_descendants);
 		}

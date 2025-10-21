@@ -219,8 +219,9 @@
 										? 'Cannot place a course inside another course.'
 										: '',
 						});
+					} else {
+						await db.vines.update_vine(vine_moving.id, { parent_id: selected_vine.id });
 					}
-					await db.vines.update_vine(vine_moving.id, { parent_id: selected_vine.id });
 				} else {
 					await db.vines.update_vine(vine_moving?.id, { parent_id: undefined });
 				}
