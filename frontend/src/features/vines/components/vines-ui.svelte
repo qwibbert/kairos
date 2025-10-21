@@ -319,24 +319,28 @@
 		class="list w-full max-h-[calc(0.8*80dvh)] overflow-y-auto"
 		id="vines-container"
 	>
-		{#each await vines_list_state as vine (vine.id)}
-			{#if vine.children && vine.children?.length > 0}
-				<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
-					{@render vine_list_item(vine)}
-				</li>
+		{#await vines_list_state}
+			Loading vines...
+		{:then vines_list_state}
+			{#each vines_list_state as vine (vine.id)}
+				{#if vine.children && vine.children?.length > 0}
+					<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
+						{@render vine_list_item(vine)}
+					</li>
+				{:else}
+					<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
+						{@render vine_list_item(vine)}
+					</li>
+				{/if}
 			{:else}
-				<li class="list-row flex items-center justify-between w-full" aria-label={vine.title}>
-					{@render vine_list_item(vine)}
-				</li>
-			{/if}
-		{:else}
-			<div class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]">
-				<VinesIcon styles={['size-[5em]']} />
-				<p class="text-lg font-bold">
-					{i18next.t('vines:no_vines_found')}
-				</p>
-			</div>
-		{/each}
+				<div class="h-full flex flex-col justify-around items-center gap-2 my-[5dvh]">
+					<VinesIcon styles={['size-[5em]']} />
+					<p class="text-lg font-bold">
+						{i18next.t('vines:no_vines_found')}
+					</p>
+				</div>
+			{/each}
+		{/await}
 	</ul>
 </div>
 <div class="fab mb-[10dvh] md:hidden" id="tour-5-fab">

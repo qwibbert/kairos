@@ -44,7 +44,6 @@ export const build_vine_subtree = async (vines: VinesDocument[], root_id?: strin
 
 	if (!root_id) {
 		return roots.filter((v) => {
-			console.log('v', v)
 			if (search_string != "" && !v.title.toLocaleLowerCase().includes(search_string.toLocaleLowerCase())) return false;
 
 			return true;
