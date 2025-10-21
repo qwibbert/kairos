@@ -21,12 +21,10 @@
 		type SessionDocument,
 		SessionStatus,
 	} from '../../../db/sessions/define.svelte';
-	import type { VinesDocument } from '../../../db/vines/define';
 	import { day_options, year_options } from '../graph-options';
 	import {
 		get_day_histogram_echarts,
-		get_stats_day,
-		get_year_histogram_echarts,
+		get_year_histogram_echarts
 	} from '../graphs/histogram';
 
 	echarts.use([
@@ -48,17 +46,16 @@
 		delta_weeks,
 		delta_years,
 		time_today = $bindable(),
-		sessions_today = $bindable(),
 	}: {
 		view: 'DAY' | 'YEAR';
 		delta_weeks: number;
 		delta_years: number;
 		time_today: number;
-		sessions_today: SessionDocument[];
 	} = $props();
 
 	let histogram = $state<echarts.EChartsType | undefined>(undefined);
 	let histogram_element: HTMLDivElement | null = $state(null);
+	let sessions_today: SessionDocument[] = $state([]);
 
 	let active_session: SessionDocument | undefined = $state(undefined);
 	db.sessions
@@ -84,14 +81,11 @@
 	$effect(() => {
 		if (histogram && active_session) {
 			load_histogram();
-
-			load_day_stats();
 		}
 	});
 
 	onMount(async () => {
 		await load_histogram();
-		await load_day_stats();
 	});
 
 	$effect(() => {
@@ -101,52 +95,6 @@
 			load_histogram();
 		}
 	});
-
-	async function load_day_stats(): Promise<void> {
-		await db.vines
-			.find()
-			.exec()
-			.then((vines) => {
-				const vine_map = new Map(vines.map((v) => [v.id, v]));
-				const vine_children_cache = new Map<string, VinesDocument[]>();
-
-				Promise.all(
-					vines.map(
-						async (vine) =>
-							await db.vines.get_vine(vine.id).then((v) =>
-								v?.get_all_children().then((vs) =>
-									vine_children_cache.set(
-										vine.id,
-										vs.map((vss) => vss.id),
-									),
-								),
-							),
-					),
-				).then(() => {
-					// Now vine_children_cache is fully populated
-					const today = DateTime.now().startOf('day');
-					db.sessions
-						.find({
-							selector: {
-								$and: [
-									{ updated_at: { $gte: DateTime.now().startOf('day').toISO().replace('T', ' ') } },
-									{ updated_at: { $lte: DateTime.now().endOf('day').toISO().replace('T', '') } },
-									{ pomo_type: { $eq: PomoType.Pomo } },
-								],
-							},
-						})
-						.exec()
-						.then((results) => {
-							get_stats_day(today, undefined, results, vine_map, vine_children_cache, false).then(
-								(stats) => {
-									time_today =
-										stats.no_vine + stats.per_vine.reduce((time, vine) => time + vine.time, 0);
-								},
-							);
-						});
-				});
-			});
-	}
 
 	export function load_colors() {
 		const style = window.getComputedStyle(document.body);
