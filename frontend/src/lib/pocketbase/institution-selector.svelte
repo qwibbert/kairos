@@ -1,7 +1,7 @@
 <script lang="ts">
 
 	import i18next from 'i18next';
-	import { client } from '.';
+	import { client } from './';
 
 	let { selected_institution = $bindable() }: { selected_institution: string | undefined } =
 		$props();

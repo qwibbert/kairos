@@ -1,110 +1,74 @@
 import { browser } from '$app/environment';
-import { base } from '$app/paths';
-import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import { resolve } from '$app/paths';
 import type { ListResult, RecordListOptions, RecordModel, UnsubscribeFunc } from 'pocketbase';
 import PocketBase, { type AuthProviderInfo, RecordService } from 'pocketbase';
 import { type Readable, type Subscriber, readable } from 'svelte/store';
 
-import type { TypedPocketBase, UsersRecord } from './types.ts';
+import { push_toast } from '$lib/toasts.js';
+import { modals } from 'svelte-modals';
+import LoginRegister from './login-register.svelte';
+import type { TypedPocketBase } from './types.js';
 
-export const client = new PocketBase(
-	browser ? window.location.origin + base : undefined,
-) as TypedPocketBase;
+export let client: TypedPocketBase | null = null;
 
 try {
-	await client.collection('users').authRefresh();
-} catch {
-	//
+	client = new PocketBase(resolve('/'))
+} catch (e) {
+	push_toast('error', { header: 'Server error', text: `Failed to connect to the backend server: ${e}`, type: 'headed' });
 }
 
-export const authModel = readable<UsersRecord | null>(null, function (set, update) {
-	client.authStore.onChange((token, model) => {
-		update(() => {
-			if (!client.authStore.isValid) {
-				return null;
-			}
-
-			return model;
-		});
-	}, true);
-});
+if (client) {
+	try {
+		await client?.collection('users').authRefresh();
+	} catch (e) {
+		if (client.authStore.token) {
+			// Token is expired, make the user log in again
+			push_toast('warning', { type: 'headed', header: 'Session Expired', text: 'Your session has expired, please log in again.' });
+			client.authStore.clear();
+			modals.open(LoginRegister);
+		}
+	}
+}
 
 export async function login(
 	email: string,
 	password: string,
 	register = false,
 	rest: { [key: string]: unknown } = {},
-) {
+): Promise<'SUCCESS' | 'INVALID_CREDENTIALS' | 'OTHER_ERROR' | 'EMAIL_IN_USE' | 'OTHER_ERROR'> {
 	if (register) {
 		const user = { ...rest, email, password, passwordConfirm: password };
-		await client.collection('users').create({ ...user });
-	}
-	await client.collection('users').authWithPassword(email, password);
-}
 
-export async function webauthnRegister(usernameOrEmail: string): Promise<void | Error> {
-	try {
-		const resp = await fetch(
-			`/api/webauthn/registration-options?usernameOrEmail=${usernameOrEmail}`,
-		);
-		if (!resp.ok) {
-			const text = await resp.text();
-			throw new Error(text);
+		try {
+			await client?.collection('users').create({ ...user });
+		} catch (e: any) {
+			if (e.response?.data?.email?.code == "validation_not_unique") {
+				return 'EMAIL_IN_USE';
+			} else return 'OTHER_ERROR';
 		}
-		const { publicKey: optionsJSON } = await resp.json();
-		const attResp = await startRegistration({ optionsJSON });
-		const res = await fetch(`/api/webauthn/register`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ ...attResp, usernameOrEmail }),
-		});
-		if (!res.ok) throw new Error('Failed to register');
-		alerts.success('Passkey registered successfully.');
-	} catch (e) {
-		if (e instanceof Error) {
-			if (e.name === 'NotAllowedError') {
-				alerts.error('Registration denied or timed out.');
-			}
-			console.error(e);
-		}
-	}
-}
 
-export async function webauthnLogin(usernameOrEmail: string) {
+		push_toast('success', { type: 'headed', header: "Account created!", text: `Welcome to Kairos, ${rest.surname}!` });
+	}
+
 	try {
-		const resp = await fetch(`/api/webauthn/login-options?usernameOrEmail=${usernameOrEmail}`);
-		if (!resp.ok) {
-			const text = await resp.text();
-			throw new Error(text);
-		}
-		const { publicKey: optionsJSON } = await resp.json();
-		const asseResp = await startAuthentication({ optionsJSON });
-		const res = await fetch(`/api/webauthn/login`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ ...asseResp, usernameOrEmail }),
-		});
-		const authResponse = await res.json();
-		if (!res.ok) throw new Error('Failed to login');
-		client.authStore.save(authResponse.token, authResponse.record);
+		await client?.collection('users').authWithPassword(email, password);
 	} catch (e) {
-		if (e instanceof Error) {
-			if (e.name === 'NotAllowedError') {
-				alerts.error('Registration denied or timed out.');
-			} else {
-				alerts.error(e.message);
-			}
-			console.error(e);
+		if (e.status == 400) {
+			return 'INVALID_CREDENTIALS';
+		} else {
+			return 'OTHER_ERROR';
 		}
 	}
+
+	if (!register) {
+		push_toast('success', { type: 'headed', header: "Logged In", text: "Welcome back!" });
+	}
+
+	return 'SUCCESS';
 }
 
 export function logout() {
-	client.authStore.clear();
+	client?.authStore.clear();
 }
 
 /*
@@ -116,9 +80,9 @@ export async function save<T>(collection: string, record: RecordModel, create = 
 	const data = object2formdata(record);
 	if (record.id && !create) {
 		// "create" flag overrides update
-		return await client.collection(collection).update<T>(record.id, data);
+		return await client?.collection(collection).update<T>(record.id, data);
 	} else {
-		return await client.collection(collection).create<T>(data);
+		return await client?.collection(collection).create<T>(data);
 	}
 }
 
@@ -164,8 +128,8 @@ export async function watch<T extends RecordModel>(
 	perPage = 20,
 	realtime = browser,
 ): Promise<PageStore<T>> {
-	const collection = client.collection(idOrName);
-	let result = await collection.getList<T>(page, perPage, queryParams);
+	const collection = client?.collection(idOrName);
+	let result = await collection?.getList<T>(page, perPage, queryParams);
 	let set: Subscriber<ListResult<T>>;
 	let unsubRealtime: UnsubscribeFunc | undefined;
 	// fetch first page

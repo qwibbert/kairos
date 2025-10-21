@@ -28,13 +28,11 @@
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
-	import { type VinesDocument } from '../db/vines/define';
 
 	// === STATE VARIABLES ===
 	const app_state = get_app_state();
 
 	let sessions: SessionDocument[] | null = $state(null);
-	let vines: VinesDocument[] | null = $state(null);
 
 	const remaining_time = $derived(
 		app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0,
@@ -47,14 +45,9 @@
 	// === DATABASE QUERIES ===
 	const settings_query = db.settings.findOne('1');
 	const sessions_query = db.sessions.find();
-	const vines_query = db.vines.find();
 
 	sessions_query.$.subscribe((e) => {
 		if (e) sessions = e;
-	});
-
-	vines_query.$.subscribe((e: VinesDocument[]) => {
-		if (e) vines = e;
 	});
 
 	onMount(async () => {
@@ -247,7 +240,7 @@
 		</div>
 		{#if app_state.session?.vine_title}
 			<span class="btn btn-primary btn-sm">
-				<SquareCheck class="size-[1.2em]" />{app_state.session?.vine_title}
+				<SquareCheck class="size-[1.2em]" />{app_state.active_vine?.title}
 			</span>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>

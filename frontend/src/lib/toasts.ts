@@ -7,9 +7,9 @@ const THEME_SUCCESS = {
 };
 
 const THEME_WARNING = {
-    '--toastColor': 'var(--color-success-content)',
-    '--toastBackground': 'var(--color-success)',
-    '--toastBarBackground': 'var(--color-success-content)',
+    '--toastColor': 'var(--color-warning-content)',
+    '--toastBackground': 'var(--color-warning)',
+    '--toastBarBackground': 'var(--color-warning-content)',
 };
 
 const THEME_ERROR = {

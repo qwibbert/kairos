@@ -2,7 +2,7 @@
 	import type { ListResult } from 'pocketbase';
 
 	import i18next from 'i18next';
-	import { client } from '.';
+	import { client } from './';
 	import type { CoursesResponse } from './pocketbase-types';
 
 	interface Props {

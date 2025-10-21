@@ -1,7 +1,7 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
 
-import { client } from '$lib/pocketbase';
+import { client } from '$lib/pocketbase/';
 import { push_toast } from '$lib/toasts';
 
 import Alert from '$lib/components/alert.svelte';

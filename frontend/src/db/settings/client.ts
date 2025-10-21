@@ -1,7 +1,7 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
 
-import { client } from '$lib/pocketbase';
+import { client } from '$lib/pocketbase/';
 
 import { db } from '../db';
 import type { SettingsDocType } from './define';

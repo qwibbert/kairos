@@ -2,6 +2,7 @@ import { getContext } from 'svelte';
 import type { SessionDocument } from '../db/sessions/define.svelte';
 import type { SettingsDocument } from '../db/settings/define';
 import type { VinesDocument } from '../db/vines/define';
+import type { UsersRecord } from './pocketbase/types';
 
 export const APP_STATE = 'app_state';
 
@@ -15,12 +16,13 @@ export interface AlertDialog {
 }
 
 export interface AppState {
-    vines: VinesDocument[] | null,
-    session: SessionDocument | null,
-    settings: SettingsDocument | null,
-    timer_interval: ReturnType<typeof setTimeout> | null,
-    wake_lock: WakeLockSentinel | null,
-    alerts: AlertDialog[]
+    vines: VinesDocument[] | null;
+    session: SessionDocument | null;
+    settings: SettingsDocument | null;
+    timer_interval: ReturnType<typeof setTimeout> | null;
+    wake_lock: WakeLockSentinel | null;
+    user: UsersRecord | null;
+    active_vine: VinesDocument | null;
 }
 
 
