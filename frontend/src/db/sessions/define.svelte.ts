@@ -9,7 +9,7 @@ import {
 } from 'rxdb';
 
 import { db } from '../db';
-import type { VinesDocType } from '../vines/define';
+import type { VinesDocument } from '../vines/define';
 import { on_session_syncable } from './client';
 import { SessionError, SessionErrorFactory, SessionErrorType } from './errors';
 
@@ -109,8 +109,8 @@ export const session_schema: RxJsonSchema<SessionDocType> = session_schema_liter
 export type SessionDocMethods = {
 	start: (increment_cycle: boolean) => Promise<SessionDocument>;
 	pause: () => Promise<SessionDocument>;
-	skip: (override_type?: PomoType) => Promise<SessionDocument | null>;
-	next: (override_type?: PomoType) => Promise<SessionDocument | null>;
+	skip: (override_type?: PomoType, vine?: VinesDocument) => Promise<SessionDocument | null>;
+	next: (override_type?: PomoType, vine?: VinesDocument) => Promise<SessionDocument | null>;
 	get_time_elapsed: () => number;
 	upload: () => Promise<void>;
 };
@@ -142,7 +142,7 @@ export type SessionNewOpts = {
 	time_target: number;
 	pomo_type: PomoType;
 	cycle: number;
-	vine?: VinesDocType;
+	vine?: VinesDocument;
 };
 
 type TimerInterval = string;
@@ -275,7 +275,7 @@ export const session_doc_methods: SessionDocMethods = {
 			},
 		});
 	},
-	skip: async function (this: SessionDocument, override_type?: PomoType): Promise<SessionDocument | null> {
+	skip: async function (this: SessionDocument, override_type?: PomoType, vine?: VinesDocument): Promise<SessionDocument | null> {
 		if (this.status == SessionStatus.Ready) {
 			throw SessionErrorFactory.invalid_state(
 				'cannot skip an already finished session',
@@ -314,9 +314,9 @@ export const session_doc_methods: SessionDocMethods = {
 
 		on_session_syncable(this.id);
 
-		return await this.next(override_type);
+		return await this.next(override_type, vine);
 	},
-	next: async function (this: SessionDocument, override_type?: PomoType): Promise<SessionDocument | null> {
+	next: async function (this: SessionDocument, override_type?: PomoType, vine?: VinesDocument): Promise<SessionDocument | null> {
 		// Determine what the next session type should be
 		const next_type = override_type ?? get_next_session_type(this.pomo_type, this.cycle);
 
@@ -328,7 +328,7 @@ export const session_doc_methods: SessionDocMethods = {
 			time_target: time,
 			pomo_type: next_type,
 			cycle,
-			vine: this.vine_id ? ({ id: this.vine_id } as VinesDocType) : undefined,
+			vine,
 		} as SessionNewOpts);
 	},
 	get_time_elapsed: function (this: SessionDocument): number {
@@ -376,6 +376,7 @@ export const session_collection_methods: SessionCollectionMethods = {
 			});
 		}
 
+		
 		const session: SessionDocType = {
 			id: crypto.randomUUID(),
 			date_finished: undefined,

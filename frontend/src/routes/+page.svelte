@@ -101,7 +101,7 @@
 				return;
 			}
 
-			app_state.session = await tick(app_state.session, app_state.timer_interval, app_state.wake_lock);
+			app_state.session = await tick(app_state);
 		}, 1000);
 	}
 
@@ -125,7 +125,7 @@
 
 	async function skip_session(override_type?: PomoType) {
 		if (app_state.session) {
-			app_state.session = await app_state.session.skip(override_type);
+			app_state.session = await app_state.session.skip(override_type, app_state.active_vine ?? undefined);
 			clearInterval(app_state.timer_interval);
 			app_state.timer_interval = null;
 			if (app_state.wake_lock) {
@@ -169,7 +169,7 @@
 			// Check if there is already an active session with a non-zero time_real
 			// If so, skip this session
 			if (app_state.session && app_state.session.get_time_elapsed() != 0) {
-				app_state.session = await app_state.session.skip(type);
+				app_state.session = await app_state.session.skip(type, app_state.active_vine ?? undefined);
 			} else {
 				app_state.session = await db.sessions.new({
 					pomo_type: type,
@@ -181,6 +181,7 @@
 								: 'long_break_time',
 					),
 					cycle: 0,
+					vine: app_state.active_vine ?? undefined
 				});
 			}
 		}}
