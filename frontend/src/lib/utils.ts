@@ -1,3 +1,18 @@
+import { DateTime, Interval } from "luxon";
+
+export function special_period(): "CHRISTMAS" | "HALLOWEEN" | null {
+	const today = DateTime.now();
+
+	if (Interval.fromDateTimes(DateTime.local(today.year, 10, 20), DateTime.local(today.year, 11, 5)).contains(today)) {
+		return "HALLOWEEN";
+	} else if ((today.month == 12 && today.day >= 15) || (today.month == 1 && today.day <= 5)) {
+		return "CHRISTMAS";
+	} else {
+		return null;
+	}
+}
+
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function svelteDeepCopy<T>(obj: object, asObject: boolean): T {
 	// Handle null, undefined and primitive types

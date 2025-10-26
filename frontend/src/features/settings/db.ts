@@ -34,4 +34,5 @@ export enum Theme {
 	CARAMELLATTE = 'caramellatte',
 	ABYSS = 'abyss',
 	SILK = 'silk',
+	CHRISTMAS = 'christmas'
 }

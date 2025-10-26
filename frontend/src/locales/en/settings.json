@@ -6,6 +6,5 @@
 	"tick_sound": "Tick sound",
 	"timer_sound": "Timer sound",
 	"appearance": "Appearance",
-	"inactive": "Inactive",
-	"active": "Active"
+	"theme": "Theme"
 }

@@ -15,15 +15,15 @@
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
 	import { onMount } from 'svelte';
+	import { modals } from 'svelte-modals';
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
+	import { get_app_state } from '$lib/context';
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
-
-	import { get_app_state } from '$lib/context';
 	import { push_toast } from '$lib/toasts';
-	import { modals } from 'svelte-modals';
+
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -62,7 +62,9 @@
 				await start_timer();
 			}
 
-			app_state.active_vine = resumeable_session.vine_id ? await db.vines.get_vine(resumeable_session.vine_id) : null;
+			app_state.active_vine = resumeable_session.vine_id
+				? await db.vines.get_vine(resumeable_session.vine_id)
+				: null;
 		} else {
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
@@ -84,7 +86,11 @@
 			try {
 				app_state.wake_lock = await navigator.wakeLock.request('screen');
 			} catch (err) {
-				push_toast('error', { type: 'headed', header: 'Wakelock', text: `Failed to acquire a wakelock due to the following reason. ${err.name}: ${err.message}` })
+				push_toast('error', {
+					type: 'headed',
+					header: 'Wakelock',
+					text: `Failed to acquire a wakelock due to the following reason. ${err.name}: ${err.message}`,
+				});
 			}
 		}
 
@@ -125,7 +131,10 @@
 
 	async function skip_session(override_type?: PomoType) {
 		if (app_state.session) {
-			app_state.session = await app_state.session.skip(override_type, app_state.active_vine ?? undefined);
+			app_state.session = await app_state.session.skip(
+				override_type,
+				app_state.active_vine ?? undefined,
+			);
 			clearInterval(app_state.timer_interval);
 			app_state.timer_interval = null;
 			if (app_state.wake_lock) {
@@ -144,10 +153,7 @@
 		trigger: {
 			key: ' ',
 			modifier: false,
-			callback: () =>
-				modals.stack.length != 0
-					? null
-					: start_button?.click(),
+			callback: () => (modals.stack.length != 0 ? null : start_button?.click()),
 		},
 	}}
 />
@@ -181,7 +187,7 @@
 								: 'long_break_time',
 					),
 					cycle: 0,
-					vine: app_state.active_vine ?? undefined
+					vine: app_state.active_vine ?? undefined,
 				});
 			}
 		}}
@@ -198,7 +204,8 @@
 
 <header class="h-[10dvh] flex justify-between items-center">
 	<div class="grow-1 basis-0 flex items-center gap-2 justify-center">
-		<KairosLogo /><span class="text-2xl md:text-3xl xl:text-4xl text-primary font-bold">Kairos</span
+		<KairosLogo /><span class="text-[2em] md:text-3xl xl:text-4xl text-primary font-bold"
+			>Kairos</span
 		>
 		<span class="badge hidden md:block">{__KAIROS_VERSION__}</span>
 	</div>

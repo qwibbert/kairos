@@ -10,12 +10,14 @@
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { setContext } from 'svelte';
-	import { Modals } from 'svelte-modals';
+	import { Modals, modals } from 'svelte-modals';
 
-	import { client } from '$lib/pocketbase';
-
+	import Alert from '$lib/components/alert.svelte';
 	import type { AppState } from '$lib/context';
+	import { client } from '$lib/pocketbase';
 	import type { UsersRecord } from '$lib/pocketbase/types';
+	import { special_period } from '$lib/utils';
+
 	import { db } from '../db/db';
 	import { type VinesDocument } from '../db/vines/define';
 
@@ -28,18 +30,60 @@
 		vines: null,
 		wake_lock: null,
 		user: null,
-		active_vine: null
+		active_vine: null,
+		special_period: special_period(),
 	});
 
 	client?.authStore.onChange((token, model) => {
 		if (!client?.authStore.isValid) {
-			app_state.user = null;	
+			app_state.user = null;
 		}
 
 		app_state.user = model as unknown as UsersRecord;
 	}, true);
 
-	db.settings.findOne('1').$.subscribe((s) => (app_state.settings = s));
+	let holiday_alert_showing = $state(false);
+
+	db.settings.findOne('1').$.subscribe((s) => {
+		app_state.settings = s;
+
+		if (
+			!holiday_alert_showing &&
+			app_state.settings &&
+			app_state.special_period &&
+			app_state.settings?.special_periods &&
+			app_state.settings.tour_completed &&
+			!app_state.settings.special_periods_tip_shown
+		) {
+			holiday_alert_showing = true;
+			modals.open(Alert, {
+				type: 'INFO',
+				header:
+					app_state.special_period == 'HALLOWEEN' ? 'Spooky Scary Skeletons!' : 'Jingle Bells!',
+				text: `Your theme was automatically adjusted to the ${app_state.special_period == 'HALLOWEEN' ? 'Halloween' : 'Christmas'} theme`,
+				dismissable: false,
+				actions: new Map([
+					[
+						'Dismiss',
+						async () => {
+							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
+							holiday_alert_showing = false;
+						},
+					],
+					[
+						'Revert',
+						async () => {
+							document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
+							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
+							await app_state.settings?.modify_setting('special_periods', false);
+							holiday_alert_showing = false;
+						},
+					],
+				]),
+			});
+		}
+	});
+
 	db.vines.find().$.subscribe(async (e: VinesDocument[]) => {
 		if (e) {
 			app_state.vines = e;
@@ -53,11 +97,15 @@
 	);
 
 	$effect(() => {
-		if (app_state.settings?.theme_active && app_state.settings?.theme_inactive) {
-			if (app_state.timer_interval) {
-				document.documentElement.setAttribute('data-theme', app_state.settings?.theme_active);
-			} else {
-				document.documentElement.setAttribute('data-theme', app_state.settings?.theme_inactive);
+		if (app_state.settings?.special_periods && app_state.special_period) {
+			if (app_state.special_period == 'CHRISTMAS') {
+				document.documentElement.setAttribute('data-theme', 'christmas');
+			} else if (app_state.special_period == 'HALLOWEEN') {
+				document.documentElement.setAttribute('data-theme', 'halloween');
+			}
+		} else {
+			if (app_state.settings?.theme) {
+				document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
 			}
 		}
 	});

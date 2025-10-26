@@ -1,26 +1,21 @@
 <script lang="ts">
-	import ArrowRightLeft from 'lucide-svelte/icons/arrow-right-left';
+	import i18next from 'i18next';
 	import Volume from 'lucide-svelte/icons/volume';
 	import Volume1 from 'lucide-svelte/icons/volume-1';
 	import Volume2 from 'lucide-svelte/icons/volume-2';
 	import VolumeX from 'lucide-svelte/icons/volume-x';
-	import { getContext } from 'svelte';
 
 	import AccountButton from '$lib/components/account-button.svelte';
-	import i18next from 'i18next';
-	import { db } from '../../../db/db';
-	import { type SessionDocument, SessionStatus } from '../../../db/sessions/define.svelte';
-	import type { SettingsDocument } from '../../../db/settings/define';
+	import { get_app_state } from '$lib/context';
+
+	import { SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
 
-	const session = getContext('session') as SessionDocument | null;
-	let settings: SettingsDocument | null = $state(null);
-
-	db.settings.findOne('1').$.subscribe((s) => (settings = s));
+	const app_state = get_app_state();
 </script>
 
-{#if settings}
+{#if app_state.settings}
 	<div class="flex w-full justify-center">
 		<AccountButton />
 	</div>
@@ -34,9 +29,9 @@
 					type="number"
 					class="input text-center"
 					placeholder="25"
-					value={settings.pomo_time! / 60}
+					value={app_state.settings.pomo_time! / 60}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'pomo_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						)}
@@ -49,9 +44,9 @@
 					type="number"
 					class="input text-center"
 					placeholder="5"
-					value={settings.short_break_time! / 60}
+					value={app_state.settings.short_break_time! / 60}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'short_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						)}
@@ -64,9 +59,9 @@
 					type="number"
 					class="input text-center"
 					placeholder="15"
-					value={settings.long_break_time! / 60}
+					value={app_state.settings.long_break_time! / 60}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'long_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						)}
@@ -80,9 +75,12 @@
 			<label class="label">
 				<input
 					type="checkbox"
-					checked={settings.ui_sounds}
+					checked={app_state.settings.ui_sounds}
 					onchange={async (e) =>
-						await settings!.modify_setting('ui_sounds', (e.target as HTMLInputElement).checked)}
+						await app_state.settings!.modify_setting(
+							'ui_sounds',
+							(e.target as HTMLInputElement).checked,
+						)}
 					class="toggle"
 				/>
 				{i18next.t('settings:ui_sounds')}
@@ -95,11 +93,11 @@
 						// TODO: add sound preview
 					}}
 				>
-					{#if settings.ui_sounds && settings.ui_sounds_volume! < 25}
+					{#if app_state.settings.ui_sounds && app_state.settings.ui_sounds_volume! < 25}
 						<Volume class="size-[1.2em]" />
-					{:else if settings.ui_sounds && settings.ui_sounds_volume! >= 25 && settings.ui_sounds_volume! < 75}
+					{:else if app_state.settings.ui_sounds && app_state.settings.ui_sounds_volume! >= 25 && app_state.settings.ui_sounds_volume! < 75}
 						<Volume1 class="size-[1.2em]" />
-					{:else if settings.ui_sounds && settings.ui_sounds_volume! >= 75}
+					{:else if app_state.settings.ui_sounds && app_state.settings.ui_sounds_volume! >= 75}
 						<Volume2 class="size-[1.2em]" />
 					{:else}
 						<VolumeX class="size-[1.2em]" />
@@ -107,16 +105,16 @@
 				</button>
 
 				<input
-					disabled={!settings.ui_sounds}
+					disabled={!app_state.settings.ui_sounds}
 					type="range"
 					min="0"
 					max="100"
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'ui_sounds_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
-					value={settings.ui_sounds_volume}
+					value={app_state.settings.ui_sounds_volume}
 					class="range w-3/4 md:w-[30%]"
 				/>
 			</div>
@@ -126,9 +124,9 @@
 			<label class="label">
 				<input
 					type="checkbox"
-					checked={settings.timer_tick_sound}
+					checked={app_state.settings.timer_tick_sound}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'timer_tick_sound',
 							(e.target as HTMLInputElement).checked,
 						)}
@@ -143,24 +141,24 @@
 						// TODO: add sound preview
 					}}
 				>
-					{#if settings.timer_tick_sound && settings.timer_tick_sound_volume! < 25}
+					{#if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! < 25}
 						<Volume class="size-[1.2em]" />
-					{:else if settings.timer_tick_sound && settings.timer_tick_sound_volume! >= 25 && settings.timer_tick_sound_volume! < 75}
+					{:else if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! >= 25 && app_state.settings.timer_tick_sound_volume! < 75}
 						<Volume1 class="size-[1.2em]" />
-					{:else if settings.timer_tick_sound && settings.timer_tick_sound_volume! >= 75}
+					{:else if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! >= 75}
 						<Volume2 class="size-[1.2em]" />
 					{:else}
 						<VolumeX class="size-[1.2em]" />
 					{/if}
 				</button>
 				<input
-					disabled={!settings.timer_tick_sound}
+					disabled={!app_state.settings.timer_tick_sound}
 					type="range"
 					min="0"
 					max="100"
-					value={settings.timer_tick_sound_volume}
+					value={app_state.settings.timer_tick_sound_volume}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'timer_tick_sound_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
@@ -173,9 +171,9 @@
 			<label class="label">
 				<input
 					type="checkbox"
-					checked={settings.timer_finish_sound}
+					checked={app_state.settings.timer_finish_sound}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'timer_finish_sound',
 							(e.target as HTMLInputElement).checked,
 						)}
@@ -190,24 +188,24 @@
 						// TODO: add sound preview
 					}}
 				>
-					{#if settings.timer_finish_sound && settings.timer_finish_sound_volume! < 25}
+					{#if app_state.settings.timer_finish_sound && app_state.settings.timer_finish_sound_volume! < 25}
 						<Volume class="size-[1.2em]" />
-					{:else if settings.timer_finish_sound && settings.timer_finish_sound_volume! >= 25 && settings.timer_finish_sound_volume! < 75}
+					{:else if app_state.settings.timer_finish_sound && app_state.settings.timer_finish_sound_volume! >= 25 && app_state.settings.timer_finish_sound_volume! < 75}
 						<Volume1 class="size-[1.2em]" />
-					{:else if settings.timer_finish_sound && settings.timer_finish_sound_volume! >= 75}
+					{:else if app_state.settings.timer_finish_sound && app_state.settings.timer_finish_sound_volume! >= 75}
 						<Volume2 class="size-[1.2em]" />
 					{:else}
 						<VolumeX class="size-[1.2em]" />
 					{/if}
 				</button>
 				<input
-					disabled={!settings.timer_finish_sound}
+					disabled={!app_state.settings.timer_finish_sound}
 					type="range"
 					min="0"
 					max="100"
-					value={settings.timer_finish_sound_volume}
+					value={app_state.settings.timer_finish_sound_volume}
 					onchange={async (e) =>
-						await settings!.modify_setting(
+						await app_state.settings!.modify_setting(
 							'timer_finish_sound_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
@@ -222,61 +220,41 @@
 		<legend class="fieldset-legend">{i18next.t('settings:appearance')}</legend>
 		<div class="flex flex-col gap-2 items-center">
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">{i18next.t('settings:inactive')}</legend>
+				<legend class="fieldset-legend">{i18next.t('settings:theme')}</legend>
 				<select
 					class="select"
+					disabled={app_state.settings?.special_periods && app_state.special_period != null}
+					title={app_state.settings?.special_periods && app_state.special_period != null ? "Zet 'Pas thema aan' uit onder Feestdagen om deze instelling te wijzigen" : ""}
 					onchange={async (e) => {
-						if (session?.status != SessionStatus.Active) {
+						if (app_state.session?.status != SessionStatus.Active) {
 							document.documentElement.setAttribute(
 								'data-theme',
 								(e.target as HTMLSelectElement).value,
 							);
 						}
 
-						await settings!.modify_setting(
-							'theme_inactive',
+						await app_state.settings!.modify_setting(
+							'theme',
 							(e.target as HTMLSelectElement).value as Theme,
 						);
 					}}
 				>
 					{#each Object.values(Theme) as theme (theme)}
-						<option value={theme} selected={settings.theme_inactive == theme}>
-							{theme}
+						<option value={theme} selected={app_state.settings.theme == theme}>
+							<ThemeSample theme={theme} />
 						</option>
 					{/each}
 				</select>
 			</fieldset>
-			<ThemeSample theme={settings.theme_inactive} />
-		</div>
-		<ArrowRightLeft class="size-[2.5em] self-center" />
-		<div class="flex flex-col gap-2 items-center">
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">{i18next.t('settings:active')}</legend>
-				<select
-					class="select"
-					onchange={async (e) => {
-						if (session?.status == SessionStatus.Active) {
-							document.documentElement.setAttribute(
-								'data-theme',
-								(e.target as HTMLSelectElement).value,
-							);
-						}
-
-						await settings!.modify_setting(
-							'theme_active',
-							(e.target as HTMLSelectElement).value as Theme,
-						);
-					}}
-				>
-					{#each Object.values(Theme) as theme (theme)}
-						<option value={theme} selected={settings.theme_active == theme}>
-							{theme}
-						</option>
-					{/each}
-				</select>
+				<legend class="fieldset-legend">Feestdagen</legend>
+				<label class="label">
+					<input type="checkbox" checked={app_state.settings.special_periods} class="checkbox" onchange={async (e) => {
+						await app_state.settings!.modify_setting("special_periods", e.currentTarget.checked);
+					}} />
+					Pas thema aan
+				</label>
 			</fieldset>
-
-			<ThemeSample theme={settings.theme_active} />
 		</div>
 	</fieldset>
 {/if}

@@ -23,6 +23,7 @@ export interface AppState {
     wake_lock: WakeLockSentinel | null;
     user: UsersRecord | null;
     active_vine: VinesDocument | null;
+    special_period: "HALLOWEEN" | "CHRISTMAS" | null;
 }
 
 

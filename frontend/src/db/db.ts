@@ -87,6 +87,20 @@ export async function init_db(): Promise<KairosDB> {
 				3: function (old_doc) {
 					old_doc.vines_sort_dir = "DESC";
 					return old_doc;
+				},
+				4: function (old_doc) {
+					old_doc.theme = old_doc.theme_inactive ?? "coffee";
+					delete old_doc.theme_inactive;
+					delete old_doc.theme_active;
+					return old_doc;
+				},
+				5: function (old_doc) {
+					old_doc.special_periods = true;
+					return old_doc;
+				},
+				6: function (old_doc) {
+					old_doc.special_periods_tip_shown = false;
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -140,8 +154,9 @@ if ((await db.settings.count().exec()) == 0) {
 		ui_sounds_volume: 100,
 		timer_tick_sound_volume: 100,
 		timer_finish_sound_volume: 100,
-		theme_active: 'nord',
-		theme_inactive: 'coffee',
+		theme: 'coffee',
+		special_periods: true,
+		special_periods_tip_shown: false,
 		vines_sort_by: 'LAST_USED',
 		tour_completed: false
 	} as SettingsDocType);
