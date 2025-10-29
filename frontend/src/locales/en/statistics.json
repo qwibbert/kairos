@@ -6,6 +6,7 @@
 	"focus_time_hours": "Focus time (hours)",
     "day_view": "Day view",
 	"year_view": "Year view",
+	"date": "Date",
 	"pie_chart": "Pie chart",
 	"histogram": "Histogram",
     "vine_stats": "Vine stats"

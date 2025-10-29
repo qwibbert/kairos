@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 
+import { category_color } from '$lib/colors';
 import i18next from 'i18next';
 import { db } from '../../../db/db';
 import { PomoType, type SessionDocument } from '../../../db/sessions/define.svelte';
@@ -23,7 +24,8 @@ interface HistogramDataElement {
 
 interface HistogramData {
 	rows: string[],
-	elements: HistogramDataElement[]
+	elements: HistogramDataElement[],
+	colors: string[]
 }
 
 export type HistogramSeriesType = { id: string; stack: string; name: string; type: string }[];
@@ -32,11 +34,10 @@ export type HistogramLegendType = { name: string }[];
 
 export async function get_stats_day(
 	day: DateTime,
-	vine_id: string | undefined,
+	vine: VinesDocument | null,
 	entries: SessionDocument[],
 	vine_map: Map<string, VinesDocument>,
 	children_cache: Map<string, VinesDocument[]>,
-	vine_stats: boolean
 ): Promise<FocusTimeCounter> {
 	const entries_subset = entries.filter(
 		(entry) => entry.time_elapsed[day.toJSDate().toDateString()],
@@ -54,17 +55,27 @@ export async function get_stats_day(
 			throw new Error('No elapsed time');
 		}
 
-		if (entry.vine_id && vine_id) {
-			const child_vine = children_cache.get(vine_id)?.find(child => child.id == entry.vine_id);
+		if (entry.vine_id && vine) {
+			const child_vine = children_cache.get(vine.id)?.find(child => child.id == entry.vine_id);
+
+			const vine_time_count = counter.per_vine.findIndex(
+				(count) => count.vine.id == entry.vine_id,
+			);
 
 			if (child_vine) {
-				const vine_time_count = counter.per_vine.findIndex(
-					(count) => count.vine.id == entry.vine_id,
-				);
-
 				if (vine_time_count == -1) {
 					counter.per_vine.push({
 						vine: child_vine,
+						time: elapsed_time,
+					});
+				} else {
+					const object = counter.per_vine[vine_time_count];
+					counter.per_vine[vine_time_count] = { ...object, time: object.time + elapsed_time };
+				}
+			} else {
+				if (vine_time_count == -1) {
+					counter.per_vine.push({
+						vine,
 						time: elapsed_time,
 					});
 				} else {
@@ -81,12 +92,14 @@ export async function get_stats_day(
 				continue;
 			}
 
-			if (vine_stats) {
-				// If this vine has a parent, we will count the vine time towards the parent
-				if (vine?.parent_id) {
-					vine = vine_map.get(vine?.parent_id ?? '');
-				}
-			}
+			// If the vine has a parent, we should clearly mention that to the user
+			// For example, two courses may have a 'Chapter 1' subtask making the graph ambiguous
+			// if (vine) {
+			// 	// If this vine has a parent, we will count the vine time towards the parent
+			// 	if (vine?.parent_id) {
+			// 		vine = vine_map.get(vine?.parent_id ?? '');
+			// 	}
+			// }
 
 			const vine_time_count = counter.per_vine.findIndex((count) => count.vine.id == vine.id);
 
@@ -117,11 +130,10 @@ export async function get_stats_day(
 
 export async function get_stats_month(
 	month: DateTime,
-	vine_id: string | undefined,
+	vine: VinesDocument | null,
 	entries: SessionDocument[],
 	vine_map: Map<string, VinesDocument>,
-	children_cache: Map<string, string[]>,
-	vine_stats: boolean
+	children_cache: Map<string, VinesDocument[]>,
 ): Promise<FocusTimeCounter> {
 	const counter: FocusTimeCounter = {
 		per_vine: [],
@@ -131,11 +143,10 @@ export async function get_stats_month(
 	for (let i = 0; i <= (month.daysInMonth ?? 30); i++) {
 		const day_stats = await get_stats_day(
 			month.plus({ days: i }),
-			vine_id,
+			vine,
 			entries,
 			vine_map,
 			children_cache,
-			vine_stats
 		);
 
 		counter.no_vine += day_stats.no_vine;
@@ -159,8 +170,8 @@ export async function get_stats_month(
 export async function get_day_histogram_echarts(
 	day: DateTime,
 	pomo_type: PomoType,
-	vine_id: string | undefined,
-	vine_stats: boolean
+	vine: VinesDocument | null,
+	colors: string[]
 ): Promise<[HistogramSourceType, HistogramSeriesType]> {
 	const start_day = day.startOf('week');
 
@@ -180,8 +191,8 @@ export async function get_day_histogram_echarts(
 		.find({
 			selector: {
 				$and: [
-					{ updated_at: { $gte: start_day.startOf('week').toISO() } },
-					{ updated_at: { $lte: start_day.endOf('week').toISO() } },
+					{ updated_at: { $gte: start_day.startOf('week').toISO()?.replace('T', ' ') } },
+					{ updated_at: { $lte: start_day.endOf('week').toISO()?.replace('T', ' ') } },
 					{ pomo_type: { $eq: PomoType.Pomo } },
 				],
 			},
@@ -189,11 +200,13 @@ export async function get_day_histogram_echarts(
 		.exec()
 		.then((results) =>
 			results.filter((res) => {
-				if (vine_stats) {
-					if (vine_id) {
-						return vine_children_cache.get(vine_id ?? '')?.find(child => child.id == res.vine_id);
+				if (vine) {
+					if (res.vine_id == vine.id) {
+						return true;
+					} else if (vine_children_cache.get(vine.id)?.find((r) => r.id == res.vine_id)) {
+						return true;
 					} else {
-						return res.vine_id;
+						return false;
 					}
 				} else {
 					return true;
@@ -208,14 +221,13 @@ export async function get_day_histogram_echarts(
 		rows.push(day.toISODate()!);
 		const day_stats = await get_stats_day(
 			day.startOf('day'),
-			vine_id,
+			vine,
 			all_entries,
 			vine_map,
 			vine_children_cache,
-			vine_stats
 		);
 
-		if (!vine_stats) {
+		if (!vine) {
 			elements.push({ row: rows[rows.length - 1], vine: null, time: day_stats.no_vine });
 		}
 
@@ -228,14 +240,14 @@ export async function get_day_histogram_echarts(
 		}
 	}
 
-	return build_histogram_sources({ rows, elements });
+	return build_histogram_sources({ rows, elements, colors });
 }
 
 export async function get_year_histogram_echarts(
 	day: DateTime,
 	pomo_type: PomoType,
-	vine_id: string | undefined,
-	vine_stats: boolean
+	vine: VinesDocument | null,
+	colors: string[]
 ): Promise<[HistogramSourceType, HistogramSeriesType, HistogramLegendType]> {
 	const start_day = day.startOf('month');
 
@@ -255,8 +267,8 @@ export async function get_year_histogram_echarts(
 		.find({
 			selector: {
 				$and: [
-					{ updated_at: { $gte: day.startOf('year').toISO() } },
-					{ updated_at: { $lte: day.endOf('year').toISO() } },
+					{ updated_at: { $gte: day.startOf('year').toISO()?.replace('T', ' ') } },
+					{ updated_at: { $lte: day.endOf('year').toISO()?.replace('T', ' ') } },
 					{ pomo_type: { $eq: PomoType.Pomo } },
 				],
 			},
@@ -264,11 +276,13 @@ export async function get_year_histogram_echarts(
 		.exec()
 		.then((results) =>
 			results.filter((res) => {
-				if (vine_stats) {
-					if (vine_id) {
-						return vine_children_cache.get(vine_id ?? '')?.find(child => child.id == res.vine_id);
+				if (vine) {
+					if (res.vine_id == vine.id) {
+						return true;
+					} else if (vine_children_cache.get(vine.id)?.find((r) => r.id == res.vine_id)) {
+						return true;
 					} else {
-						return res.vine_id;
+						return false;
 					}
 				} else {
 					return true;
@@ -284,14 +298,13 @@ export async function get_year_histogram_echarts(
 
 		const month_stats = await get_stats_month(
 			month.startOf('month'),
-			vine_id,
+			vine,
 			all_entries,
 			vine_map,
-			vine_children_cache,
-			vine_stats
+			vine_children_cache
 		);
 
-		if (!vine_stats) {
+		if (!vine) {
 			elements.push({ row: rows[rows.length - 1], vine: null, time: month_stats.no_vine });
 		}
 
@@ -304,7 +317,7 @@ export async function get_year_histogram_echarts(
 		}
 	}
 
-	return build_histogram_sources({ rows, elements });
+	return build_histogram_sources({ rows, elements, colors });
 }
 
 
@@ -317,7 +330,15 @@ function build_histogram_sources(data: HistogramData) {
 
 	// Check if we need to add a series for sessions without a vine
 	if (data.elements.find(el => !el.vine)) {
-		series.push({ type: 'bar', stack: 'x', name: i18next.t('vines:no_vine'), emphasis: { focus: 'series' } });
+		series.push({ 
+			type: 'bar', 
+			stack: 'x', 
+			name: i18next.t('vines:no_vine'), 
+			emphasis: { focus: 'series' },
+			itemStyle: {
+				color: category_color('NO_VINE', data.colors)
+			}
+		});
 		source[0][1] = undefined;
 	}
 
@@ -343,7 +364,15 @@ function build_histogram_sources(data: HistogramData) {
 				source[0][vine_h_pos] = element.vine.id;
 				source[v_pos][vine_h_pos] = element.time / 3600;
 
-				series.push({ type: 'bar', stack: 'x', name: element.vine.title, emphasis: { focus: 'series' } });
+				series.push({ 
+					type: 'bar', 
+					stack: 'x', 
+					name: element.vine.title, 
+					emphasis: { focus: 'series' },
+					itemStyle: {
+						color: category_color(element.vine.id, data.colors)
+					}
+				});
 			}
 		} else {
 			// Count this element as an undefined vine

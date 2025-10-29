@@ -31,6 +31,7 @@
 		wake_lock: null,
 		user: null,
 		active_vine: null,
+		selected_vine: null,
 		special_period: special_period(),
 	});
 
@@ -111,7 +112,11 @@
 	});
 </script>
 
-<Modals />
+<Modals>
+	{#snippet backdrop({ close })}
+		<div class="backdrop" onclick={() => close()} />
+	{/snippet}
+</Modals>
 <SvelteToast />
 
 <div class="h-[80dvh] m-[5dvh]">

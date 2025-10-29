@@ -1,9 +1,7 @@
 <script lang="ts">
 	import VinesIcon from '$components/ui/vines-icon.svelte';
-	import VineStatsModal from '$features/stats/components/vine-stats-modal.svelte';
 	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
-	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import Folder from 'lucide-svelte/icons/folder';
@@ -257,18 +255,7 @@
 			</li>
 		</ul>
 	</details>
-	<button
-		class="btn btn-soft join-item"
-		onclick={async () => {
-			if (parent_vine) {
-				vine_to_view = await db.vines.get_vine(parent_vine ?? '');
-			} else {
-				vine_to_view = undefined;
-			}
-
-			modals.open(VineStatsModal, { vine: vine_to_view });
-		}}><ChartLine class="size-[1.2em]" />{i18next.t('statistics:statistics')}</button
-	>
+	
 </div>
 
 <div class="flex flex-row gap-2 my-5 justify-center">

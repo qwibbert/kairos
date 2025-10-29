@@ -3,6 +3,8 @@
 
 	import StatsUi from './stats-ui.svelte';
 
+	let mode: 'GENERAL' | 'VINE' = $state('GENERAL');
+
 	interface Props {
 		isOpen: boolean;
 		close: () => {};
@@ -24,26 +26,15 @@
 	});
 </script>
 
-<dialog
-	bind:this={dialog_el}
-	id="stats"
-	class="modal overflow-y-auto"
-	onclose={(e) => {
-		e.preventDefault();
-		close();
-	}}
->
-	<div class="modal-box">
-		<div class="flex flex-row items-center justify-between mb-2">
-			<h3 class="text-lg font-bold">{i18next.t('statistics:statistics')}</h3>
-			<form method="dialog">
-				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
-			</form>
-		</div>
+{#if isOpen}
+	<dialog bind:this={dialog_el} id="stats" class="modal overflow-y-auto">
+		<div class="modal-box">
+			<div class="flex flex-row items-center justify-between mb-2">
+				<h3 class="text-lg font-bold">{i18next.t('statistics:statistics')}</h3>
+				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
+			</div>
 
-		<StatsUi />
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+			<StatsUi bind:mode />
+		</div>
+	</dialog>
+{/if}

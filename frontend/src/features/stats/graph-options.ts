@@ -32,8 +32,8 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 			htmlString += `
                                 <div class="flex justify-between gap-2">
                         <span>${param.marker} ${param.seriesName}</span> <span class="font-bold">${Math.floor(
-													focusTime * 60,
-												)} min</span>
+				focusTime * 60,
+			)} min</span>
                                 </div>
                             `;
 			return;
@@ -41,8 +41,8 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 			htmlString += `
                                 <div>
                                    ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
-																			focusTime,
-																		)} h ${Math.floor((focusTime % 1) * 60)} min
+				focusTime,
+			)} h ${Math.floor((focusTime % 1) * 60)} min
                                 </div>
                             `;
 		}
@@ -150,7 +150,7 @@ export const year_options = {
 					month: 'short',
 				}),
 		},
-	}as XAXisOption,
+	} as XAXisOption,
 	tooltip: {
 		...day_options.tooltip,
 		formatter: (params) => tooltip_formatter(params, 'MONTHS'),
@@ -160,7 +160,7 @@ export const year_options = {
 export const vine_day_options = day_options;
 export const vine_year_options = year_options;
 
-export const vine_pie_options = {
+export const pie_options = {
 	tooltip: {
 		trigger: 'item',
 	},
@@ -171,6 +171,13 @@ export const vine_pie_options = {
 			label: {},
 			radius: '50%',
 			tooltip: {
+				confine: true,
+				backgroundColor: '',
+				color: '',
+				borderColor: '',
+				textStyle: {
+					color: '',
+				},
 				formatter: (data) => {
 					const value = data.value;
 

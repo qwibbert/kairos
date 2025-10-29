@@ -15,17 +15,16 @@
 	import { DateTime } from 'luxon';
 	import { onMount } from 'svelte';
 
+	import { generate_color_palette } from '$lib/colors';
 	import { db } from '../../../db/db';
 	import {
 		PomoType,
 		type SessionDocument,
 		SessionStatus,
 	} from '../../../db/sessions/define.svelte';
+	import type { VinesDocument } from '../../../db/vines/define';
 	import { day_options, year_options } from '../graph-options';
-	import {
-		get_day_histogram_echarts,
-		get_year_histogram_echarts
-	} from '../graphs/histogram';
+	import { get_day_histogram_echarts, get_year_histogram_echarts } from '../graphs/histogram';
 
 	echarts.use([
 		PieChart,
@@ -46,11 +45,13 @@
 		delta_weeks,
 		delta_years,
 		time_today = $bindable(),
+		vine,
 	}: {
 		view: 'DAY' | 'YEAR';
 		delta_weeks: number;
 		delta_years: number;
-		time_today: number;
+		time_today?: number;
+		vine: VinesDocument | null;
 	} = $props();
 
 	let histogram = $state<echarts.EChartsType | undefined>(undefined);
@@ -103,16 +104,10 @@
 			formatHex(style.getPropertyValue('--color-primary')),
 			formatHex(style.getPropertyValue('--color-secondary')),
 			formatHex(style.getPropertyValue('--color-accent')),
-			formatHex(style.getPropertyValue('--color-accent')),
-			formatHex(style.getPropertyValue('--color-accent-content')),
 			formatHex(style.getPropertyValue('--color-info')),
-			formatHex(style.getPropertyValue('--color-info-content')),
 			formatHex(style.getPropertyValue('--color-success')),
-			formatHex(style.getPropertyValue('--color-success-content')),
 			formatHex(style.getPropertyValue('--color-warning')),
-			formatHex(style.getPropertyValue('--color-warning-content')),
 			formatHex(style.getPropertyValue('--color-error')),
-			formatHex(style.getPropertyValue('--color-error-content')),
 		] as string[];
 
 		day_options.color = colors;
@@ -135,13 +130,29 @@
 		year_options.yAxis.nameTextStyle!.color = style.getPropertyValue('--color-base-content');
 
 		if (view == 'DAY') {
+			histogram?.clear();
 			histogram?.setOption(day_options);
 		} else if (view == 'YEAR') {
+			histogram?.clear();
 			histogram?.setOption(year_options);
 		}
 	}
 
 	async function load_histogram() {
+		const style = window.getComputedStyle(document.body);
+
+		const base_colors = [
+			formatHex(style.getPropertyValue('--color-primary')),
+			formatHex(style.getPropertyValue('--color-secondary')),
+			formatHex(style.getPropertyValue('--color-accent')),
+			formatHex(style.getPropertyValue('--color-info')),
+			formatHex(style.getPropertyValue('--color-success')),
+			formatHex(style.getPropertyValue('--color-warning')),
+			formatHex(style.getPropertyValue('--color-error')),
+		] as string[];
+
+		const computed_colors = generate_color_palette(base_colors, 60);
+
 		histogram?.clear();
 
 		if (!histogram) {
@@ -156,16 +167,16 @@
 			[day_options.dataset.source, day_options.series] = await get_day_histogram_echarts(
 				DateTime.now().minus({ weeks: delta_weeks }),
 				PomoType.Pomo,
-				undefined,
-				false,
+				vine,
+				computed_colors
 			);
 		} else if (view == 'YEAR') {
 			[year_options.dataset.source, year_options.series, year_options.legend.data] =
 				await get_year_histogram_echarts(
 					DateTime.now().startOf('year').minus({ years: delta_years }),
 					PomoType.Pomo,
-					undefined,
-					false,
+					vine,
+					computed_colors
 				);
 		}
 
