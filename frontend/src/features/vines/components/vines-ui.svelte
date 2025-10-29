@@ -96,7 +96,8 @@
 				onchange={async (e) => {
 					if (app_state.session) {
 						if (app_state.session.status != SessionStatus.Inactive) {
-							modals.open(Alert, {
+
+							await modals.open(Alert, {
 								type: 'INFO',
 								header: 'Change Vine',
 								text: 'Changing vine will create a new session, are you sure you want to continue?',

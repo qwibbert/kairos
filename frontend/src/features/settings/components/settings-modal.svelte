@@ -24,24 +24,24 @@
 	});
 </script>
 
-<dialog
-	bind:this={dialog_el}
-	class="modal"
-	onclose={(e) => {
-		e.preventDefault();
-		close();
-	}}
->
-	<div class="modal-box max-h-[90dvh]">
-		<div class="flex flex-row items-center justify-between mb-2">
-			<h3 class="text-lg font-bold">{i18next.t('settings:settings')}</h3>
-			<form method="dialog">
-				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
-			</form>
+{#if isOpen}
+	<dialog
+		bind:this={dialog_el}
+		class="modal"
+		onclose={(e) => {
+			e.preventDefault();
+			close();
+		}}
+	>
+		<div class="modal-box max-h-[90dvh]">
+			<div class="flex flex-row items-center justify-between mb-2">
+				<h3 class="text-lg font-bold">{i18next.t('settings:settings')}</h3>
+					<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
+			</div>
+			<SettingsUi />
 		</div>
-		<SettingsUi />
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
+{/if}

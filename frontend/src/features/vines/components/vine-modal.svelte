@@ -22,21 +22,22 @@
 	});
 </script>
 
-<dialog
-	bind:this={dialog_el}
-	class="modal"
-	onclose={(e) => {
-		e.preventDefault();
-		close();
-	}}
->
-	<div class="modal-box max-h-[90dvh]">
-		<div class="flex flex-row justify-between items-center w-full">
-			<h3 class="text-lg font-bold self-baseline">Vines</h3>
-			<form method="dialog">
-				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
-			</form>
+{#if isOpen}
+	<dialog
+		bind:this={dialog_el}
+		class="modal"
+		onclose={(e) => {
+			e.preventDefault();
+			close();
+		}}
+	>
+		<div class="modal-box max-h-[90dvh]">
+			<div class="flex flex-row justify-between items-center w-full">
+				<h3 class="text-lg font-bold self-baseline">Vines</h3>
+
+				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
+			</div>
+			<VinesUi />
 		</div>
-		<VinesUi />
-	</div>
-</dialog>
+	</dialog>
+{/if}
