@@ -50,11 +50,11 @@
 
 	let search_string = $state('');
 
-	let vines_list_state = $derived(
-		app_state.vines
+	let vines_list_state = $derived.by(async () => {
+		return app_state.vines
 			? await build_vine_subtree(app_state.vines, parent_vine?.id, vines_sort_by, search_string)
-			: [],
-	);
+			: [];
+	});
 </script>
 
 <dialog
