@@ -1,3 +1,9 @@
+## v0.3.4 (2025-10-30)
+
+### Fix
+
+- vine selection modal not opening
+
 ## v0.3.3 (2025-10-30)
 
 ### Fix
