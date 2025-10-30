@@ -17,7 +17,7 @@
 {#if session && session.status == SessionStatus.Active}
     <div class="flex flex-row gap-2">
         <button class="btn" onclick={async () => await travel(session.time_target * 0.20)}>{i18next.t("session:advance_20%")}</button>
-        <button class="btn" onclick={async () => await travel(session.time_target - 5)}>{i18next.t("travel_5_seconds_until_end")}</button>
+        <button class="btn" onclick={async () => await travel(session.time_target - 5)}>{i18next.t("session:travel_5_seconds_until_end")}</button>
     </div>
 {/if}
 
