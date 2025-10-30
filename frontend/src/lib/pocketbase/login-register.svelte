@@ -69,7 +69,6 @@
 	}
 </script>
 
-{#if isOpen}
 	<dialog
 		bind:this={dialog_el}
 		class="modal"
@@ -204,4 +203,3 @@
 			</form>
 		</div>
 	</dialog>
-{/if}

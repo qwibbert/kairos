@@ -23,7 +23,7 @@
 	});
 </script>
 
-{#if isOpen}
+
 	<dialog
 		bind:this={dialog_el}
 		class="modal"
@@ -41,4 +41,4 @@
 			<VinesUi />
 		</div>
 	</dialog>
-{/if}
+

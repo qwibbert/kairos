@@ -57,7 +57,6 @@
 	);
 </script>
 
-{#if isOpen}
 	<dialog
 		bind:this={dialog_el}
 		class="modal"
@@ -226,4 +225,4 @@
 			{/await}
 		</div>
 	</dialog>
-{/if}
+

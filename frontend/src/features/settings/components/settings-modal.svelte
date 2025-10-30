@@ -24,7 +24,7 @@
 	});
 </script>
 
-{#if isOpen}
+
 	<dialog
 		bind:this={dialog_el}
 		class="modal"
@@ -41,4 +41,3 @@
 			<SettingsUi />
 		</div>
 	</dialog>
-{/if}

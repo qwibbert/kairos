@@ -39,53 +39,51 @@
 	});
 </script>
 
-{#if isOpen}
-	<dialog
-		bind:this={dialog_el}
-		class="modal overflow-y-auto z-50"
-		onclose={(e) => {
-			e.preventDefault();
-			close();
-		}}
-	>
-		<div class="modal-box flex flex-col justify-between">
-			<div class="flex flex-row items-center justify-between mb-5">
-				<h3
-					class={[
-						'text-lg',
-						'font-bold',
-						'flex',
-						'flex-row',
-						'gap-2 ',
-						'items-center',
-						type == 'WARNING' ? 'text-warning' : type == 'ERROR' ? 'text-error' : '',
-					]}
-				>
-					{#if type == 'INFO'}
-						<Info class="size-[1.2em]" />
-					{:else if type == 'WARNING'}<TriangleAlert
-							class="size-[1.2em]"
-						/>{:else if type == 'ERROR'}<CircleAlert class="size-[1.2em]" />{/if}
-					{header}
-				</h3>
-				{#if dismissable}
-					<form method="dialog">
-						<button class="btn btn-sm btn-circle btn-ghost">✕</button>
-					</form>
-				{/if}
-			</div>
-			<p>{@html text}</p>
-			<div class="flex flex-row items-center justify-between mt-5">
-				{#each actions as action (action[0])}
-					<button
-						class={['btn ', type == 'WARNING' ? 'btn-warning' : type == 'ERROR' ? 'btn-error' : '']}
-						onclick={async (e) => {
-							await action[1]();
-							close();
-						}}>{action[0]}</button
-					>
-				{/each}
-			</div>
+<dialog
+	bind:this={dialog_el}
+	class="modal overflow-y-auto z-50"
+	onclose={(e) => {
+		e.preventDefault();
+		close();
+	}}
+>
+	<div class="modal-box flex flex-col justify-between">
+		<div class="flex flex-row items-center justify-between mb-5">
+			<h3
+				class={[
+					'text-lg',
+					'font-bold',
+					'flex',
+					'flex-row',
+					'gap-2 ',
+					'items-center',
+					type == 'WARNING' ? 'text-warning' : type == 'ERROR' ? 'text-error' : '',
+				]}
+			>
+				{#if type == 'INFO'}
+					<Info class="size-[1.2em]" />
+				{:else if type == 'WARNING'}<TriangleAlert
+						class="size-[1.2em]"
+					/>{:else if type == 'ERROR'}<CircleAlert class="size-[1.2em]" />{/if}
+				{header}
+			</h3>
+			{#if dismissable}
+				<form method="dialog">
+					<button class="btn btn-sm btn-circle btn-ghost">✕</button>
+				</form>
+			{/if}
 		</div>
-	</dialog>
-{/if}
+		<p>{@html text}</p>
+		<div class="flex flex-row items-center justify-between mt-5">
+			{#each actions as action (action[0])}
+				<button
+					class={['btn ', type == 'WARNING' ? 'btn-warning' : type == 'ERROR' ? 'btn-error' : '']}
+					onclick={async (e) => {
+						await action[1]();
+						close();
+					}}>{action[0]}</button
+				>
+			{/each}
+		</div>
+	</div>
+</dialog>

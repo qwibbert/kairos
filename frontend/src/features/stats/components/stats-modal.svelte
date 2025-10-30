@@ -26,7 +26,6 @@
 	});
 </script>
 
-{#if isOpen}
 	<dialog bind:this={dialog_el} id="stats" class="modal overflow-y-auto">
 		<div class="modal-box">
 			<div class="flex flex-row items-center justify-between mb-2">
@@ -37,4 +36,4 @@
 			<StatsUi bind:mode />
 		</div>
 	</dialog>
-{/if}
+
