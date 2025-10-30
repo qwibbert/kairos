@@ -40,8 +40,5 @@
 			</div>
 			<SettingsUi />
 		</div>
-		<form method="dialog" class="modal-backdrop">
-			<button>close</button>
-		</form>
 	</dialog>
 {/if}

@@ -1,15 +1,25 @@
 {
+	"account": "Account",
     "login_register": "Login / Register",
 	"login": "Login",
 	"register": "Register",
 	"e_mail": "Email adress",
 	"e_mail_placeholder": "Enter your email adress here",
+	"e_mail_hint": "Please enter a valid email address",
+	"e_mail_in_use": "This email address is already in use",
 	"password": "Password",
 	"password_placeholder": "Enter your password here",
+	"password_hint": "Must be at least 8 characters",
 	"password_confirm": "Confirm password",
 	"password_confirm_placeholder": "Please enter your password again",
+	"password_confirm_hint": "Passwords must match",
+	"privacy_declaration_text": "When creating an account, you accept our",
+	"privacy_declaration_link_text": "privacy declaration",
 	"surname": "Surname",
 	"surname_placeholder": "John",
 	"name": "Name",
-	"name_placeholder": "Dough"
+	"name_placeholder": "Dough",
+	"err_failed_create": "Failed to create account, please try again later.",
+	"err_failed_login_header": "Login failed",
+	"err_failed": "Check your internet connection"
 }

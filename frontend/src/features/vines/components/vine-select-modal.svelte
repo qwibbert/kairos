@@ -69,7 +69,7 @@
 	>
 		<div class="modal-box max-h-[90dvh]">
 			<div class="flex flex-row justify-between items-center w-full">
-				<h3 class="text-lg font-bold self-baseline">{vine_moving ? "Verplaats" : "Selecteer een tros"} {vine_moving?.title}</h3>
+				<h3 class="text-lg font-bold self-baseline">{vine_moving ? i18next.t("vines:move_vine") : i18next.t("vines:select_vine")} {vine_moving?.title}</h3>
 
 				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close(null)}>✕</button>
 			</div>
@@ -84,9 +84,9 @@
 							: '',
 					]}
 					data-tip={vine.id == vine_moving?.id
-						? 'Cannot place a vine inside itself'
+						? i18next.t("vines:err_vine_in_vine")
 						: vine_moving?.type == VineType.Course && vine.type == VineType.Course
-							? 'Cannot place a course inside another course.'
+							? i18next.t("vines:err_course_in_course")
 							: ''}
 				>
 					<button
@@ -133,7 +133,7 @@
 							class="btn"
 							onclick={() => {
 								close(resolved_parent_vine ?? null);
-							}}><FolderDown class="size-[1.2em]" /> Place Here</button
+							}}><FolderDown class="size-[1.2em]" /> {i18next.t("vines:place_here")}</button
 						>
 					{/if}
 				</div>
@@ -149,12 +149,12 @@
 								(e.target as HTMLSelectElement).value,
 							)}
 					>
-						<option value="LAST_USED_DESC">Last used</option>
-						<option value="LAST_USED_ASC">First used</option>
-						<option value="CREATION_DESC">Newest</option>
-						<option value="CREATION_ASC">Oldest</option>
-						<option value="NAME_DESC">Name (descending)</option>
-						<option value="NAME_ASC">Name (ascending)</option>
+						<option value="LAST_USED_DESC">{i18next.t("vines:last_used")}</option>
+						<option value="LAST_USED_ASC">{i18next.t("vines:first_used")}</option>
+						<option value="CREATION_DESC">{i18next.t("vines:newest")}</option>
+						<option value="CREATION_ASC">{i18next.t("vines:oldest")}</option>
+						<option value="NAME_DESC">{i18next.t("vines:name_desc")}</option>
+						<option value="NAME_ASC">{i18next.t("vines:name_asc")}</option>
 					</select>
 				</div>
 

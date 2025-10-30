@@ -79,7 +79,7 @@
 >
 	<div class="modal-box h-[70dvh]">
 		<div class="flex flex-row justify-between items-center w-full">
-			<h3 class="text-lg font-bold self-baseline">Import Course</h3>
+			<h3 class="text-lg font-bold self-baseline">{i18next.t("vines:import_course")}</h3>
 			<form method="dialog">
 				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
 			</form>

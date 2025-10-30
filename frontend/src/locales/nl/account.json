@@ -1,15 +1,25 @@
 {
+	"account": "Account",
     "login_register": "Log In / Registreer",
 	"login": "Log In",
 	"register": "Registreer",
 	"e_mail": "Email-adres",
+	"e_mail_hint": "Geef een geldig email adress in",
+	"e_mail_in_use": "Dit e-mailadres is al in gebruik",
 	"e_mail_placeholder": "Vul hier je email-adres in",
 	"password": "Wachtwoord",
 	"password_placeholder": "Vul hier je wachtwoord in",
 	"password_confirm": "Bevestig je wachtwoord",
+	"password_hint": "Moet uit minstens 8 karakters bestaan",
 	"password_confirm_placeholder": "Vul hier je wachtwoord opnieuw in",
+	"password_confirm_hint": "Wachtwoorden moeten overeen komen",
+	"privacy_declaration_text": "Bij het aanmaken van een account ga je akkoord met onze",
+	"privacy_declaration_link_text": "privacy-verklaring",
 	"surname": "Voornaam",
 	"surname_placeholder": "John",
 	"name": "Familienaam",
-	"name_placeholder": "Dough"
+	"name_placeholder": "Dough",
+	"err_failed_create": "Probleem bij het aanmaken van een account, probeer later opnieuw",
+	"err_failed_login_header": "Inloggen mislukt",
+	"err_failed": "Controleer je internetverbinding"
 }

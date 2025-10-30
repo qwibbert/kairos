@@ -42,8 +42,8 @@
 			other_error = true;
 			push_toast('error', {
 				type: 'headed',
-				header: 'Server Error',
-				text: 'Failed to create account, please try again later.',
+				header: i18next.t("common:err_server_header"),
+				text: i18next.t("account:err_failed_create"),
 			});
 		} else if (result == 'SUCCESS') {
 			email_in_use = false;
@@ -59,7 +59,7 @@
 		if (result == 'INVALID_CREDENTIALS') {
 			invalid_credentials = true;
 		} else if (result == 'OTHER_ERROR') {
-			push_toast('error', { type: 'headed', header: "Login Failed", text: "Failed to connect to server, do you have internet access?" })
+			push_toast('error', { type: 'headed', header: i18next.t("account:err_failed_login_header"), text: i18next.t("common:err_failed") })
 		}
 
 		if (result == 'SUCCESS') {
@@ -143,9 +143,9 @@
 						]}
 						placeholder={i18next.t('account:e_mail_placeholder')}
 					/>
-					<div class="validator-hint hidden">Enter valid email address</div>
+					<div class="validator-hint hidden">{i18next.t("account:e_mail_hint")}</div>
 					{#if active_tab == 'REGISTER' && email_in_use}
-						<div class="text-error">This email address is already in use</div>
+						<div class="text-error">{i18next.t("account:e_mail_in_use")}</div>
 					{/if}
 				</fieldset>
 				<fieldset class="fieldset">
@@ -157,11 +157,11 @@
 							'input',
 							invalid_credentials ? 'input-error' : active_tab == 'REGISTER' ? 'validator' : '',
 						]}
-						title={active_tab == 'REGISTER' ? 'Must be more than 8 characters' : ''}
+						title={active_tab == 'REGISTER' ? i18next.t("account:password_hint") : ''}
 						placeholder={i18next.t('account:password_placeholder')}
 						minlength={active_tab == 'REGISTER' ? 8 : undefined}
 					/>
-					<p class="validator-hint hidden">Must be more than 8 characters</p>
+					<p class="validator-hint hidden">i18next.t("account:password_hint")</p>
 				</fieldset>
 				{#if active_tab == 'REGISTER'}
 					<fieldset class="fieldset">
@@ -177,12 +177,12 @@
 							]}
 							placeholder={i18next.t('account:password_confirm_placeholder')}
 						/>
-						<p class="validator-hint hidden">Passwords must match</p>
+						<p class="validator-hint hidden">{i18next.t("account:password_confirm_hint")}</p>
 					</fieldset>
 					<p>
-						Bij het aanmaken van een account ga je akkoord met onze <a
+					 	{i18next.t("account:privacy_declaration_text")} <a
 							href="privacy.pdf"
-							class="link">privacy-verklaring</a
+							class="link">{i18next.t("account:privacy_declaration_link_text")}</a
 						>.
 					</p>
 				{/if}

@@ -4,5 +4,9 @@
 	"long_break": "Long Break",
 	"start": "Start",
 	"resume": "Resume",
-	"pause": "Pause"
+	"pause": "Pause",
+	"advance_20%": "Advance 20%",
+	"travel_5_seconds_until_end": "Jump to 5 seconds before endtime",
+	"wakelock": "Wakelock",
+	"err_wakelock": "Failed to acquire wackelock"
 }

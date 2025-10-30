@@ -60,19 +60,19 @@
 			modals.open(Alert, {
 				type: 'INFO',
 				header:
-					app_state.special_period == 'HALLOWEEN' ? 'Spooky Scary Skeletons!' : 'Jingle Bells!',
-				text: `Your theme was automatically adjusted to the ${app_state.special_period == 'HALLOWEEN' ? 'Halloween' : 'Christmas'} theme`,
+					app_state.special_period == 'HALLOWEEN' ? i18next.t("settings:halloween_header") : i18next.t("settings:christmas_header"),
+				text: i18next.t("settings:theme_auto_adjust_msg", {theme: app_state.special_period == 'HALLOWEEN' ? i18next.t("settings:halloween"): i18next.t("settings:christmas")}),
 				dismissable: false,
 				actions: new Map([
 					[
-						'Dismiss',
+						i18next.t("common:dismiss"),
 						async () => {
 							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
 							holiday_alert_showing = false;
 						},
 					],
 					[
-						'Revert',
+						i18next.t("commonrevert"),
 						async () => {
 							document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
 							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
@@ -124,7 +124,7 @@
 </div>
 
 <footer class="h-[10dvh] hidden md:flex flex-row w-full items-center justify-center gap-4">
-	<a href="privacy.pdf" class="link link-hover text-sm">privacy</a>
+	<a href="privacy.pdf" class="link link-hover text-sm">{i18next.t("common:privacy")}</a>
 	<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
 		>meld problemen</a
 	>

@@ -4,5 +4,9 @@
 	"long_break": "Lange Pauze",
 	"start": "Start",
 	"resume": "Hervat",
-	"pause": "Pauzeer"
+	"pause": "Pauzeer",
+	"advance_20%": "Spring 20% vooruit",
+	"travel_5_seconds_until_end": "Spring naar 5 seconden voor eindtijd",
+	"wakelock": "Wakelock",
+	"err_wakelock": "Verkrijgen van wakelock mislukt"
 }

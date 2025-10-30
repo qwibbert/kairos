@@ -96,16 +96,15 @@
 				onchange={async (e) => {
 					if (app_state.session) {
 						if (app_state.session.status != SessionStatus.Inactive) {
-
 							await modals.open(Alert, {
 								type: 'INFO',
-								header: 'Change Vine',
-								text: 'Changing vine will create a new session, are you sure you want to continue?',
+								header: i18next.t('vines:vine_change'),
+								text: i18next.t('vines:vine_change_active_session'),
 								dismissable: false,
 								actions: new Map([
-									['Cancel', async () => {}],
+									[i18next.t('common:cancel'), async () => {}],
 									[
-										'Change vine',
+										i18next.t('vines:vine_change'),
 										async () => {
 											app_state.session = await app_state.session?.skip(
 												app_state.session.pomo_type as PomoType,
@@ -167,7 +166,7 @@
 					parent_override = vine.id;
 					page = 1;
 				}}
-				class=" link text-base-content">{vine.title}</button
+				class="link text-base-content">{vine.title}</button
 			>
 		{:else}
 			<p>{vine.title}</p>
@@ -210,12 +209,12 @@
 					) {
 						push_toast('error', {
 							type: 'headed',
-							header: 'Invalid Move Operation',
+							header: i18next.t('vines:err_invalid_move'),
 							text:
 								vine.id == vine_moving?.id
-									? 'Cannot place a vine inside itself'
+									? i18next.t('vines:err_vine_in_vine')
 									: vine_moving?.type == VineType.Course && vine.type == VineType.Course
-										? 'Cannot place a course inside another course.'
+										? i18next.t('vines:err_course_in_course')
 										: '',
 						});
 					} else {
@@ -256,7 +255,6 @@
 			</li>
 		</ul>
 	</details>
-	
 </div>
 
 <div class="flex flex-row gap-2 my-5 justify-center">
@@ -270,12 +268,12 @@
 				(e.target as HTMLSelectElement).value,
 			)}
 	>
-		<option value="LAST_USED_DESC">Last used</option>
-		<option value="LAST_USED_ASC">First used</option>
-		<option value="CREATION_DESC">Newest</option>
-		<option value="CREATION_ASC">Oldest</option>
-		<option value="NAME_DESC">Name (descending)</option>
-		<option value="NAME_ASC">Name (ascending)</option>
+		<option value="LAST_USED_DESC">{i18next.t('vines:last_used')}</option>
+		<option value="LAST_USED_ASC">{i18next.t('vines:first_used')}</option>
+		<option value="CREATION_DESC">{i18next.t('vines:newest')}</option>
+		<option value="CREATION_ASC">{i18next.t('vines:oldest')}</option>
+		<option value="NAME_DESC">{i18next.t('vines:name_desc')}</option>
+		<option value="NAME_ASC">{i18next.t('vines:name_asc')}</option>
 	</select>
 </div>
 

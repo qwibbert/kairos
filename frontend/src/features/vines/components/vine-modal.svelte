@@ -1,4 +1,5 @@
 <script lang="ts">
+	import i18next from 'i18next';
 	import VinesUi from './vines-ui.svelte';
 
 	interface Props {
@@ -33,7 +34,7 @@
 	>
 		<div class="modal-box max-h-[90dvh]">
 			<div class="flex flex-row justify-between items-center w-full">
-				<h3 class="text-lg font-bold self-baseline">Vines</h3>
+				<h3 class="text-lg font-bold self-baseline">{i18next.t("vines:vines")}</h3>
 
 				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
 			</div>

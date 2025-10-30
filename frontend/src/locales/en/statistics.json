@@ -8,6 +8,9 @@
 	"year_view": "Year view",
 	"date": "Date",
 	"pie_chart": "Pie chart",
-	"histogram": "Histogram",
+	"bar_chart": "Bar chart",
+	"total_time": "Total time",
+	"minute_short": "min",
+	"hour_short": "h",
     "vine_stats": "Vine stats"
 }

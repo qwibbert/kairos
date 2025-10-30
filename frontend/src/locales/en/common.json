@@ -1,5 +1,5 @@
 {
-    "date": "Date",
+	"date": "Date",
 	"page": "Page",
 	"add": "Add",
 	"search": "Search",
@@ -9,5 +9,10 @@
 	"skip": "Skip",
 	"next": "Next",
 	"previous": "Previous",
-	"close": "Close"
+	"close": "Close",
+	"cancel": "Cancel",
+	"dismiss": "Dismiss",
+	"revert": "Revert",
+	"privacy": "Privacy",
+	"err_server_header": "Server Error"
 }

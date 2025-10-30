@@ -188,24 +188,24 @@
 				app_state.selected_vine = await modals.open(VineSelectModal, { vine_moving: null });
 			}}
 		>
-			<option>{app_state.selected_vine?.title ?? 'Selecteer een vine'}</option>
+			<option>{app_state.selected_vine?.title ?? i18next.t("vines:select_vine")}</option>
 		</select>
 		<select class="select w-[40%]" bind:value={chart_type}>
-			<option value="BAR">Bar Chart</option>
-			<option value="PIE">Pie Chart</option>
+			<option value="BAR">{i18next.t("statistics:bar_chart")}</option>
+			<option value="PIE">{i18next.t("statistics:pie_chart")}</option>
 		</select>
 	</div>
 
 	{#if app_state.selected_vine}
 		<div class="stats shadow w-[50%] mx-[25%] mb-5 text-primary">
 			<div class="stat">
-				<div class="stat-title">Totale tijd</div>
+				<div class="stat-title">{i18next.t("statistics:total_time")}</div>
 				<div class="stat-value">
 					{#if vine_total_time < 3600}
-						{Math.floor(vine_total_time / 60)} min
+						{Math.floor(vine_total_time / 60)} {i18next.t("statistics:minutes_short")}
 					{:else}
 						{Math.floor(vine_total_time / 3600)}
-						h {Math.floor((vine_total_time % 3600) / 60)} min
+						{i18next.t("statistics:hour_short")} {Math.floor((vine_total_time % 3600) / 60)} {i18next.t("statistics:minutes_short")}
 					{/if}
 				</div>
 			</div>
@@ -217,6 +217,6 @@
 		{/if}
 	{:else}
 		<ChartColumn class="size-[8em] w-[50%] mx-[25%]" />
-		<p class="text-center font-bold text-xl">Geen tros geselecteerd</p>
+		<p class="text-center font-bold text-xl">{i18next.t("vines:no_vine_selected")}</p>
 	{/if}
 {/if}

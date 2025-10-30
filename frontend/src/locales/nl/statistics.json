@@ -8,6 +8,9 @@
     "day_view": "Dagoverzicht",
 	"year_view": "Jaaroverzicht",
 	"pie_chart": "Taartdiagram",
-	"histogram": "Histogram",
+	"bar_chart": "Staafdiagram",
+	"total_time": "Totale tijd",
+	"minute_short": "min",
+	"hour_short": "u",
     "vine_stats": "Trosstatistieken"
 }

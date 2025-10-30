@@ -224,7 +224,7 @@
 				<select
 					class="select"
 					disabled={app_state.settings?.special_periods && app_state.special_period != null}
-					title={app_state.settings?.special_periods && app_state.special_period != null ? "Zet 'Pas thema aan' uit onder Feestdagen om deze instelling te wijzigen" : ""}
+					title={app_state.settings?.special_periods && app_state.special_period != null ? i18next.t("settings:theme_locked_hint"): ""}
 					onchange={async (e) => {
 						if (app_state.session?.status != SessionStatus.Active) {
 							document.documentElement.setAttribute(
@@ -247,12 +247,12 @@
 				</select>
 			</fieldset>
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">Feestdagen</legend>
+				<legend class="fieldset-legend">{i18next.t("settings:hollydays")}</legend>
 				<label class="label">
 					<input type="checkbox" checked={app_state.settings.special_periods} class="checkbox" onchange={async (e) => {
 						await app_state.settings!.modify_setting("special_periods", e.currentTarget.checked);
 					}} />
-					Pas thema aan
+					{i18next.t("settings:adjust_theme")}
 				</label>
 			</fieldset>
 		</div>

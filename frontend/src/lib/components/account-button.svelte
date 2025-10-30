@@ -22,7 +22,7 @@
 				{app_state.user.surname}
 			</summary>
 			<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-[10dvw] p-2 shadow-sm">
-				<li><button>Account</button></li>
+				<li><button>{i18next.t("account:account")}</button></li>
 				<li><button onclick={() => logout()}>Log uit</button></li>
 			</ul>
 		</details>

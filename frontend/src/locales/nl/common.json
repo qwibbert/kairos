@@ -9,5 +9,10 @@
 	"skip": "Sla over",
 	"next": "Volgende",
 	"previous": "Vorige",
-	"close": "Sluit"
+	"close": "Sluit",
+	"cancel": "Annuleer",
+	"dismiss": "Negeer",
+	"revert": "Herstel",
+	"privacy": "Privacy",
+	"err_server_header": "Server Fout"
 }

@@ -88,8 +88,8 @@
 			} catch (err) {
 				push_toast('error', {
 					type: 'headed',
-					header: 'Wakelock',
-					text: `Failed to acquire a wakelock due to the following reason. ${err.name}: ${err.message}`,
+					header: i18next.t("session:wakelock"),
+					text: i18next.t("session:err_wakelock"),
 				});
 			}
 		}

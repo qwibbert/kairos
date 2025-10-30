@@ -6,5 +6,13 @@
 	"tick_sound": "Tick sound",
 	"timer_sound": "Timer sound",
 	"appearance": "Appearance",
-	"theme": "Theme"
+	"theme": "Theme",
+	"theme_locked_hint": "Disable 'Adjust theme' under Hollydays to modify this settings",
+	"adjust_theme": "Adjust theme",
+	"hollydays": "Hollydays",
+	"halloween": "Halloween",
+	"christmas": "Christmas",
+	"halloween_header": "Spooky Scary Skeletons",
+	"christmas_header": "Jingle Bells!",
+	"theme_auto_adjust_msg": "Your theme was automatically adjusted to the {{theme}} theme"
 }
