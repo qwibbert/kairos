@@ -15,6 +15,7 @@ RUN go mod download
 COPY backend ./
 RUN npm i
 COPY --from=frontend /app/build /app/pb_public
+COPY package.json ../
 RUN npm run build
 RUN go build -o kairos main.go
 
