@@ -57,145 +57,151 @@
 	);
 </script>
 
-	<dialog
-		bind:this={dialog_el}
-		class="modal"
-		id="vines"
-		onclose={(e) => {
-			e.preventDefault();
-			close(null);
-		}}
-	>
-		<div class="modal-box max-h-[90dvh]">
-			<div class="flex flex-row justify-between items-center w-full">
-				<h3 class="text-lg font-bold self-baseline">{vine_moving ? i18next.t("vines:move_vine") : i18next.t("vines:select_vine")} {vine_moving?.title}</h3>
+<dialog
+	bind:this={dialog_el}
+	class="modal"
+	id="vines"
+	onclose={(e) => {
+		e.preventDefault();
+		close(null);
+	}}
+>
+	<div class="modal-box max-h-[90dvh]">
+		<div class="flex flex-row justify-between items-center w-full">
+			<h3 class="text-lg font-bold self-baseline">
+				{vine_moving ? i18next.t('vines:move_vine') : i18next.t('vines:select_vine')}
+				{vine_moving?.title}
+			</h3>
 
-				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close(null)}>✕</button>
-			</div>
+			<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close(null)}>✕</button>
+		</div>
 
-			{#snippet vine_list_item(vine: VineTreeItem)}
-				<div
-					class={[
-						'flex flex-row items-center gap-2',
-						vine.id == vine_moving?.id ||
-						(vine_moving?.type == VineType.Course && vine.type == VineType.Course)
-							? 'lg:tooltip lg:tooltip-right'
-							: '',
-					]}
-					data-tip={vine.id == vine_moving?.id
-						? i18next.t("vines:err_vine_in_vine")
-						: vine_moving?.type == VineType.Course && vine.type == VineType.Course
-							? i18next.t("vines:err_course_in_course")
-							: ''}
+		{#snippet vine_list_item(vine: VineTreeItem)}
+			<div
+				class={[
+					'flex flex-row items-center gap-2',
+					vine.id == vine_moving?.id ||
+					(vine_moving?.type == VineType.Course && vine.type == VineType.Course)
+						? 'lg:tooltip lg:tooltip-right'
+						: '',
+				]}
+				data-tip={vine.id == vine_moving?.id
+					? i18next.t('vines:err_vine_in_vine')
+					: vine_moving?.type == VineType.Course && vine.type == VineType.Course
+						? i18next.t('vines:err_course_in_course')
+						: ''}
+			>
+				<button
+					disabled={vine.id == vine_moving?.id ||
+						(vine_moving?.type == VineType.Course && vine.type == VineType.Course)}
+					class="btn"
+					onclick={() => {
+						close(vine);
+					}}
 				>
+					{#if vine_moving}
+						<FolderSymlink class="size-[1.5em]" />
+					{:else}<Check class="size-[1.5em]" />{/if}
+				</button>
+			</div>
+			<div class="flex flex-col w-full items-center gap-2">
+				{#if vine.children && vine.children.length > 0}
 					<button
-						disabled={vine.id == vine_moving?.id ||
-							(vine_moving?.type == VineType.Course && vine.type == VineType.Course)}
+						onclick={() => {
+							if (parent_override) {
+								parent_override = null;
+							}
+
+							parent_override = vine;
+							page = 1;
+						}}
+						class=" link text-base-content">{vine.title}</button
+					>
+				{:else}
+					<p>{vine.title}</p>
+				{/if}
+				{#if vine.type == VineType.Course}
+					<div class="flex flex-row">
+						<span class="badge badge-soft badge-primary">{vine.course_code}</span>
+					</div>
+				{/if}
+			</div>
+		{/snippet}
+
+		{#await parent_vine then resolved_parent_vine}
+			<div class="mt-5 flex flex-row justify-center md:join w-full">
+				{#if vine_moving}
+					<button
 						class="btn"
 						onclick={() => {
-							close(vine);
-						}}
+							close(resolved_parent_vine ?? null);
+						}}><FolderDown class="size-[1.2em]" /> {i18next.t('vines:place_here')}</button
 					>
-						{#if vine_moving}
-							<FolderSymlink class="size-[1.5em]" />
-						{:else}<Check class="size-[1.5em]" />{/if}
-					</button>
-				</div>
-				<div class="flex flex-col w-full items-center gap-2">
-					{#if vine.children && vine.children.length > 0}
-						<button
-							onclick={() => {
-								if (parent_override) {
-									parent_override = null;
-								}
+				{/if}
+			</div>
 
-								parent_override = vine;
-								page = 1;
-							}}
-							class=" link text-base-content">{vine.title}</button
-						>
-					{:else}
-						<p>{vine.title}</p>
-					{/if}
-					{#if vine.type == VineType.Course}
-						<div class="flex flex-row">
-							<span class="badge badge-soft badge-primary">{vine.course_code}</span>
-						</div>
-					{/if}
-				</div>
-			{/snippet}
-
-			{#await parent_vine then resolved_parent_vine}
-				<div class="mt-5 flex flex-row justify-center md:join w-full">
-					{#if vine_moving}
-						<button
-							class="btn"
-							onclick={() => {
-								close(resolved_parent_vine ?? null);
-							}}><FolderDown class="size-[1.2em]" /> {i18next.t("vines:place_here")}</button
-						>
-					{/if}
-				</div>
-
-				<div class="flex flex-row gap-2 my-5 justify-center">
-					<input placeholder="Zoek hier naar een vine" class="input" bind:value={search_string} />
-					<select
-						class="select"
-						bind:value={vines_sort_by}
-						onchange={async (e) =>
-							await app_state.settings?.modify_setting(
-								'vines_sort_by',
-								(e.target as HTMLSelectElement).value,
-							)}
-					>
-						<option value="LAST_USED_DESC">{i18next.t("vines:last_used")}</option>
-						<option value="LAST_USED_ASC">{i18next.t("vines:first_used")}</option>
-						<option value="CREATION_DESC">{i18next.t("vines:newest")}</option>
-						<option value="CREATION_ASC">{i18next.t("vines:oldest")}</option>
-						<option value="NAME_DESC">{i18next.t("vines:name_desc")}</option>
-						<option value="NAME_ASC">{i18next.t("vines:name_asc")}</option>
-					</select>
-				</div>
-
-				<div class="rounded-box bg-base-200 shadow-md">
-					{#if parent_vine}
-						{@const parents = get_parent_nodes_from_flat_list(
-							app_state.vines ?? ([] as VinesDocument[]),
-							parent_vine.id,
+			<div class="flex flex-row gap-2 my-5 justify-center">
+				<input placeholder="Zoek hier naar een vine" class="input" bind:value={search_string} />
+				<select
+					class="select"
+					bind:value={vines_sort_by}
+					onchange={async (e) =>
+						await app_state.settings?.modify_setting(
+							'vines_sort_by',
+							(e.target as HTMLSelectElement).value,
 						)}
+				>
+					<option value="LAST_USED_DESC">{i18next.t('vines:last_used')}</option>
+					<option value="LAST_USED_ASC">{i18next.t('vines:first_used')}</option>
+					<option value="CREATION_DESC">{i18next.t('vines:newest')}</option>
+					<option value="CREATION_ASC">{i18next.t('vines:oldest')}</option>
+					<option value="NAME_DESC">{i18next.t('vines:name_desc')}</option>
+					<option value="NAME_ASC">{i18next.t('vines:name_asc')}</option>
+				</select>
+			</div>
 
-						<div class="breadcrumbs text-sm self-start">
-							<ul>
+			<div class="rounded-box bg-base-200 shadow-md">
+				{#if parent_vine}
+					{@const parents = get_parent_nodes_from_flat_list(
+						app_state.vines ?? ([] as VinesDocument[]),
+						parent_vine.id,
+					)}
+
+					<div class="breadcrumbs text-sm self-start">
+						<ul>
+							<li>
+								<button
+									class="btn btn-link text-base-content"
+									onclick={() => {
+										vine_to_view = undefined;
+										parent_vine = null;
+										page = 1;
+									}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
+								>
+							</li>
+							{#each parents as parent (parent.id)}
 								<li>
 									<button
-										class="btn btn-link text-base-content"
+										class="btn btn-link text-base-content flex items-center"
 										onclick={() => {
-											vine_to_view = undefined;
-											parent_vine = null;
+											vine_to_view = parent;
+											parent_override = parent;
 											page = 1;
-										}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
+										}}>{parent.title}</button
 									>
 								</li>
-								{#each parents as parent (parent.id)}
-									<li>
-										<button
-											class="btn btn-link text-base-content flex items-center"
-											onclick={() => {
-												vine_to_view = parent;
-												parent_override = parent;
-												page = 1;
-											}}>{parent.title}</button
-										>
-									</li>
-								{/each}
-							</ul>
-						</div>
-					{/if}
-					<ul
-						aria-label="Vine List"
-						class="list w-full max-h-[calc(0.8*80dvh)] overflow-y-auto"
-						id="vines-container"
-					>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				<ul
+					aria-label="Vine List"
+					class="list w-full max-h-[calc(0.8*80dvh)] overflow-y-auto"
+					id="vines-container"
+				>
+					{#await vines_list_state}
+						Loading vines...
+					{:then vines_list_state}
 						{#each vines_list_state as vine (vine.id)}
 							{#if vine.children && vine.children?.length > 0}
 								<li
@@ -220,9 +226,9 @@
 								</p>
 							</div>
 						{/each}
-					</ul>
-				</div>
-			{/await}
-		</div>
-	</dialog>
-
+					{/await}
+				</ul>
+			</div>
+		{/await}
+	</div>
+</dialog>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import i18next from 'i18next';
+
 	import VinesUi from './vines-ui.svelte';
 
 	interface Props {
@@ -23,22 +24,20 @@
 	});
 </script>
 
+<dialog
+	bind:this={dialog_el}
+	class="modal"
+	onclose={(e) => {
+		e.preventDefault();
+		close();
+	}}
+>
+	<div class="modal-box max-h-[90dvh]">
+		<div class="flex flex-row justify-between items-center w-full">
+			<h3 class="text-lg font-bold self-baseline">{i18next.t('vines:vines')}</h3>
 
-	<dialog
-		bind:this={dialog_el}
-		class="modal"
-		onclose={(e) => {
-			e.preventDefault();
-			close();
-		}}
-	>
-		<div class="modal-box max-h-[90dvh]">
-			<div class="flex flex-row justify-between items-center w-full">
-				<h3 class="text-lg font-bold self-baseline">{i18next.t("vines:vines")}</h3>
-
-				<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
-			</div>
-			<VinesUi />
+			<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
 		</div>
-	</dialog>
-
+		<VinesUi />
+	</div>
+</dialog>
