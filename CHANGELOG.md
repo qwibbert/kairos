@@ -1,3 +1,11 @@
+## v0.3.3 (2025-10-30)
+
+### Fix
+
+- incorrect translation key
+- not able to deselect the active vine
+- modals not stacking in production environment
+
 ## v0.3.2 (2025-10-30)
 
 ### Fix
