@@ -3,6 +3,7 @@ WORKDIR /app
 COPY frontend/package.json ./
 RUN npm install
 COPY frontend ./
+COPY package.json ../
 RUN npm run build
 
 FROM golang:1.24-alpine AS backend
