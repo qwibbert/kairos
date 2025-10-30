@@ -21,7 +21,9 @@ if (client) {
 	try {
 		await client?.collection('users').authRefresh();
 	} catch (e) {
-		if (client.authStore.token) {
+		if (e.status == 500) {
+			push_toast('error', { header: 'Server error', text: `Failed to connect to the backend server: please try again later`, type: 'headed' });
+		} else if (client.authStore.token) {
 			// Token is expired, make the user log in again
 			push_toast('warning', { type: 'headed', header: 'Session Expired', text: 'Your session has expired, please log in again.' });
 			client.authStore.clear();

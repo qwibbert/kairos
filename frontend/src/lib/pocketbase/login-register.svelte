@@ -58,6 +58,8 @@
 
 		if (result == 'INVALID_CREDENTIALS') {
 			invalid_credentials = true;
+		} else if (result == 'OTHER_ERROR') {
+			push_toast('error', { type: 'headed', header: "Login Failed", text: "Failed to connect to server, do you have internet access?" })
 		}
 
 		if (result == 'SUCCESS') {
