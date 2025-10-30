@@ -1,3 +1,13 @@
+## v0.3.0 (2025-10-30)
+
+### Feat
+
+- update translations
+
+### Fix
+
+- incorrect translation
+
 ## v0.2.0 (2025-10-30)
 
 ### Feat
