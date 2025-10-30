@@ -202,10 +202,10 @@
 				<div class="stat-title">{i18next.t("statistics:total_time")}</div>
 				<div class="stat-value">
 					{#if vine_total_time < 3600}
-						{Math.floor(vine_total_time / 60)} {i18next.t("statistics:minutes_short")}
+						{Math.floor(vine_total_time / 60)} {i18next.t("statistics:minute_short")}
 					{:else}
 						{Math.floor(vine_total_time / 3600)}
-						{i18next.t("statistics:hour_short")} {Math.floor((vine_total_time % 3600) / 60)} {i18next.t("statistics:minutes_short")}
+						{i18next.t("statistics:hour_short")} {Math.floor((vine_total_time % 3600) / 60)} {i18next.t("statistics:minute_short")}
 					{/if}
 				</div>
 			</div>
