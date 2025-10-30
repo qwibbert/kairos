@@ -110,6 +110,34 @@
 												app_state.session.pomo_type as PomoType,
 											);
 
+											if (vine.id == app_state.active_vine?.id) {
+												if (app_state.session) {
+													app_state.session = await app_state.session.incrementalUpdate({
+														$set: {
+															vine_id: undefined,
+															vine_title: undefined,
+															vine_course: undefined,
+															vine_type: undefined,
+														},
+													});
+
+													app_state.active_vine = null;
+												}
+											} else {
+												if (app_state.session) {
+													app_state.session = await app_state.session.incrementalUpdate({
+														$set: {
+															vine_id: vine.id,
+															vine_title: vine.title,
+															vine_course: vine.course_id,
+															vine_type: vine.type,
+														},
+													});
+
+													app_state.active_vine = vine;
+												}
+											}
+
 											if (app_state.session) {
 												app_state.session = await app_state.session.incrementalUpdate({
 													$set: {
