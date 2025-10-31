@@ -137,19 +137,6 @@
 													app_state.active_vine = vine;
 												}
 											}
-
-											if (app_state.session) {
-												app_state.session = await app_state.session.incrementalUpdate({
-													$set: {
-														vine_id: vine.id,
-														vine_title: vine.title,
-														vine_course: vine.course_id,
-														vine_type: vine.type,
-													},
-												});
-
-												app_state.active_vine = vine;
-											}
 										},
 									],
 								]),
@@ -157,16 +144,29 @@
 						} else {
 							const checked = (e.target as HTMLInputElement)?.checked;
 
-							app_state.session = await app_state.session.incrementalUpdate({
-								$set: {
-									vine_id: checked ? vine.id : undefined,
-									vine_title: checked ? vine.title : undefined,
-									vine_course: checked ? vine.course_id : undefined,
-									vine_type: checked ? vine.type : undefined,
-								},
-							});
+							if (vine.id == app_state.active_vine?.id) {
+								app_state.session = await app_state.session.incrementalUpdate({
+									$set: {
+										vine_id: undefined,
+										vine_title: undefined,
+										vine_course: undefined,
+										vine_type: undefined,
+									},
+								});
 
-							app_state.active_vine = vine;
+								app_state.active_vine = null;
+							} else {
+								app_state.session = await app_state.session.incrementalUpdate({
+									$set: {
+										vine_id: checked ? vine.id : undefined,
+										vine_title: checked ? vine.title : undefined,
+										vine_course: checked ? vine.course_id : undefined,
+										vine_type: checked ? vine.type : undefined,
+									},
+								});
+
+								app_state.active_vine = vine;
+							}
 						}
 
 						modals.close();

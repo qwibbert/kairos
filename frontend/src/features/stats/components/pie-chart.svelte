@@ -186,8 +186,6 @@
 
 		pie_options.series[0].data = data;
 
-		console.log(pie_options)
-
 		load_colors();
 	}
 
