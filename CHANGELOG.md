@@ -1,3 +1,14 @@
+## v0.3.6 (2025-11-01)
+
+### Fix
+
+- scroll container not correctly set on mobile
+- statistics mode not set when loading component
+- remove duplicate account buttons on large screens
+- typo in translation key
+- update backend settings schema to solve sync failure
+- deselection of active vine would instantly reactivate it
+
 ## v0.3.5 (2025-10-30)
 
 ### Fix
