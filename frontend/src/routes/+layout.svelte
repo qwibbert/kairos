@@ -119,7 +119,7 @@
 </Modals>
 <SvelteToast />
 
-<div class="h-[80dvh] m-[5dvh]">
+<div class="h-[80dvh] m-[5dvh] overflow-auto">
 	{@render children()}
 </div>
 
