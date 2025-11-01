@@ -12,13 +12,17 @@
 	import { Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
 
+	const { mobile }: { mobile: boolean } = $props();
+
 	const app_state = get_app_state();
 </script>
 
 {#if app_state.settings}
-	<div class="flex w-full justify-center">
-		<AccountButton />
-	</div>
+	{#if mobile}
+		<div class="flex w-full justify-center">
+			<AccountButton />
+		</div>
+	{/if}
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
 		<legend class="fieldset-legend">{i18next.t('statistics:focus_time')}</legend>
 		<div class="flex flex-col md:flex-row gap-2">
@@ -224,7 +228,9 @@
 				<select
 					class="select"
 					disabled={app_state.settings?.special_periods && app_state.special_period != null}
-					title={app_state.settings?.special_periods && app_state.special_period != null ? i18next.t("settings:theme_locked_hint"): ""}
+					title={app_state.settings?.special_periods && app_state.special_period != null
+						? i18next.t('settings:theme_locked_hint')
+						: ''}
 					onchange={async (e) => {
 						if (app_state.session?.status != SessionStatus.Active) {
 							document.documentElement.setAttribute(
@@ -241,18 +247,23 @@
 				>
 					{#each Object.values(Theme) as theme (theme)}
 						<option value={theme} selected={app_state.settings.theme == theme}>
-							<ThemeSample theme={theme} />
+							<ThemeSample {theme} />
 						</option>
 					{/each}
 				</select>
 			</fieldset>
 			<fieldset class="fieldset w-full">
-				<legend class="fieldset-legend">{i18next.t("settings:hollydays")}</legend>
+				<legend class="fieldset-legend">{i18next.t('settings:hollydays')}</legend>
 				<label class="label">
-					<input type="checkbox" checked={app_state.settings.special_periods} class="checkbox" onchange={async (e) => {
-						await app_state.settings!.modify_setting("special_periods", e.currentTarget.checked);
-					}} />
-					{i18next.t("settings:adjust_theme")}
+					<input
+						type="checkbox"
+						checked={app_state.settings.special_periods}
+						class="checkbox"
+						onchange={async (e) => {
+							await app_state.settings!.modify_setting('special_periods', e.currentTarget.checked);
+						}}
+					/>
+					{i18next.t('settings:adjust_theme')}
 				</label>
 			</fieldset>
 		</div>

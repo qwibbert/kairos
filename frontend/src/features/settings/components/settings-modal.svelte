@@ -38,6 +38,6 @@
 				<h3 class="text-lg font-bold">{i18next.t('settings:settings')}</h3>
 					<button class="btn btn-sm btn-circle btn-ghost" onclick={() => close()}>✕</button>
 			</div>
-			<SettingsUi />
+			<SettingsUi mobile={false} />
 		</div>
 	</dialog>
