@@ -72,7 +72,7 @@
 						},
 					],
 					[
-						i18next.t("commonrevert"),
+						i18next.t("common:revert"),
 						async () => {
 							document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
 							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
