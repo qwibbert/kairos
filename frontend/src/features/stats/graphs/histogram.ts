@@ -238,6 +238,14 @@ export async function get_day_histogram_echarts(
 				time: count.time
 			});
 		}
+
+		if (vine && day_stats.per_vine.length == 0) {
+			elements.push({
+				row: rows[rows.length - 1],
+				vine: vine,
+				time: 0
+			})
+		}
 	}
 
 	return build_histogram_sources({ rows, elements, colors });
