@@ -1,3 +1,9 @@
+## v0.4.1 (2025-11-02)
+
+### Fix
+
+- init_db not defined in production environment
+
 ## v0.4.0 (2025-11-02)
 
 ### Feat
