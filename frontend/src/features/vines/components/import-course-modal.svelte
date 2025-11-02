@@ -5,26 +5,28 @@
 	import Import from 'lucide-svelte/icons/import';
 	import type { ListResult } from 'pocketbase';
 
+	import { get_app_state } from '$lib/context';
 	import CourseSearch from '$lib/pocketbase/course-search.svelte';
 	import InstitutionSelector from '$lib/pocketbase/institution-selector.svelte';
 	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
+	import { push_toast } from '$lib/toasts';
 
-	import { get_app_state } from '$lib/context';
 	import { db } from '../../../db/db';
-	import { VineType } from '../../../db/vines/define';
+	import { VineType, type VinesDocument } from '../../../db/vines/define';
+	import { get_parent_nodes_from_flat_list } from '../db';
 
 	const app_state = get_app_state();
 
 	interface Props {
 		isOpen: boolean;
 		close: () => {};
-		parent_id: string | undefined;
+		parent: VinesDocument | undefined;
 	}
 	const {
 		// provided by <Modals />
 		isOpen,
 		close,
-		parent_id,
+		parent,
 	}: Props = $props();
 
 	let dialog_el: HTMLDialogElement | null = $state(null);
@@ -46,23 +48,28 @@
 	let selected_institution: string | undefined = $state(undefined);
 
 	async function import_course(course: CoursesResponse) {
-		const query = parent_id
-			? await db.vines.find({ selector: { parent_id: { $eq: parent_id } } }).exec()
-			: await db.vines.find({ selector: { parent_id: { $exists: false } } }).exec();
-		const length = query.length;
+		const parents = parent ? get_parent_nodes_from_flat_list(app_state.vines ?? [], parent.id) : [];
 
-		await db.vines.add_vine({
-			type: VineType.Course,
-			title: course.title,
-			parent_id: parent_id ?? '',
-			public: true,
-			course_id: course.id,
-			course_title: course.title,
-			course_code: course.course_code,
-			course_weight: course.weight,
-			course_instructor: course.instructor,
-			session_aim: 0,
-		});
+		if (parent?.type == VineType.Course || parents?.find(p => p.type == VineType.Course)) {
+			push_toast('error', {
+				type: 'headed',
+				header: i18next.t('vines:err_invalid_move'),
+				text: i18next.t('vines:err_course_in_course'),
+			});
+		} else {
+			await db.vines.add_vine({
+				type: VineType.Course,
+				title: course.title,
+				parent_id: parent?.id ?? '',
+				public: true,
+				course_id: course.id,
+				course_title: course.title,
+				course_code: course.course_code,
+				course_weight: course.weight,
+				course_instructor: course.instructor,
+				session_aim: 0,
+			});
+		}
 
 		close();
 	}
@@ -79,7 +86,7 @@
 >
 	<div class="modal-box h-[70dvh]">
 		<div class="flex flex-row justify-between items-center w-full">
-			<h3 class="text-lg font-bold self-baseline">{i18next.t("vines:import_course")}</h3>
+			<h3 class="text-lg font-bold self-baseline">{i18next.t('vines:import_course')}</h3>
 			<form method="dialog">
 				<button class="btn btn-sm btn-circle btn-ghost">✕</button>
 			</form>

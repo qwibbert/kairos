@@ -26,12 +26,12 @@
 	import VineSelectModal from './vine-select-modal.svelte';
 
 	const app_state = get_app_state();
-	let parent_override: string | undefined = $state(undefined);
-	let parent_vine: string | undefined = $derived.by(() => {
+	let parent_override: VinesDocument | null = $state(null);
+	let parent_vine: VinesDocument | null = $derived.by(() => {
 		if (parent_override) {
 			return parent_override;
 		} else {
-			return app_state.active_vine?.parent_id;
+			return app_state.vines?.find((v) => v.id == app_state.active_vine?.parent_id) ?? null;
 		}
 	});
 	let page = $state(1);
@@ -51,7 +51,7 @@
 
 	let vines_list_state = $derived.by(async () => {
 		return app_state.vines
-			? await build_vine_subtree(app_state.vines, parent_vine, vines_sort_by, search_string)
+			? await build_vine_subtree(app_state.vines, parent_vine?.id, vines_sort_by, search_string)
 			: [];
 	});
 
@@ -188,10 +188,10 @@
 			<button
 				onclick={() => {
 					if (parent_override) {
-						parent_override = undefined;
+						parent_override = null;
 					}
 
-					parent_override = vine.id;
+					parent_override = vine;
 					page = 1;
 				}}
 				class="link text-base-content">{vine.title}</button
@@ -230,10 +230,17 @@
 					vine_moving,
 				})) as VinesDocument | null;
 
+				const selected_vine_parents = get_parent_nodes_from_flat_list(
+					app_state.vines ?? [],
+					selected_vine?.id ?? '',
+				);
+
 				if (selected_vine && vine_moving) {
 					if (
 						vine_moving.id == selected_vine?.id ||
-						(vine_moving.type == VineType.Course && selected_vine.type == VineType.Course)
+						(vine_moving.type == VineType.Course &&
+							(selected_vine.type == VineType.Course ||
+								selected_vine_parents.find((p) => p.type == VineType.Course)))
 					) {
 						push_toast('error', {
 							type: 'headed',
@@ -268,15 +275,16 @@
 		>
 		<ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
 			<li>
-				<a onclick={async () => await action_add_vine(parent_vine)}
+				<a onclick={async () => await action_add_vine(parent_vine?.id)}
 					><SquareCheck class="size-[1.2em]" /> {i18next.t('vines:add_task')}</a
 				>
 			</li>
 			<li>
 				<a
 					id="tour-5-course"
+					class={[parent_vine?.type == VineType.Course ? 'hidden' : '']}
 					onclick={async () => {
-						modals.open(ImportCourseModal, { parent_id: parent_vine });
+						modals.open(ImportCourseModal, { parent: parent_vine });
 						add_vine_details!.open = false;
 					}}><BookText class="size-[1.2em]" /> {i18next.t('vines:add_course')}</a
 				>
@@ -309,7 +317,7 @@
 	{#if parent_vine}
 		{@const parents = get_parent_nodes_from_flat_list(
 			app_state.vines ?? ([] as VinesDocument[]),
-			parent_vine,
+			parent_vine?.id,
 		)}
 
 		<div class="breadcrumbs text-sm self-start">
@@ -319,7 +327,7 @@
 						class="btn btn-link text-base-content"
 						onclick={() => {
 							vine_to_view = undefined;
-							parent_vine = undefined;
+							parent_vine = null;
 							page = 1;
 						}}><Home class="size-[1em]" />{i18next.t('vines:vines')}</button
 					>
@@ -330,7 +338,7 @@
 							class="btn btn-link text-base-content flex items-center"
 							onclick={() => {
 								vine_to_view = parent;
-								parent_override = parent.id;
+								parent_override = parent;
 								page = 1;
 							}}>{parent.title}</button
 						>
@@ -375,8 +383,9 @@
 	<!-- buttons that show up when FAB is open -->
 	<div>
 		{i18next.t('vines:add_task')}
-		<button class="btn btn-lg btn-circle" onclick={async () => await action_add_vine(parent_vine)}
-			><SquareCheck /></button
+		<button
+			class="btn btn-lg btn-circle"
+			onclick={async () => await action_add_vine(parent_vine?.id)}><SquareCheck /></button
 		>
 	</div>
 	<div>
@@ -384,7 +393,7 @@
 		<button
 			class="btn btn-lg btn-circle"
 			onclick={() => {
-				modals.open(ImportCourseModal, { parent_id: parent_vine });
+				modals.open(ImportCourseModal, { parent: parent_vine });
 				add_vine_details!.open = false;
 			}}><BookText /></button
 		>
