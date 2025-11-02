@@ -53,8 +53,6 @@ if (import.meta.env.DEV) {
 	addRxPlugin(RxDBDevModePlugin);
 }
 
-export const db: KairosDB = await init_db();
-
 export async function init_db(): Promise<KairosDB> {
 	const db: KairosDB = await createRxDatabase({
 		name: 'kairosdb',
@@ -139,6 +137,8 @@ export async function init_db(): Promise<KairosDB> {
 
 	return db;
 }
+
+export const db: KairosDB = await init_db();
 
 if ((await db.settings.count().exec()) == 0) {
 	await db.settings.insertIfNotExists({
