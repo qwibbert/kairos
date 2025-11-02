@@ -38,12 +38,6 @@
 		LegendComponent,
 	]);
 
-	let {
-		vine,
-	}: {
-		vine: VinesDocument | null;
-	} = $props();
-
 	let pie_chart = $state<echarts.EChartsType | undefined>(undefined);
 	let pie_chart_element: HTMLDivElement | null = $state(null);
 	let sessions: SessionDocument[] = $state([]);
@@ -57,13 +51,13 @@
 		.$.subscribe((result) => (sessions = result));
 
 	$effect(() => {
-		if (pie_chart && app_state.session) {
-			load_pie_chart(vine, sessions);
+		if (pie_chart && (app_state.session || app_state.selected_vine)) {
+			load_pie_chart(app_state.selected_vine, sessions);
 		}
 	});
 
 	onMount(async () => {
-		await load_pie_chart(vine, sessions);
+		await load_pie_chart(app_state.selected_vine, sessions);
 	});
 
 	export function load_colors() {
@@ -119,7 +113,6 @@
 		}
 
 		const data: PieChartData = [];
-		const parent_vine = vine_map.get(vine.id);
 
 		for (const entry of entries) {
 			// Only include children of the specified vine if vine_id is provided
@@ -159,8 +152,10 @@
 
 		// No data was found, we need to distribute the pie chart evenly
 		if (data.length == 0) {
-			if (parent_vine) {
-				for (const child of vine_children_cache.get(parent_vine.id) ?? []) {
+			const children = vine_children_cache.get(vine.id);
+			// Check if vine has children
+			if (children && children.length != 0) {
+				for (const child of children) {
 					data.push({
 						name: child?.title ?? 'Unknown Task',
 						value: 0,
@@ -170,20 +165,16 @@
 					});
 				}
 			} else {
-				for (const parentless_vine of vine_map
-					.values()
-					.filter((entry) => (entry.parent_id ? false : true))) {
-					data.push({
-						name: parentless_vine.title,
-						value: 0,
-						itemStyle: {
-							color: category_color(parentless_vine.id ?? '', color_palette),
-						},
-					});
-				}
+
+				data.push({
+					name: vine.title,
+					value: 0,
+					itemStyle: {
+						color: category_color(vine.id ?? '', color_palette),
+					}
+				});
 			}
 		}
-
 		pie_options.series[0].data = data;
 
 		load_colors();
