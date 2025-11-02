@@ -27,7 +27,6 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 
 		if (focusTime === undefined) return;
 		if (param.dimensionNames[param.seriesIndex + 1] == undefined) return;
-		console.log(param)
 
 		if (focusTime < 1) {
 			htmlString += `
@@ -40,8 +39,8 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 			return;
 		} else {
 			htmlString += `
-                                <div>
-                                   ${param.marker} ${param.dimensionNames[param.seriesIndex + 1]}: ${Math.floor(
+                                <div class="flex justify-between gap-2">
+                                   <span>${param.marker} ${param.seriesName}</span> ${Math.floor(
 				focusTime,
 			)} h ${Math.floor((focusTime % 1) * 60)} min
                                 </div>
