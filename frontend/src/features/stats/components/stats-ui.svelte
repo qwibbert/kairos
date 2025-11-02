@@ -102,7 +102,7 @@
 
 			vine_total_time = all_entries.reduce((sum, vine) => {
 				return sum + vine;
-			});
+			}, 0);
 		}
 	}
 </script>
