@@ -197,26 +197,56 @@
 	</div>
 
 	{#if app_state.selected_vine}
-		<div class="stats shadow w-[50%] mx-[25%] mb-5 text-primary">
-			<div class="stat">
-				<div class="stat-title">{i18next.t("statistics:total_time")}</div>
-				<div class="stat-value">
-					{#if vine_total_time < 3600}
-						{Math.floor(vine_total_time / 60)} {i18next.t("statistics:minute_short")}
-					{:else}
-						{Math.floor(vine_total_time / 3600)}
-						{i18next.t("statistics:hour_short")} {Math.floor((vine_total_time % 3600) / 60)} {i18next.t("statistics:minute_short")}
-					{/if}
-				</div>
-			</div>
+		<div class="flex flex-row items-center justify-between mb-2">
+			<button
+				class="btn btn-xs btn-primary"
+				onclick={() => (view == 'DAY' ? (delta_weeks += 1) : (delta_years += 1))}
+				><ChevronLeft class="size-[1.5em]" /></button
+			>
+			{#if week_start && week_end && view == 'DAY'}
+				<span class="mx-2 text-sm">
+					{week_start.toLocaleString({
+						day: '2-digit',
+						month: 'short',
+						year: 'numeric',
+					})} - {week_end.toLocaleString({
+						day: '2-digit',
+						month: 'short',
+						year: 'numeric',
+					})}
+				</span>
+			{:else if view == 'YEAR'}
+				<span class="mx-2 text-sm">
+					{today.minus({ years: delta_years }).year}
+				</span>
+			{/if}
+			<button
+				class="btn btn-xs btn-primary"
+				disabled={view == 'DAY' ? delta_weeks <= 0 : view == 'YEAR' ? delta_years <= 0 : true}
+				onclick={() => (view == 'DAY' ? (delta_weeks -= 1) : (delta_years -= 1))}
+				><ChevronRight class="size-[1.5em]" /></button
+			>
 		</div>
 		{#if chart_type == 'BAR'}
-			<Histogram view="DAY" delta_weeks={0} delta_years={0} vine={app_state.selected_vine} />
+			<Histogram view="DAY" {delta_weeks} {delta_years} vine={app_state.selected_vine} />
 		{:else}
-			<PieChart vine={app_state.selected_vine} />
+			<PieChart />
 		{/if}
+		<p class="text-center">
+			{i18next.t('statistics:total_time')}
+			<span class="text-primary font-bold"
+				>{#if vine_total_time < 3600}
+					{Math.floor(vine_total_time / 60)} {i18next.t('statistics:minute_short')}
+				{:else}
+					{Math.floor(vine_total_time / 3600)}
+					{i18next.t('statistics:hour_short')}
+					{Math.floor((vine_total_time % 3600) / 60)}
+					{i18next.t('statistics:minute_short')}
+				{/if}</span
+			>
+		</p>
 	{:else}
 		<ChartColumn class="size-[8em] w-[50%] mx-[25%]" />
-		<p class="text-center font-bold text-xl">{i18next.t("vines:no_vine_selected")}</p>
+		<p class="text-center font-bold text-lg">{i18next.t('vines:no_vine_selected')}</p>
 	{/if}
 {/if}
