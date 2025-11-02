@@ -12,10 +12,13 @@
 	import * as echarts from 'echarts/core';
 	import { LabelLayout, UniversalTransition } from 'echarts/features';
 	import { CanvasRenderer } from 'echarts/renderers';
+	import ClockAlert from 'lucide-svelte/icons/clock-alert';
 	import { DateTime } from 'luxon';
 	import { onMount } from 'svelte';
 
 	import { generate_color_palette } from '$lib/colors';
+
+	import i18next from 'i18next';
 	import { db } from '../../../db/db';
 	import {
 		PomoType,
@@ -57,6 +60,8 @@
 	let histogram = $state<echarts.EChartsType | undefined>(undefined);
 	let histogram_element: HTMLDivElement | null = $state(null);
 	let sessions_today: SessionDocument[] = $state([]);
+
+	let no_data = $state(false);
 
 	let active_session: SessionDocument | undefined = $state(undefined);
 	db.sessions
@@ -170,6 +175,12 @@
 				vine,
 				computed_colors
 			);
+
+			if (day_options.series.length == 0) {
+				no_data = true;
+			} else {
+				no_data = false;
+			}
 		} else if (view == 'YEAR') {
 			[year_options.dataset.source, year_options.series, year_options.legend.data] =
 				await get_year_histogram_echarts(
@@ -178,6 +189,12 @@
 					vine,
 					computed_colors
 				);
+
+			if (day_options.series.length == 0) {
+				no_data = true;
+			} else {
+				no_data = false;
+			}
 		}
 
 		histogram.resize();
@@ -194,4 +211,9 @@
 	}).observe(document.documentElement, { attributes: true });
 </script>
 
-<div bind:this={histogram_element} class="w-full h-[50dvh]"></div>
+<div bind:this={histogram_element} class={['w-full h-[50dvh]', no_data ? 'hidden' : '']}></div>
+
+{#if no_data}
+	<ClockAlert class="size-[5em] mx-auto" />
+	<p class="text-center text-lg font-bold">{i18next.t("statistics:no_data")}</p>
+{/if}
