@@ -14,5 +14,15 @@
 	"christmas": "Kerstmis",
 	"halloween_header": "Boe!",
 	"christmas_header": "Jingle Bells!",
-	"theme_auto_adjust_msg": "Je thema werd automatisch aangepast naar het {{theme}} thema"
+	"data_management": "Databeheer",
+	"export": "Exporteer data",
+	"import": "Importeer data",
+	"theme_auto_adjust_msg": "Je thema werd automatisch aangepast naar het {{theme}} thema",
+	"err_import": "Importeer Fout",
+	"err_import_no_files": "Geen bestanden opgegeven",
+	"err_import_multiple_files": "Meerdere bestanden opgegeven, verwachtte er maar 1",
+	"err_import_failed_read": "Probleem bij inlezen bestand",
+	"err_import_logged_in": "Kan niet importeren wanneer er een gebruiker is ingelogd",
+	"err_import_parse_failed": "Kon JSON niet parsen",
+	"err_import_database_init": "Kon database niet initialiseren"
 }

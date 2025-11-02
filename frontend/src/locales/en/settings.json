@@ -12,7 +12,17 @@
 	"hollydays": "Hollydays",
 	"halloween": "Halloween",
 	"christmas": "Christmas",
+	"data_management": "Data managment",
+	"export": "Export data",
+	"import": "Import data",
 	"halloween_header": "Spooky Scary Skeletons",
 	"christmas_header": "Jingle Bells!",
-	"theme_auto_adjust_msg": "Your theme was automatically adjusted to the {{theme}} theme"
+	"theme_auto_adjust_msg": "Your theme was automatically adjusted to the {{theme}} theme",
+	"err_import": "Import Error",
+	"err_import_no_files": "No files were provided",
+	"err_import_multiple_files": "Multiple files were provided, expected 1",
+	"err_import_failed_read": "Failed to read file",
+	"err_import_logged_in": "Cannot import while user is logged in.",
+	"err_import_parse_failed": "Failed to parse JSON",
+	"err_import_database_init": "Failed to initialise database"
 }

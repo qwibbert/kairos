@@ -27,6 +27,7 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 
 		if (focusTime === undefined) return;
 		if (param.dimensionNames[param.seriesIndex + 1] == undefined) return;
+		console.log(param)
 
 		if (focusTime < 1) {
 			htmlString += `

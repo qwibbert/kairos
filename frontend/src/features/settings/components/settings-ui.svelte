@@ -7,7 +7,10 @@
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import { get_app_state } from '$lib/context';
+	import { push_toast } from '$lib/toasts';
 
+	import { goto } from '$app/navigation';
+	import { db, init_db } from '../../../db/db';
 	import { SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
@@ -15,6 +18,98 @@
 	const { mobile }: { mobile: boolean } = $props();
 
 	const app_state = get_app_state();
+
+	let files: FileList | undefined = $state();
+
+	$effect(() => {
+		if (files) {
+			if (files.length == 0) {
+				push_toast('error', {
+					type: 'headed',
+					header: i18next.t("settings:err_import"),
+					text: i18next.t("settings:err_import_no_files"),
+				});
+			} else if (files.length > 1) {
+				push_toast('error', {
+					type: 'headed',
+					header: i18next.t("settings:err_import"),
+					text: i18next.t("settings:err_import_multiple_files"),
+				});
+			} else {
+				const reader = new FileReader();
+
+				reader.onload = async () => {
+					await import_data(reader.result as string);
+				};
+				reader.onerror = () => {
+					push_toast('error', {
+						type: 'headed',
+						header: i18next.t("settings:err_import"),
+						text: i18next.t("settings:err_import_failed_read"),
+					});
+				};
+				reader.readAsText(files[0]);
+			}
+		}
+	});
+
+	async function export_data() {
+		const exported_data = await db.exportJSON();
+
+		const file_url = URL.createObjectURL(
+			new Blob([JSON.stringify(exported_data)], { type: 'application/json' }),
+		);
+
+		const downloadLink = document.createElement('a');
+		downloadLink.href = file_url;
+		downloadLink.download = 'kairos_data.json';
+		document.body.appendChild(downloadLink);
+		downloadLink.click();
+
+		URL.revokeObjectURL(file_url);
+	}
+
+	async function import_data(json_string: string) {
+		if (app_state.user) {
+			push_toast('error', {
+				type: 'headed',
+				header: i18next.t("settings:err_import"),
+				text: i18next.t("err_import_logged_in")
+			});
+
+			return
+		}
+
+
+		let obj: object | null = null;
+		try {
+			obj = JSON.parse(json_string);
+		} catch {
+			push_toast('error', {
+				type: 'headed',
+				header: i18next.t("settings:err_import"),
+				text: i18next.t("settings:err_import_parse_failed"),
+			});
+		}
+
+		if (obj) {
+			try {
+				await db.remove();
+				const new_db = await init_db();
+				await new_db.addState();
+				await new_db.importJSON(obj);
+				goto('/');
+
+			} catch (e) {
+				console.log(e);
+				push_toast('error', {
+					type: 'headed',
+					header: i18next.t("settings:err_import"),
+					text: i18next.t("settings:err_import_database_init"),
+				});
+			}
+		}
+	}
 </script>
 
 {#if app_state.settings}
@@ -267,5 +362,20 @@
 				</label>
 			</fieldset>
 		</div>
+	</fieldset>
+	<fieldset
+		class="fieldset flex flex-row justify-evenly bg-base-100 border-base-300 rounded-box w-full border p-4"
+	>
+		<legend class="fieldset-legend">{i18next.t('settings:data_management')}</legend>
+		<button class="btn" onclick={() => export_data()}>{i18next.t('settings:export')}</button>
+		{#if import.meta.env.DEV}
+			<input
+				bind:files
+				accept="application/json"
+				type="file"
+				class="file-input"
+				placeholder={i18next.t('settings:import')}
+			/>
+		{/if}
 	</fieldset>
 {/if}
