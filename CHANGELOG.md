@@ -1,3 +1,19 @@
+## v0.4.0 (2025-11-02)
+
+### Feat
+
+- add import / export functionality
+- add week selector to vine bar chart
+- inform user if no data was found after bar chart data aggregation
+
+### Fix
+
+- add additional checks to ensure a course cannot be placed inside another course
+- timer tick sound not playing
+- solve pie chart not recalculating on vine change and children not being handled correctly
+- add vine information to bar chart even if no data was found, avoiding an empty chart
+- provide default value for total vine time calculation
+
 ## v0.3.6 (2025-11-01)
 
 ### Fix
