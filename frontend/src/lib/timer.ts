@@ -2,10 +2,12 @@ import { on_session_syncable } from "../db/sessions/client";
 import { SessionStatus, type SessionDocument } from "../db/sessions/define.svelte";
 import type { VinesDocument } from "../db/vines/define";
 import type { AppState } from "./context";
-import { play_timer_finish_sound } from "./sounds";
+import { play_timer_finish_sound, play_timer_tick_sound } from "./sounds";
 
 export async function tick({ session, timer_interval, wake_lock, active_vine }: AppState): Promise<SessionDocument | null> {
     if (session) {
+        await play_timer_tick_sound();
+
         const now = Date.now();
         const remaining_ms = Math.max(0, (session?.time_end ?? 0) - now);
         const remaining_seconds_total = Math.ceil(remaining_ms / 1000);
