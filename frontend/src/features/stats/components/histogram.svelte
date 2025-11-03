@@ -125,6 +125,10 @@
 		year_options.tooltip.textStyle!.color = style.getPropertyValue('--color-base-content');
 		day_options.legend.textStyle!.color = style.getPropertyValue('--color-base-content');
 		year_options.legend.textStyle!.color = style.getPropertyValue('--color-base-content');
+		day_options.legend.pageIconColor = style.getPropertyValue('--color-primary');
+		year_options.legend.pageIconColor = style.getPropertyValue('--color-primary');
+		day_options.legend.pageIconInactiveColor = style.getPropertyValue('--color-base-content');
+		year_options.legend.pageIconInactiveColor = style.getPropertyValue('--color-base-content');
 		day_options.xAxis.axisLine!.lineStyle!.color = style.getPropertyValue('--color-base-content');
 		year_options.xAxis.axisLine!.lineStyle!.color = style.getPropertyValue('--color-base-content');
 		day_options.yAxis.splitLine!.lineStyle!.color = style.getPropertyValue('--color-base-content');

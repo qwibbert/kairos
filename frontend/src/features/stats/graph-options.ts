@@ -66,6 +66,8 @@ export const day_options = {
 	legend: {
 		padding: [0, 0, 0, 0],
 		type: 'scroll',
+		pageIconColor: "#333",
+		pageIconInactiveColor: "#333",
 		textStyle: {
 			color: '#333' as string,
 		},
