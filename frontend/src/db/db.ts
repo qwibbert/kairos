@@ -7,14 +7,12 @@ import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
 import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
-import { setup_sessions_sync } from './sessions/client';
 import {
 	type SessionCollection,
 	session_collection_methods,
 	session_doc_methods,
 	session_schema,
 } from './sessions/define.svelte';
-import './settings/client';
 import { setup_settings_sync } from './settings/client';
 import {
 	type SettingsCollection,
@@ -42,6 +40,7 @@ export type KairosDB = RxDatabase<KairosCollections>;
 import fakeIndexedDB from 'fake-indexeddb';
 import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
 import { RxDBCleanupPlugin } from 'rxdb/plugins/cleanup';
+import { setup_sessions_sync } from './sessions/client';
 
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBUpdatePlugin);
@@ -171,9 +170,15 @@ if (!client_id) {
 	await kairos_state.set('client_id', () => client_id);
 }
 
+// setTimeout is needed here to circumvent a bug where the stream variable inside './*/client.ts' would not be initialised
+// This is due to the fact that the client.ts import this file and vice versa, we therefore need to make sure that the variable
+// initialisation has completed
+setTimeout(async () => {
+	// Set up syncronisation
+	await setup_settings_sync();
+	await setup_vines_sync();
+	await setup_sessions_sync();
+}, 10);
 
-// Set up syncronisation
-await setup_settings_sync();
-await setup_vines_sync();
-await setup_sessions_sync();
+
 

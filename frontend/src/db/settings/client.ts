@@ -60,7 +60,7 @@ export async function setup_settings_sync() {
 					checkpoint: response.checkpoint,
 				};
 			},
-			stream$: settings_stream$,
+			stream$: settings_stream$.asObservable(),
 		},
 	});
 

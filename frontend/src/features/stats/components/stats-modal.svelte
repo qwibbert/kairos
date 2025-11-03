@@ -7,19 +7,25 @@
 
 	interface Props {
 		isOpen: boolean;
+		non_modal?: boolean;
 		close: () => {};
 	}
 	const {
 		// provided by <Modals />
 		isOpen,
 		close,
+		non_modal = false
 	}: Props = $props();
 
 	let dialog_el: HTMLDialogElement | null = $state(null);
 
 	$effect(() => {
 		if (dialog_el && isOpen && !dialog_el.open) {
-			dialog_el.showModal();
+			if (non_modal) {
+				dialog_el.show();
+			} else {
+				dialog_el.showModal();
+			}
 		} else if (dialog_el && !isOpen && dialog_el.open) {
 			dialog_el.requestClose();
 		}

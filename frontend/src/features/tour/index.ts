@@ -1,7 +1,11 @@
 import { goto } from "$app/navigation";
+import SettingsModal from "$features/settings/components/settings-modal.svelte";
+import StatsModal from "$features/stats/components/stats-modal.svelte";
+import VineModal from "$features/vines/components/vine-modal.svelte";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
+import { modals } from "svelte-modals";
 import { db } from "../../db/db";
 
 
@@ -42,8 +46,7 @@ i18next.on('initialized', async () => {
                   const settings_button = document.getElementById('tour-2-mobile');
                   settings_button?.click();
                 } else {
-                  const settings_modal = document.getElementById('settings-modal');
-                  settings_modal?.show();
+                  modals.open(SettingsModal, { non_modal: true });
                 }
                 driverObj.moveNext();
               }
@@ -55,8 +58,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const settings_modal: HTMLDialogElement | null = document.getElementById('settings-modal');
-                  settings_modal?.close();
+                  modals.closeAll();
                 }
 
                 driverObj.moveNext();
@@ -65,8 +67,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const settings_modal: HTMLDialogElement | null = document.getElementById('settings-modal');
-                  settings_modal?.close();
+                  modals.closeAll();
                 }
 
                 driverObj.movePrevious();
@@ -79,8 +80,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/statistics');
                 } else {
-                  const stats_modal = document.getElementById('stats');
-                  stats_modal?.show();
+                  modals.open(StatsModal, { non_modal: true });
                 }
 
                 driverObj.moveNext();
@@ -89,8 +89,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('settings');
                 } else {
-                  const settings_modal: HTMLDialogElement = document.getElementById('settings-modal');
-                  settings_modal.show();
+                  modals.open(StatsModal, { non_modal: true });
                 }
 
                 driverObj.movePrevious();
@@ -103,8 +102,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const stats_modal: HTMLDialogElement = document.getElementById('stats');
-                  stats_modal.close();
+                  modals.closeAll();
                 }
 
                 driverObj.moveNext();
@@ -113,8 +111,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const stats_modal: HTMLDialogElement = document.getElementById('stats');
-                  stats_modal.close();
+                  modals.closeAll();
                 }
 
                 driverObj.movePrevious();
@@ -127,8 +124,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/vines')
                 } else {
-                  const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                  vines_modal.show();
+                  modals.open(VineModal, { non_modal: true });
                 }
 
                 driverObj.moveNext();
@@ -137,8 +133,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/statistics');
                 } else {
-                  const stats_modal: HTMLDialogElement = document.getElementById('stats');
-                  stats_modal.show();
+                  modals.open(StatsModal, {non_modal: true});
                 }
 
                 driverObj.movePrevious();
@@ -152,8 +147,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                  vines_modal.close();
+                  modals.closeAll();
                 }
 
                 driverObj.moveNext();
@@ -162,8 +156,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/');
                 } else {
-                  const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                  vines_modal.close();
+                  modals.closeAll();
                 }
 
                 driverObj.movePrevious();
@@ -176,8 +169,7 @@ i18next.on('initialized', async () => {
                 if (mobile) {
                   await goto('/vines');
                 } else {
-                  const vines_modal: HTMLDialogElement = document.getElementById('vines');
-                vines_modal.show();
+                  modals.closeAll();
                 }
                 
 
