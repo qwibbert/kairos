@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import i18next from 'i18next';
 	import Volume from 'lucide-svelte/icons/volume';
 	import Volume1 from 'lucide-svelte/icons/volume-1';
@@ -9,7 +10,6 @@
 	import { get_app_state } from '$lib/context';
 	import { push_toast } from '$lib/toasts';
 
-	import { goto } from '$app/navigation';
 	import { db, init_db } from '../../../db/db';
 	import { SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
@@ -26,14 +26,14 @@
 			if (files.length == 0) {
 				push_toast('error', {
 					type: 'headed',
-					header: i18next.t("settings:err_import"),
-					text: i18next.t("settings:err_import_no_files"),
+					header: i18next.t('settings:err_import'),
+					text: i18next.t('settings:err_import_no_files'),
 				});
 			} else if (files.length > 1) {
 				push_toast('error', {
 					type: 'headed',
-					header: i18next.t("settings:err_import"),
-					text: i18next.t("settings:err_import_multiple_files"),
+					header: i18next.t('settings:err_import'),
+					text: i18next.t('settings:err_import_multiple_files'),
 				});
 			} else {
 				const reader = new FileReader();
@@ -44,8 +44,8 @@
 				reader.onerror = () => {
 					push_toast('error', {
 						type: 'headed',
-						header: i18next.t("settings:err_import"),
-						text: i18next.t("settings:err_import_failed_read"),
+						header: i18next.t('settings:err_import'),
+						text: i18next.t('settings:err_import_failed_read'),
 					});
 				};
 				reader.readAsText(files[0]);
@@ -73,13 +73,12 @@
 		if (app_state.user) {
 			push_toast('error', {
 				type: 'headed',
-				header: i18next.t("settings:err_import"),
-				text: i18next.t("err_import_logged_in")
+				header: i18next.t('settings:err_import'),
+				text: i18next.t('err_import_logged_in'),
 			});
 
-			return
+			return;
 		}
-
 
 		let obj: object | null = null;
 		try {
@@ -87,8 +86,8 @@
 		} catch {
 			push_toast('error', {
 				type: 'headed',
-				header: i18next.t("settings:err_import"),
-				text: i18next.t("settings:err_import_parse_failed"),
+				header: i18next.t('settings:err_import'),
+				text: i18next.t('settings:err_import_parse_failed'),
 			});
 		}
 
@@ -99,13 +98,12 @@
 				await new_db.addState();
 				await new_db.importJSON(obj);
 				goto('/');
-
 			} catch (e) {
 				console.log(e);
 				push_toast('error', {
 					type: 'headed',
-					header: i18next.t("settings:err_import"),
-					text: i18next.t("settings:err_import_database_init"),
+					header: i18next.t('settings:err_import'),
+					text: i18next.t('settings:err_import_database_init'),
 				});
 			}
 		}
@@ -167,6 +165,17 @@
 				/>
 			</div>
 		</div>
+		<label class="label mx-auto">
+			<input
+				type="checkbox"
+				checked={app_state.settings.auto_start}
+				class="checkbox"
+				onchange={async (e) => {
+					await app_state.settings!.modify_setting('auto_start', e.currentTarget.checked);
+				}}
+			/>
+			{i18next.t('settings:auto_start')}
+		</label>
 	</fieldset>
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
 		<legend class="fieldset-legend">{i18next.t('settings:sound')}</legend>

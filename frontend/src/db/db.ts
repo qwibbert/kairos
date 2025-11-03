@@ -98,6 +98,10 @@ export async function init_db(): Promise<KairosDB> {
 				6: function (old_doc) {
 					old_doc.special_periods_tip_shown = false;
 					return old_doc;
+				},
+				7: function (old_doc) {
+					old_doc.auto_start = false;
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -147,6 +151,7 @@ if ((await db.settings.count().exec()) == 0) {
 		pomo_time: 25 * 60,
 		short_break_time: 5 * 60,
 		long_break_time: 15 * 60,
+		auto_start: false,
 		ui_sounds: true,
 		timer_tick_sound: true,
 		timer_finish_sound: true,

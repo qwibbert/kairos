@@ -1,6 +1,7 @@
 {
     "settings": "Instellingen",
     "focus_times": "Focustijden",
+	"auto_start": "Automatisch overgaan naar volgende sessie",
 	"sound": "Geluid",
 	"ui_sounds": "UI geluiden",
 	"tick_sound": "Tik geluiden",

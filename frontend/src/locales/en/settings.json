@@ -1,6 +1,7 @@
 {
     "settings": "Settings",
     "focus_times": "Focus times",
+	"auto_start": "Start next session automatically",
 	"sound": "Sound",
 	"ui_sounds": "UI sounds",
 	"tick_sound": "Tick sound",

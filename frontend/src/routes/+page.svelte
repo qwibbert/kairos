@@ -88,8 +88,8 @@
 			} catch (err) {
 				push_toast('error', {
 					type: 'headed',
-					header: i18next.t("session:wakelock"),
-					text: i18next.t("session:err_wakelock"),
+					header: i18next.t('session:wakelock'),
+					text: i18next.t('session:err_wakelock'),
 				});
 			}
 		}
@@ -110,6 +110,8 @@
 			app_state.session = await tick(app_state);
 		}, 1000);
 	}
+
+	$inspect(app_state.session);
 
 	async function start_session() {
 		if (app_state.session) {
@@ -135,10 +137,15 @@
 				override_type,
 				app_state.active_vine ?? undefined,
 			);
-			clearInterval(app_state.timer_interval);
-			app_state.timer_interval = null;
-			if (app_state.wake_lock) {
-				await app_state.wake_lock.release();
+
+			if (app_state.settings?.auto_start) {
+				await start_session();
+			} else {
+				clearInterval(app_state.timer_interval);
+				app_state.timer_interval = null;
+				if (app_state.wake_lock) {
+					await app_state.wake_lock.release();
+				}
 			}
 		}
 	}
