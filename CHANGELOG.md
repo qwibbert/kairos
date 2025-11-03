@@ -1,3 +1,14 @@
+## v0.5.0 (2025-11-03)
+
+### Feat
+
+- add option to automatically start the next session when completed / skipped
+
+### Fix
+
+- tour stuck at step 5
+- vine name not correctly displayed in bar chart tooltip
+
 ## v0.4.1 (2025-11-02)
 
 ### Fix
