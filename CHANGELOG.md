@@ -1,3 +1,10 @@
+## v0.6.0 (2025-11-11)
+
+### Feat
+
+- **sounds**: add more sounds for during the timer session
+- **sounds**: add more sounds for session ending
+
 ## v0.5.0 (2025-11-03)
 
 ### Feat
