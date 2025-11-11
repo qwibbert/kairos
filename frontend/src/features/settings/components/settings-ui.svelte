@@ -10,6 +10,7 @@
 	import { get_app_state } from '$lib/context';
 	import { push_toast } from '$lib/toasts';
 
+	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound, TimerFinishSound } from '$lib/sounds';
 	import { db, init_db } from '../../../db/db';
 	import { SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
@@ -198,7 +199,7 @@
 				<button
 					class="btn btn-primary btn-circle"
 					onclick={async () => {
-						// TODO: add sound preview
+						await play_button_sound();
 					}}
 				>
 					{#if app_state.settings.ui_sounds && app_state.settings.ui_sounds_volume! < 25}
@@ -246,7 +247,7 @@
 				<button
 					class="btn btn-primary btn-circle"
 					onclick={async () => {
-						// TODO: add sound preview
+						await play_timer_tick_sound();
 					}}
 				>
 					{#if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! < 25}
@@ -274,26 +275,20 @@
 				/>
 			</div>
 		</div>
-		<div class="divider"></div>
+		<div class="divider">{i18next.t('settings:timer_sound')}</div>
 		<div class="flex flex-col md:flex-row justify-evenly items-center">
 			<label class="label">
-				<input
-					type="checkbox"
-					checked={app_state.settings.timer_finish_sound}
-					onchange={async (e) =>
-						await app_state.settings!.modify_setting(
-							'timer_finish_sound',
-							(e.target as HTMLInputElement).checked,
-						)}
-					class="toggle"
-				/>
-				{i18next.t('settings:timer_sound')}
+				<select class="select" onchange={async (e) => { app_state.settings?.modify_setting("timer_finish_sound", e.currentTarget.value) }}>
+					{#each Object.values(TimerFinishSound) as sound}
+						<option selected={app_state.settings.timer_finish_sound == sound}>{sound}</option>
+					{/each}
+				</select>
 			</label>
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
 					class="btn btn-primary btn-circle"
 					onclick={async () => {
-						// TODO: add sound preview
+						await play_timer_finish_sound();
 					}}
 				>
 					{#if app_state.settings.timer_finish_sound && app_state.settings.timer_finish_sound_volume! < 25}

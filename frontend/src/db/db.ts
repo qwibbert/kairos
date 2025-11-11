@@ -102,6 +102,10 @@ export async function init_db(): Promise<KairosDB> {
 				7: function (old_doc) {
 					old_doc.auto_start = false;
 					return old_doc;
+				},
+				8: function (old_doc) {
+					old_doc.timer_finish_sound = "clock";
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -154,7 +158,7 @@ if ((await db.settings.count().exec()) == 0) {
 		auto_start: false,
 		ui_sounds: true,
 		timer_tick_sound: true,
-		timer_finish_sound: true,
+		timer_finish_sound: "clock",
 		ui_sounds_volume: 100,
 		timer_tick_sound_volume: 100,
 		timer_finish_sound_volume: 100,

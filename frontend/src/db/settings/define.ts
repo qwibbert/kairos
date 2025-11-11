@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 7,
+	version: 8,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -48,7 +48,7 @@ export const settings_schema_literal = {
 			type: 'boolean',
 		},
 		timer_finish_sound: {
-			type: 'boolean',
+			type: 'string',
 		},
 		ui_sounds_volume: {
 			type: 'number',
