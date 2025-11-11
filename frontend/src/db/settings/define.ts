@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 8,
+	version: 9,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -44,8 +44,8 @@ export const settings_schema_literal = {
 		ui_sounds: {
 			type: 'boolean',
 		},
-		timer_tick_sound: {
-			type: 'boolean',
+		timer_active_sound: {
+			type: 'string',
 		},
 		timer_finish_sound: {
 			type: 'string',
@@ -57,7 +57,7 @@ export const settings_schema_literal = {
 			multipleOf: 1,
 			default: 100,
 		},
-		timer_tick_sound_volume: {
+		timer_active_sound_volume: {
 			type: 'number',
 			minimum: 0,
 			maximum: 100,

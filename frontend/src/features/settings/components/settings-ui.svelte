@@ -8,9 +8,15 @@
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import { get_app_state } from '$lib/context';
+	import {
+		TimerActiveSound,
+		TimerFinishSound,
+		play_button_sound,
+		play_timer_active_sound,
+		play_timer_finish_sound
+	} from '$lib/sounds';
 	import { push_toast } from '$lib/toasts';
 
-	import { play_button_sound, play_timer_finish_sound, play_timer_tick_sound, TimerFinishSound } from '$lib/sounds';
 	import { db, init_db } from '../../../db/db';
 	import { SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
@@ -180,20 +186,18 @@
 	</fieldset>
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
 		<legend class="fieldset-legend">{i18next.t('settings:sound')}</legend>
+		<div class="divider mt-[-1em]">{i18next.t('settings:ui_sounds')}</div>
 		<div class="flex flex-col md:flex-row gap-2 justify-evenly items-center">
-			<label class="label">
-				<input
-					type="checkbox"
-					checked={app_state.settings.ui_sounds}
-					onchange={async (e) =>
-						await app_state.settings!.modify_setting(
-							'ui_sounds',
-							(e.target as HTMLInputElement).checked,
-						)}
-					class="toggle"
-				/>
-				{i18next.t('settings:ui_sounds')}
-			</label>
+			<input
+				type="checkbox"
+				checked={app_state.settings.ui_sounds}
+				onchange={async (e) =>
+					await app_state.settings!.modify_setting(
+						'ui_sounds',
+						(e.target as HTMLInputElement).checked,
+					)}
+				class="toggle"
+			/>
 
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
@@ -228,47 +232,45 @@
 				/>
 			</div>
 		</div>
-		<div class="divider"></div>
+		<div class="divider">{i18next.t('settings:tick_sound')}</div>
 		<div class="flex flex-col md:flex-row justify-evenly items-center">
-			<label class="label">
-				<input
-					type="checkbox"
-					checked={app_state.settings.timer_tick_sound}
-					onchange={async (e) =>
-						await app_state.settings!.modify_setting(
-							'timer_tick_sound',
-							(e.target as HTMLInputElement).checked,
-						)}
-					class="toggle"
-				/>
-				{i18next.t('settings:tick_sound')}
-			</label>
+			<select
+				class="select"
+				onchange={async (e) => {
+					app_state.settings?.modify_setting('timer_active_sound', e.currentTarget.value);
+				}}
+			>
+				{#each Object.values(TimerActiveSound) as sound}
+					<option selected={app_state.settings.timer_active_sound == sound}>{sound}</option>
+				{/each}
+			</select>
+
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
 					class="btn btn-primary btn-circle"
 					onclick={async () => {
-						await play_timer_tick_sound();
+						await play_timer_active_sound(true);
 					}}
 				>
-					{#if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! < 25}
+					{#if app_state.settings.timer_active_sound && app_state.settings.timer_active_sound_volume! < 25}
 						<Volume class="size-[1.2em]" />
-					{:else if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! >= 25 && app_state.settings.timer_tick_sound_volume! < 75}
+					{:else if app_state.settings.timer_active_sound && app_state.settings.timer_active_sound_volume! >= 25 && app_state.settings.timer_tick_sound_volume! < 75}
 						<Volume1 class="size-[1.2em]" />
-					{:else if app_state.settings.timer_tick_sound && app_state.settings.timer_tick_sound_volume! >= 75}
+					{:else if app_state.settings.timer_active_sound && app_state.settings.timer_active_sound_volume! >= 75}
 						<Volume2 class="size-[1.2em]" />
 					{:else}
 						<VolumeX class="size-[1.2em]" />
 					{/if}
 				</button>
 				<input
-					disabled={!app_state.settings.timer_tick_sound}
+					disabled={!app_state.settings.timer_active_sound}
 					type="range"
 					min="0"
 					max="100"
-					value={app_state.settings.timer_tick_sound_volume}
+					value={app_state.settings.timer_active_sound_volume}
 					onchange={async (e) =>
 						await app_state.settings!.modify_setting(
-							'timer_tick_sound_volume',
+							'timer_active_sound_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
 					class="range w-3/4 md:w-[30%]"
@@ -277,13 +279,16 @@
 		</div>
 		<div class="divider">{i18next.t('settings:timer_sound')}</div>
 		<div class="flex flex-col md:flex-row justify-evenly items-center">
-			<label class="label">
-				<select class="select" onchange={async (e) => { app_state.settings?.modify_setting("timer_finish_sound", e.currentTarget.value) }}>
-					{#each Object.values(TimerFinishSound) as sound}
-						<option selected={app_state.settings.timer_finish_sound == sound}>{sound}</option>
-					{/each}
-				</select>
-			</label>
+			<select
+				class="select"
+				onchange={async (e) => {
+					app_state.settings?.modify_setting('timer_finish_sound', e.currentTarget.value);
+				}}
+			>
+				{#each Object.values(TimerFinishSound) as sound}
+					<option selected={app_state.settings.timer_finish_sound == sound}>{sound}</option>
+				{/each}
+			</select>
 			<div class="flex flex-row items-center gap-2 w-full md:contents">
 				<button
 					class="btn btn-primary btn-circle"
