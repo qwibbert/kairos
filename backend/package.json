@@ -1,6 +1,5 @@
 {
   "name": "kairos-backend",
-  "type": "module",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
