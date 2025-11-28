@@ -1,3 +1,9 @@
+## v0.6.1 (2025-11-28)
+
+### Fix
+
+- remove feature to play sound during session
+
 ## v0.6.0 (2025-11-11)
 
 ### Feat
