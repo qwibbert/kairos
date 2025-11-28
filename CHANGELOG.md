@@ -1,3 +1,9 @@
+## v0.6.3 (2025-11-28)
+
+### Fix
+
+- backend database migration not applied
+
 ## v0.6.2 (2025-11-28)
 
 ## v0.6.1 (2025-11-28)
