@@ -113,6 +113,12 @@ export async function init_db(): Promise<KairosDB> {
 					old_doc.timer_active_sound = "retro";
 					old_doc.timer_active_sound_volume = 100;
 					return old_doc;
+				},
+				10: function (old_doc) {
+					delete old_doc.timer_active_sound;
+					delete old_doc.timer_active_sound_volume;
+
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]

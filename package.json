@@ -3,7 +3,8 @@
   "devDependencies": {},
   "scripts": {
     "commit": "cz",
-    "build": "docker build ."
+    "build": "docker build .",
+    "prod": "cd frontend && npm run build && rm -rf ../backend/pb_public/* && cp -R build/* ../backend/pb_public && cd ../backend && go build . && ./kairos serve"
   },
   "workspaces": [
     "frontend",

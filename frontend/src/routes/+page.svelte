@@ -20,7 +20,7 @@
 	import AccountButton from '$lib/components/account-button.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
 	import { get_app_state } from '$lib/context';
-	import { play_button_sound, stop_timer_active_sound } from '$lib/sounds';
+	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
 	import { push_toast } from '$lib/toasts';
 
@@ -119,8 +119,6 @@
 	}
 
 	async function pause_session() {
-		stop_timer_active_sound();
-
 		if (app_state.session) {
 			app_state.session = await app_state.session.pause();
 			clearInterval(app_state.timer_interval);
@@ -132,8 +130,6 @@
 	}
 
 	async function skip_session(override_type?: PomoType) {
-		stop_timer_active_sound();
-		
 		if (app_state.session) {
 			app_state.session = await app_state.session.skip(
 				override_type,

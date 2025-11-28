@@ -1,12 +1,10 @@
 import { on_session_syncable } from "../db/sessions/client";
 import { SessionStatus, type SessionDocument } from "../db/sessions/define.svelte";
 import type { AppState } from "./context";
-import { play_timer_active_sound, play_timer_finish_sound, stop_timer_active_sound } from "./sounds";
+import { play_timer_finish_sound } from "./sounds";
 
 export async function tick(app_state: AppState): Promise<SessionDocument | null> {
     if (app_state.session) {
-        await play_timer_active_sound();
-
         const now = Date.now();
         const remaining_ms = Math.max(0, (app_state.session?.time_end ?? 0) - now);
         const remaining_seconds_total = Math.ceil(remaining_ms / 1000);
@@ -44,7 +42,6 @@ async function handle_session_complete(app_state: AppState): Promise<SessionDocu
 
     document.title = 'Kairos';
 
-    stop_timer_active_sound();
     await play_timer_finish_sound();
 
     on_session_syncable(app_state.session!.id);
