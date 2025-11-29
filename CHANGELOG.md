@@ -1,3 +1,9 @@
+## v0.6.4 (2025-11-29)
+
+### Fix
+
+- settings database not created on first launch
+
 ## v0.6.3 (2025-11-28)
 
 ### Fix
