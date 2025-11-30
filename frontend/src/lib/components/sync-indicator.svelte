@@ -18,15 +18,15 @@
 	let sessions_active = $state(false);
 
 	onMount(() => {
-		settings_sync_state.sent$.subscribe((doc) => {
+		settings_sync_state?.sent$.subscribe((doc) => {
 			sync_history.push({ collection: 'settings', type: 'PUSH', timestamp: Date.now() });
 		});
 
-		settings_sync_state.received$.subscribe((doc) => {
+		settings_sync_state?.received$.subscribe((doc) => {
 			sync_history.push({ collection: 'settings', type: 'PULL', timestamp: Date.now() });
 		});
 
-		settings_sync_state.active$.subscribe((bool) => {
+		settings_sync_state?.active$.subscribe((bool) => {
 			if (bool) {
 				last_sync = DateTime.now();
 			}
@@ -34,15 +34,15 @@
 			settings_active = bool;
 		});
 
-		vines_sync_state.sent$.subscribe((doc) => {
+		vines_sync_state?.sent$.subscribe((doc) => {
 			sync_history.push({ collection: 'vines', type: 'PUSH', timestamp: Date.now() });
 		});
 
-		vines_sync_state.received$.subscribe((doc) => {
+		vines_sync_state?.received$.subscribe((doc) => {
 			sync_history.push({ collection: 'vines', type: 'PULL', timestamp: Date.now() });
 		});
 
-		vines_sync_state.active$.subscribe((bool) => {
+		vines_sync_state?.active$.subscribe((bool) => {
 			if (bool) {
 				last_sync = DateTime.now();
 			}
@@ -50,11 +50,11 @@
 			vines_active = bool;
 		});
 
-		sessions_sync_state.received$.subscribe((doc) => {
+		sessions_sync_state?.received$.subscribe((doc) => {
 			sync_history.push({ collection: 'sessions', type: 'PULL', timestamp: Date.now() });
 		});
 
-		sessions_sync_state.active$.subscribe((bool) => {
+		sessions_sync_state?.active$.subscribe((bool) => {
 			if (bool) {
 				last_sync = DateTime.now();
 			}

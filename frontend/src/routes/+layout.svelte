@@ -35,6 +35,8 @@
 		special_period: special_period(),
 	});
 
+	setContext('app_state', app_state)
+
 	client?.authStore.onChange((token, model) => {
 		if (!client?.authStore.isValid) {
 			app_state.user = null;
@@ -90,8 +92,6 @@
 			app_state.vines = e;
 		}
 	});
-
-	setContext('app_state', app_state);
 
 	let dock_active: 'HOME' | 'VINES' | 'STATISTICS' | 'SETTINGS' = $state(
 		page.url.pathname == '/' ? 'HOME' : page.url.pathname.replace('/', ''),
