@@ -44,12 +44,6 @@
 
 		loading_results = false;
 	}
-
-	$effect(() => {
-		if (page && search_string) {
-			run_search();
-		}
-	});
 </script>
 
 <input
@@ -58,6 +52,9 @@
 	disabled={!institution}
 	class="input"
 	placeholder={i18next.t('vines:search_course')}
-	bind:value={search_string}
+	bind:value={
+		() => search_string,
+		(s) => { search_string = s; run_search() }
+	}
 	onchange={run_search}
 />

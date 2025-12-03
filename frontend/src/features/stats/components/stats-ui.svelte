@@ -19,7 +19,7 @@
 
 	let { mode = $bindable() }: { mode: 'GENERAL' | 'VINE' } = $props();
 
-	let vine_total_time = $state(0);
+	let vine_total_time = $derived(load_vine_stats(app_state.selected_vine));
 	let chart_type: 'BAR' | 'PIE' = $state('BAR');
 
 	let view = $state<'DAY' | 'YEAR'>('DAY');
@@ -29,22 +29,16 @@
 	const week_start = $derived(today.startOf('week').minus({ weeks: delta_weeks }));
 	const week_end = $derived(today.endOf('week').minus({ weeks: delta_weeks }));
 
-	let time_today = $state(0);
-	let n_sessions_today = $state(0);
-
 	$effect(() => {
-		if (app_state.session || !app_state.session) {
+		if ((app_state.session || !app_state.session)) {
 			load_day_stats();
 		}
 	});
 
-	$effect(() => {
-		if ((app_state.session || !app_state.session) && app_state.selected_vine) {
-			load_vine_stats(app_state.selected_vine);
-		}
-	});
+	let time_today =$state(0)
+	let n_sessions_today = $state(0);
 
-	async function load_day_stats(): Promise<void> {
+	async function load_day_stats(): Promise<{time_today: number, n_sessions_today: number}> {
 		const sessions_today = await db.sessions
 			.find({
 				selector: {
@@ -62,8 +56,8 @@
 		n_sessions_today = sessions_today.length;
 	}
 
-	async function load_vine_stats(vine: VinesDocument | null): Promise<void> {
-		if (vine) {
+	async function load_vine_stats(vine: VinesDocument | null): Promise<number> {
+		if (vine && (app_state.session || !app_state.session)) {
 			const vine_map = new Map(app_state.vines?.map((v) => [v.id, v]));
 			const vine_children_cache = new Map<string, VinesDocument[]>();
 
@@ -100,10 +94,12 @@
 						.map((v) => v.get_time_elapsed()),
 				);
 
-			vine_total_time = all_entries.reduce((sum, vine) => {
+			return all_entries.reduce((sum, vine) => {
 				return sum + vine;
 			}, 0);
 		}
+
+		return 0;
 	}
 </script>
 
