@@ -233,7 +233,7 @@
 		<div class="divider">{i18next.t('settings:timer_sound')}</div>
 		<div class="flex flex-col md:flex-row justify-evenly items-center">
 			<select
-				class="select"
+				class="select w-1/4"
 				onchange={async (e) => {
 					app_state.settings?.modify_setting('timer_finish_sound', e.currentTarget.value);
 				}}
