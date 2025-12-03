@@ -8,15 +8,11 @@
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import { get_app_state } from '$lib/context';
-	import {
-		TimerFinishSound,
-		play_button_sound,
-		play_timer_finish_sound
-	} from '$lib/sounds';
+	import { TimerFinishSound, play_button_sound, play_timer_finish_sound } from '$lib/sounds';
 	import { push_toast } from '$lib/toasts';
 
 	import { db, init_db } from '../../../db/db';
-	import { SessionStatus } from '../../../db/sessions/define.svelte';
+	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
 	import { Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
 
@@ -132,11 +128,23 @@
 					class="input text-center"
 					placeholder="25"
 					value={app_state.settings.pomo_time! / 60}
-					onchange={async (e) =>
+					onchange={async (e) => {
 						await app_state.settings!.modify_setting(
 							'pomo_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
-						)}
+						);
+
+						if (
+							app_state.session?.status == SessionStatus.Inactive &&
+							app_state.session.pomo_type == PomoType.Pomo
+						) {
+							app_state.session = await app_state.session.incrementalUpdate({
+								$set: {
+									time_target: (e.target as HTMLInputElement).value * 60,
+								},
+							});
+						}
+					}}
 				/>
 			</div>
 			<div class="flex flex-col">
@@ -147,11 +155,22 @@
 					class="input text-center"
 					placeholder="5"
 					value={app_state.settings.short_break_time! / 60}
-					onchange={async (e) =>
+					onchange={async (e) => {
 						await app_state.settings!.modify_setting(
 							'short_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
-						)}
+						);
+						if (
+							app_state.session?.status == SessionStatus.Inactive &&
+							app_state.session.pomo_type == PomoType.ShortBreak
+						) {
+							app_state.session = await app_state.session.incrementalUpdate({
+								$set: {
+									time_target: (e.target as HTMLInputElement).value * 60,
+								},
+							});
+						}
+					}}
 				/>
 			</div>
 			<div class="flex flex-col">
@@ -162,11 +181,22 @@
 					class="input text-center"
 					placeholder="15"
 					value={app_state.settings.long_break_time! / 60}
-					onchange={async (e) =>
+					onchange={async (e) => {
 						await app_state.settings!.modify_setting(
 							'long_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
-						)}
+						);
+						if (
+							app_state.session?.status == SessionStatus.Inactive &&
+							app_state.session.pomo_type == PomoType.LongBreak
+						) {
+							app_state.session = await app_state.session.incrementalUpdate({
+								$set: {
+									time_target: (e.target as HTMLInputElement).value * 60,
+								},
+							});
+						}
+					}}
 				/>
 			</div>
 		</div>
