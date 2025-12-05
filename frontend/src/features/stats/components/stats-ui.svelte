@@ -30,15 +30,15 @@
 	const week_end = $derived(today.endOf('week').minus({ weeks: delta_weeks }));
 
 	$effect(() => {
-		if ((app_state.session || !app_state.session)) {
+		if (app_state.session || !app_state.session) {
 			load_day_stats();
 		}
 	});
 
-	let time_today =$state(0)
+	let time_today = $state(0);
 	let n_sessions_today = $state(0);
 
-	async function load_day_stats(): Promise<{time_today: number, n_sessions_today: number}> {
+	async function load_day_stats(): Promise<{ time_today: number; n_sessions_today: number }> {
 		const sessions_today = await db.sessions
 			.find({
 				selector: {
@@ -184,11 +184,11 @@
 				app_state.selected_vine = await modals.open(VineSelectModal, { vine_moving: null });
 			}}
 		>
-			<option>{app_state.selected_vine?.title ?? i18next.t("vines:select_vine")}</option>
+			<option>{app_state.selected_vine?.title ?? i18next.t('vines:select_vine')}</option>
 		</select>
 		<select class="select w-[40%]" bind:value={chart_type}>
-			<option value="BAR">{i18next.t("statistics:bar_chart")}</option>
-			<option value="PIE">{i18next.t("statistics:pie_chart")}</option>
+			<option value="BAR">{i18next.t('statistics:bar_chart')}</option>
+			<option value="PIE">{i18next.t('statistics:pie_chart')}</option>
 		</select>
 	</div>
 
@@ -230,15 +230,17 @@
 		{/if}
 		<p class="text-center">
 			{i18next.t('statistics:total_time')}
-			<span class="text-primary font-bold"
-				>{#if vine_total_time < 3600}
-					{Math.floor(vine_total_time / 60)} {i18next.t('statistics:minute_short')}
-				{:else}
-					{Math.floor(vine_total_time / 3600)}
-					{i18next.t('statistics:hour_short')}
-					{Math.floor((vine_total_time % 3600) / 60)}
-					{i18next.t('statistics:minute_short')}
-				{/if}</span
+			<span class="text-primary font-bold">
+				{#await vine_total_time then vine_total_time}
+					{#if vine_total_time < 3600}
+						{Math.floor(vine_total_time / 60)} {i18next.t('statistics:minute_short')}
+					{:else}
+						{Math.floor(vine_total_time / 3600)}
+						{i18next.t('statistics:hour_short')}
+						{Math.floor((vine_total_time % 3600) / 60)}
+						{i18next.t('statistics:minute_short')}
+					{/if}
+				{/await}</span
 			>
 		</p>
 	{:else}
