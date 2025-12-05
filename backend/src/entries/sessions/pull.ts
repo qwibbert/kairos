@@ -20,8 +20,7 @@ export default function (e: core.RequestEvent) {
         parseInt(body.batch_size, 10),
         0,
         { user: e.auth?.id, updated_at: updated_at, id });
-
-
+    
     documents = documents.map((r) => {
         let copy = r?.fieldsData();
 

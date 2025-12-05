@@ -1,5 +1,5 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
-import { Subject, mergeMap } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { client } from '../../lib/pocketbase/';
 
@@ -7,27 +7,33 @@ import { db } from '../db';
 import { VineType } from '../vines/define';
 import type { SessionDocType } from './define.svelte';
 
-const active_replications = new Map<string, RxReplicationState<SessionDocType, unknown>>([]); // chunkId -> replicationState
+export let sessions_sync_state: RxReplicationState<SessionDocType, unknown> | null = null;
+const sessions_stream$ = new Subject();
 
-async function start_session_replication(session_id: string) {
-	if (active_replications.get(session_id)) return;
-	const replication_id = 'session-' + session_id;
+async function setup_sessions_subscription() {
+	await client?.realtime.subscribe(
+		client.authStore.record?.id + '_sessions',
+		({ event: e }) => {
+			sessions_stream$.next({
+				documents: e.documents,
+				checkpoint: e.checkpoint,
+			});
+		},
+		{ headers: { Version: __KAIROS_VERSION__ } },
+	);
 
-	const replication_state = replicateRxCollection({
+	client.realtime.onDisconnect = () => {
+		sessions_stream$.next('RESYNC');
+	};
+}
+
+export async function setup_sessions_sync() {
+	sessions_sync_state = replicateRxCollection({
 		collection: db.sessions,
-		replicationIdentifier: replication_id,
+		replicationIdentifier: 'sessions-sync',
 		autoStart: false,
 		push: {
 			async handler(change_rows) {
-				change_rows = change_rows.filter((row) => {
-					// Only sync sessions with status READY or SKIPPED to ensure that different clients cannot interfere with eachothers sessions
-					if (row.newDocumentState.status == 'READY' || row.newDocumentState.status == 'SKIPPED') {
-						return true;
-					}
-
-					return false;
-				});
-
 				if (change_rows.length > 0) {
 					try {
 						const raw_response = await client.send('/api/sessions/push', {
@@ -156,79 +162,17 @@ async function start_session_replication(session_id: string) {
 
 						throw err;
 					}
+				} else {
+					return [];
 				}
 			},
 		},
-	});
-	active_replications.set(session_id, replication_state);
-
-	if (client.authStore.isValid && client.authStore.record?.id) {
-		await replication_state?.start();
-	}
-
-	client.authStore.onChange(async (token) => {
-		if (token) {
-			await replication_state?.start();
-		} else {
-			await sessions_sync_state?.pause();
-		}
-	});
-
-	replication_state.active$.pipe(
-		mergeMap(async () => {
-			await replication_state.awaitInSync();
-			stop_session_replication(session_id);
-		}),
-	);
-}
-
-async function stop_session_replication(session_id: string) {
-	const rep = active_replications.get(session_id);
-	if (rep) {
-		await rep.cancel();
-		await rep.remove();
-
-		active_replications.delete(session_id);
-	}
-}
-
-// Called whenever the player's location changes;
-// dynamically start/stop replication for nearby chunks.
-export function on_session_syncable(session_id: string) {
-	start_session_replication(session_id);
-}
-
-export let sessions_sync_state: RxReplicationState<SessionDocType, unknown> | null = null;
-const sessions_stream$ = new Subject();
-
-async function setup_sessions_subscription() {
-	await client.realtime.subscribe(
-		client.authStore.record?.id + '_sessions',
-		({ event: e }) => {
-			sessions_stream$.next({
-				documents: e.documents,
-				checkpoint: e.checkpoint,
-			});
-		},
-		{ headers: { Version: __KAIROS_VERSION__ } },
-	);
-
-	client.realtime.onDisconnect = () => {
-		sessions_stream$.next('RESYNC');
-	};
-}
-
-export async function setup_sessions_sync() {
-	sessions_sync_state = replicateRxCollection({
-		collection: db.sessions,
-		autoStart: false,
-		replicationIdentifier: 'sessions-sync',
 		pull: {
 			async handler(checkpoint_or_null: SessionDocType, batch_size: number) {
 				const updated_at = new Date(checkpoint_or_null?.updated_at ?? 0).getTime();
 				const id = checkpoint_or_null ? checkpoint_or_null.id : '';
+
 				const response = await client.send('/api/sessions/pull', {
-					method: 'GET',
 					query: { updated_at, batch_size, id },
 					headers: { Version: __KAIROS_VERSION__ },
 				});
@@ -244,17 +188,17 @@ export async function setup_sessions_sync() {
 
 	sessions_sync_state.error$.subscribe((err) => console.error(err));
 
-	if (client.authStore.isValid && client.authStore.record?.id) {
+	if (client?.authStore.isValid && client.authStore.record?.id) {
 		await setup_sessions_subscription();
 		await sessions_sync_state?.start();
 	}
 
-	client.authStore.onChange(async (token) => {
+	client?.authStore.onChange(async (token) => {
 		if (token) {
 			await setup_sessions_subscription();
 			await sessions_sync_state?.start();
 		} else {
-			await sessions_sync_state?.cancel();
+			await sessions_sync_state?.pause();
 		}
 	});
 }

@@ -1,4 +1,3 @@
-import { on_session_syncable } from "../db/sessions/client";
 import { SessionStatus, type SessionDocument } from "../db/sessions/define.svelte";
 import type { AppState } from "./context";
 import { play_timer_finish_sound } from "./sounds";
@@ -43,8 +42,6 @@ async function handle_session_complete(app_state: AppState): Promise<SessionDocu
     document.title = 'Kairos';
 
     await play_timer_finish_sound();
-
-    on_session_syncable(app_state.session!.id);
 
     await app_state.session!.incrementalUpdate({
         $set: {

@@ -8,13 +8,13 @@ import {
 	toTypedRxJsonSchema,
 } from 'rxdb';
 
-import { db } from '../db';
+import { db, kairos_state } from '../db';
 import type { VinesDocument } from '../vines/define';
-import { on_session_syncable } from './client';
+import { sessions_sync_state } from './client';
 import { SessionError, SessionErrorFactory, SessionErrorType } from './errors';
 
 export const session_schema_literal = {
-	version: 0,
+	version: 1,
 	title: 'session',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -95,6 +95,9 @@ export const session_schema_literal = {
 		vine_course: {
 			type: 'string',
 		},
+		locked_by: {
+			type: 'string'
+		}
 	},
 	required: ['id', 'time_target', 'status', 'created_at', 'pomo_type', 'cycle'],
 	indexes: ['status', 'pomo_type', 'created_at'],
@@ -192,6 +195,8 @@ export const session_doc_methods: SessionDocMethods = {
 			);
 		}
 
+		await sessions_sync_state?.pause();
+
 		if (this.status == SessionStatus.Paused) {
 			if (this.paused_at) {
 				const pause_duration = Math.floor(Date.now() - this.paused_at);
@@ -260,6 +265,8 @@ export const session_doc_methods: SessionDocMethods = {
 			);
 		}
 
+		await sessions_sync_state?.start();
+
 		// Calculate remaining time based on actual time, not tick count
 		const remaining_ms = Math.max(0, (this.time_end ?? 0) - Date.now());
 		const remaining_seconds = Math.ceil(remaining_ms / 1000);
@@ -284,6 +291,8 @@ export const session_doc_methods: SessionDocMethods = {
 				{ status: this.status },
 			);
 		}
+
+		await sessions_sync_state?.start();
 
 		if (this.status == SessionStatus.Paused && this.paused_at) {
 			await this.incrementalModify((s) => {
@@ -311,8 +320,6 @@ export const session_doc_methods: SessionDocMethods = {
 				},
 			});
 		}
-
-		on_session_syncable(this.id);
 
 		return await this.next(override_type, vine);
 	},
@@ -376,7 +383,8 @@ export const session_collection_methods: SessionCollectionMethods = {
 			});
 		}
 
-		
+		await sessions_sync_state?.start();
+
 		const session: SessionDocType = {
 			id: crypto.randomUUID(),
 			date_finished: undefined,
@@ -393,6 +401,7 @@ export const session_collection_methods: SessionCollectionMethods = {
 			vine_title: opts.vine?.title,
 			vine_type: opts.vine?.type,
 			vine_course: opts.vine?.course_id,
+			locked_by: kairos_state.get('client_id')
 		};
 
 		// TODO: normalize RxDB errors
@@ -419,6 +428,7 @@ export const session_collection_methods: SessionCollectionMethods = {
 						],
 					},
 					{ updated_at: { $gt: DateTime.now().minus({ hours: 8 }).toISO().replace('T', ' ') } },
+					{ locked_by: {$eq: kairos_state.get("client_id")  } }
 				],
 			},
 			sort: [{ created_at: 'desc' }],

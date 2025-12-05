@@ -130,7 +130,12 @@ export async function init_db(): Promise<KairosDB> {
 			methods: session_doc_methods, // (optional) ORM-functions for documents
 			attachments: {}, // (optional) ORM-functions for attachments
 			options: {}, // (optional) Custom parameters that might be used in plugins
-			migrationStrategies: {}, // (optional)
+			migrationStrategies: {
+				1: function (old_doc) {
+					old_doc.locked_by = '';
+					return old_doc;
+				}
+			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
 			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
 		},
@@ -181,7 +186,7 @@ if ((await db.settings.count().exec()) == 0) {
 	} as SettingsDocType);
 }
 
-const kairos_state = await db.addState();
+export const kairos_state = await db.addState();
 
 export let client_id = kairos_state.get('client_id');
 if (!client_id) {
