@@ -1,3 +1,17 @@
+## v0.6.5 (2025-12-05)
+
+### Fix
+
+- normalise sound loudness
+- deletion of vines not propagating to sync server
+- session synchronisation initiated multiple times, add session lock
+- update inactive session target time when settings change
+- bug where user would appear as not logged in after a session is started
+
+### Refactor
+
+- remove unnecessary uses of effect rune
+
 ## v0.6.4 (2025-11-29)
 
 ### Fix
