@@ -119,6 +119,11 @@ export async function init_db(): Promise<KairosDB> {
 					delete old_doc.timer_active_sound_volume;
 
 					return old_doc;
+				},
+				11: function (old_doc) {
+					old_doc.adapt_system = true;
+					old_doc.last_dark_theme = "dark";
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -179,6 +184,8 @@ if ((await db.settings.count().exec()) == 0) {
 		ui_sounds_volume: 100,
 		timer_finish_sound_volume: 100,
 		theme: 'coffee',
+		adapt_system: false,
+		last_dark_theme: "dark",
 		special_periods: true,
 		special_periods_tip_shown: false,
 		vines_sort_by: 'LAST_USED',

@@ -13,7 +13,7 @@
 
 	import { db, init_db } from '../../../db/db';
 	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
-	import { Theme } from '../db';
+	import { DarkThemes, LightThemes, Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
 
 	const { mobile }: { mobile: boolean } = $props();
@@ -326,19 +326,56 @@
 							);
 						}
 
+						if (Object.values(DarkThemes).includes((e.target as HTMLSelectElement).value)) {
+							await app_state.settings!.modify_setting(
+								'last_dark_theme',
+								(e.target as HTMLSelectElement).value as Theme,
+							)
+						}
+
 						await app_state.settings!.modify_setting(
 							'theme',
 							(e.target as HTMLSelectElement).value as Theme,
 						);
 					}}
 				>
-					{#each Object.values(Theme) as theme (theme)}
-						<option value={theme} selected={app_state.settings.theme == theme}>
-							<ThemeSample {theme} />
-						</option>
-					{/each}
+					<optgroup class="font-bold" label={i18next.t("settings:light_themes")}>
+						{#each Object.values(LightThemes) as theme (theme)}
+							<option
+								label={app_state.settings.theme == theme ? theme : undefined}
+								value={theme}
+								selected={app_state.settings.theme == theme}
+							>
+								<ThemeSample {theme} />
+							</option>
+						{/each}
+					</optgroup>
+
+					<optgroup class="font-bold" label={i18next.t("settings:dark_themes")}>
+						{#each Object.values(DarkThemes) as theme (theme)}
+							<option
+								label={app_state.settings.theme == theme ? theme : undefined}
+								value={theme}
+								selected={app_state.settings.theme == theme}
+							>
+								<ThemeSample {theme} />
+							</option>
+						{/each}
+					</optgroup>
 				</select>
+				<label class="label tooltip" data-tip={i18next.t("settings:adapt_system_tooltip")}>
+					<input
+						type="checkbox"
+						checked={app_state.settings.adapt_system}
+						class="checkbox"
+						onchange={async (e) => {
+							await app_state.settings!.modify_setting('adapt_system', e.currentTarget.checked);
+						}}
+					/>
+					{i18next.t('settings:adapt_system')}
+				</label>
 			</fieldset>
+
 			<fieldset class="fieldset w-full">
 				<legend class="fieldset-legend">{i18next.t('settings:hollydays')}</legend>
 				<label class="label">

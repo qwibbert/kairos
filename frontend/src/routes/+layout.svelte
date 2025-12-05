@@ -9,6 +9,7 @@
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Home from 'lucide-svelte/icons/home';
 	import Settings from 'lucide-svelte/icons/settings';
+	import { mode } from 'mode-watcher';
 	import { setContext } from 'svelte';
 	import { Modals, modals } from 'svelte-modals';
 
@@ -35,7 +36,7 @@
 		special_period: special_period(),
 	});
 
-	setContext('app_state', app_state)
+	setContext('app_state', app_state);
 
 	client?.authStore.onChange((token, model) => {
 		if (!client?.authStore.isValid) {
@@ -62,19 +63,26 @@
 			modals.open(Alert, {
 				type: 'INFO',
 				header:
-					app_state.special_period == 'HALLOWEEN' ? i18next.t("settings:halloween_header") : i18next.t("settings:christmas_header"),
-				text: i18next.t("settings:theme_auto_adjust_msg", {theme: app_state.special_period == 'HALLOWEEN' ? i18next.t("settings:halloween"): i18next.t("settings:christmas")}),
+					app_state.special_period == 'HALLOWEEN'
+						? i18next.t('settings:halloween_header')
+						: i18next.t('settings:christmas_header'),
+				text: i18next.t('settings:theme_auto_adjust_msg', {
+					theme:
+						app_state.special_period == 'HALLOWEEN'
+							? i18next.t('settings:halloween')
+							: i18next.t('settings:christmas'),
+				}),
 				dismissable: false,
 				actions: new Map([
 					[
-						i18next.t("common:dismiss"),
+						i18next.t('common:dismiss'),
 						async () => {
 							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
 							holiday_alert_showing = false;
 						},
 					],
 					[
-						i18next.t("common:revert"),
+						i18next.t('common:revert'),
 						async () => {
 							document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
 							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
@@ -110,6 +118,22 @@
 			}
 		}
 	});
+
+	$effect(() => {
+		if (app_state.settings?.special_periods && app_state.special_period) {
+			if (app_state.special_period == 'CHRISTMAS') {
+				document.documentElement.setAttribute('data-theme', 'christmas');
+			} else if (app_state.special_period == 'HALLOWEEN') {
+				document.documentElement.setAttribute('data-theme', 'halloween');
+			}
+		} else {
+			if (mode.current == 'dark' && app_state.settings?.adapt_system) {
+				document.documentElement.setAttribute('data-theme', app_state.settings?.last_dark_theme!);
+			} else {
+				document.documentElement.setAttribute('data-theme', app_state.settings?.theme!);
+			}
+		}
+	});
 </script>
 
 <Modals>
@@ -124,7 +148,7 @@
 </div>
 
 <footer class="h-[10dvh] hidden md:flex flex-row w-full items-center justify-center gap-4">
-	<a href="privacy.pdf" class="link link-hover text-sm">{i18next.t("common:privacy")}</a>
+	<a href="privacy.pdf" class="link link-hover text-sm">{i18next.t('common:privacy')}</a>
 	<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
 		>meld problemen</a
 	>

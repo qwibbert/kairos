@@ -57,6 +57,7 @@
 		"i18next": "^25.5.2",
 		"lucide-svelte": "^0.545.0",
 		"luxon": "^3.7.1",
+		"mode-watcher": "^1.1.0",
 		"rxdb": "^16.18.0",
 		"svelte-dnd-action": "^0.9.64",
 		"svelte-file-dropzone": "^2.0.9",

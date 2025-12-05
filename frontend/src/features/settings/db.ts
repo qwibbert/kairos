@@ -36,3 +36,46 @@ export enum Theme {
 	SILK = 'silk',
 	CHRISTMAS = 'christmas'
 }
+
+export enum LightThemes {
+	LIGHT = "light",
+	CUPCAKE = "cupcake",
+	BUMBLEBEE = "bumblebee",
+	EMERALD = "emerald",
+	CORPORATE = "corporate",
+	RETRO = "retro",
+	CYBERPUNK = "cyberpunk",
+	VALENTINE = "valentine",
+	GARDEN = "garden",
+	LOFI = "lofi",
+	PASTEL = "pastel",
+	FANTASY = "fantasy",
+	WIREFRAME = "wireframe",
+	CMYK = "cmyk",
+	AUTUMN = "autumn",
+	ACID = "acid",
+	WINTER = "winter",
+	NORD = "nord",
+	CARAMELLATTE = "caramellatte",
+	SILK = "silk",
+	LEMONADE = "lemonade"
+}
+
+export enum DarkThemes {
+	DARK = "dark",
+	SYNTHWAVE = "synthwave",
+	HALLOWEEN = "halloween",
+	FOREST = "forest",
+	AQUA = "aqua",
+	BLACK = "black",
+	LUXURY = "luxury",
+	DRACULA = "dracula",
+	BUSINESS = "business",
+	NIGHT = "night",
+	COFFEE = "coffee",
+	DIM = "dim",
+	SUNSET = "sunset",
+	ABYSS = "abyss",
+	CHRISTMAS = "christmas"
+}
+
