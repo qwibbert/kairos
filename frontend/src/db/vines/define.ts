@@ -191,7 +191,10 @@ export const vines_doc_methods: VinesDocMethods = {
 		});
 	},
 	delete_vine: async function (this: VinesDocument): Promise<void> {
-		await this.incrementalRemove();
+		await this.incrementalPatch({
+			_deleted: true,
+			updated_at: new Date().toISOString().replace('T', ' ')
+		})
 	},
 };
 
@@ -227,6 +230,9 @@ export const vines_collection_methods: VinesCollectionMethods = {
 	delete_vine: async function (this: VinesCollection, id: string): Promise<void> {
 		await this.findOne(id)
 			.exec()
-			.then((vine) => vine?.incrementalRemove());
+			.then((vine) => vine?.incrementalPatch({
+				_deleted: true,
+				updated_at: new Date().toISOString().replace('T', ' ')
+			}));
 	},
 };
