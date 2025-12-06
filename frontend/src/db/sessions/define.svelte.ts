@@ -240,7 +240,6 @@ export const session_doc_methods: SessionDocMethods = {
 
 		if (this.pomo_type == PomoType.Pomo && increment_cycle) {
 			await this.incrementalModify((s) => {
-				s.cycle++;
 				s.updated_at = new Date().toISOString().replace('T', ' ');
 				return s;
 			});
