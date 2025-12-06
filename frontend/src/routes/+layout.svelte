@@ -148,7 +148,6 @@
 </div>
 
 <footer class="h-[10dvh] hidden md:flex flex-row w-full items-center justify-center gap-4">
-	<a href="privacy.pdf" class="link link-hover text-sm">{i18next.t('common:privacy')}</a>
 	<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
 		>meld problemen</a
 	>
