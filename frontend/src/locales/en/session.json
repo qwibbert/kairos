@@ -7,6 +7,7 @@
 	"pause": "Pause",
 	"advance_20%": "Advance 20%",
 	"travel_5_seconds_until_end": "Jump to 5 seconds before endtime",
+	"cycle_count": "Cycle count",
 	"wakelock": "Wakelock",
 	"err_wakelock": "Failed to acquire wackelock"
 }

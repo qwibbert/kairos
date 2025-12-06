@@ -257,7 +257,7 @@
 			{@render type_control(PomoType.LongBreak)}
 		</div>
 		{#if app_state.session?.vine_title}
-			<button class="btn btn-primary btn-sm tooltip tooltip-right" data-tip="Open vine statistics" onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}>
+			<button class="btn btn-primary btn-sm tooltip tooltip-right" data-tip={i18next.t("vines:vine_statistics")} onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}>
 				<SquareCheck class="size-[1.2em]" />{app_state.active_vine?.title}
 			</button>
 		{:else}
@@ -272,7 +272,7 @@
 				>{seconds}</span
 			>
 		</span>
-		<span class="tooltip badge badge-neutral" data-tip="Cycle count"><b>#</b>{app_state?.session?.cycle ?? 1}</span>
+		<span class="tooltip badge badge-neutral" data-tip={i18next.t("session:cycle_count")}><b>#</b>{app_state?.session?.cycle ?? 1}</span>
 	</section>
 
 	<section class="flex flex-row gap-2 justify-center">
