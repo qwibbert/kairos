@@ -69,7 +69,7 @@
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
 				time_target: await db.settings.get_setting('pomo_time'),
-				cycle: 0,
+				cycle: 1,
 			});
 		}
 	});
@@ -191,7 +191,7 @@
 								? 'short_break_time'
 								: 'long_break_time',
 					),
-					cycle: 0,
+					cycle: 1,
 					vine: app_state.active_vine ?? undefined,
 				});
 			}
@@ -261,7 +261,7 @@
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>
 		{/if}
 	</section>
-	<section>
+	<section class="flex flex-col gap-2 items-center">
 		<span class="countdown font-mono text-6xl md:text-7xl xl:text-8xl rounded w-full">
 			<span style={`--value:${minutes}; --digits:2`} aria-live="polite" aria-label={`${minutes}`}
 				>{minutes}</span
@@ -269,6 +269,7 @@
 				>{seconds}</span
 			>
 		</span>
+		<span class="tooltip badge badge-neutral" data-tip="Cycle count"><b>#</b>{app_state?.session?.cycle ?? 1}</span>
 	</section>
 
 	<section class="flex flex-row gap-2 justify-center">
