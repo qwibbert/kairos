@@ -62,9 +62,12 @@
 				await start_timer();
 			}
 
-			app_state.active_vine = resumeable_session.vine_id
-				? await db.vines.get_vine(resumeable_session.vine_id)
-				: null;
+			const vine = resumeable_session.vine_id ? await db.vines.get_vine(resumeable_session.vine_id) : null;
+
+			if (vine) {
+				app_state.active_vine = vine;
+				app_state.selected_vine = vine;
+			}
 		} else {
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
@@ -254,9 +257,9 @@
 			{@render type_control(PomoType.LongBreak)}
 		</div>
 		{#if app_state.session?.vine_title}
-			<span class="btn btn-primary btn-sm">
+			<button class="btn btn-primary btn-sm tooltip tooltip-right" data-tip="Open vine statistics" onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}>
 				<SquareCheck class="size-[1.2em]" />{app_state.active_vine?.title}
-			</span>
+			</button>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>
 		{/if}

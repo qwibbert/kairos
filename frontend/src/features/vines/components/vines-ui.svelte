@@ -171,6 +171,8 @@
 
 						modals.close();
 					}
+
+					app_state.selected_vine = vine;
 				}}
 				class="checkbox"
 			/>

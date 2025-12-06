@@ -3,18 +3,18 @@
 
 	import StatsUi from './stats-ui.svelte';
 
-	let mode: 'GENERAL' | 'VINE' = $state('GENERAL');
-
 	interface Props {
 		isOpen: boolean;
 		non_modal?: boolean;
+		mode?: 'GENERAL' | 'VINE'
 		close: () => {};
 	}
-	const {
+	let {
 		// provided by <Modals />
 		isOpen,
 		close,
-		non_modal = false
+		non_modal = false,
+		mode = "GENERAL"
 	}: Props = $props();
 
 	let dialog_el: HTMLDialogElement | null = $state(null);
