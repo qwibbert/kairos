@@ -24,6 +24,7 @@
 	import { tick } from '$lib/timer';
 	import { push_toast } from '$lib/toasts';
 
+	import BookText from 'lucide-svelte/icons/book-text';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
@@ -258,7 +259,7 @@
 		</div>
 		{#if app_state.session?.vine_title}
 			<button class="btn btn-primary btn-sm tooltip tooltip-right" data-tip={i18next.t("vines:vine_statistics")} onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}>
-				<SquareCheck class="size-[1.2em]" />{app_state.active_vine?.title}
+				{#if app_state.active_vine?.course_title} <BookText class="size-[1.2em]" />{:else}<SquareCheck class="size-[1.2em]" /> {/if}{app_state.active_vine?.title}
 			</button>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>
