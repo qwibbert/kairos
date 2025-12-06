@@ -1,3 +1,16 @@
+## v0.7.0 (2025-12-06)
+
+### Feat
+
+- clicking vine name on home screen will now open vine statistics
+- add cycle indicator
+- add option to respect system dark mode
+
+### Fix
+
+- cycles not incrementing correctly
+- total vine time not displaying
+
 ## v0.6.5 (2025-12-05)
 
 ### Fix
