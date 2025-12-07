@@ -1,3 +1,10 @@
+## v0.7.1 (2025-12-07)
+
+### Fix
+
+- default timer sound not set correctly
+- courses relation not linked when uploading vine to backend
+
 ## v0.7.0 (2025-12-06)
 
 ### Feat
