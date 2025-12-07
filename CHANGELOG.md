@@ -1,3 +1,9 @@
+## v0.7.3 (2025-12-07)
+
+### Fix
+
+- session loses vine status after refreshing
+
 ## v0.7.2 (2025-12-07)
 
 ### Fix
