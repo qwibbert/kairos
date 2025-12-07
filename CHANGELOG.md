@@ -1,3 +1,9 @@
+## v0.7.2 (2025-12-07)
+
+### Fix
+
+- vines_sort_by not initialised correctly
+
 ## v0.7.1 (2025-12-07)
 
 ### Fix
