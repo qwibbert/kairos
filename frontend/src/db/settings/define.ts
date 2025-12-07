@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 11,
+	version: 12,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',

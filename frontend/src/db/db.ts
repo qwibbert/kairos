@@ -124,6 +124,12 @@ export async function init_db(): Promise<KairosDB> {
 					old_doc.adapt_system = true;
 					old_doc.last_dark_theme = "dark";
 					return old_doc;
+				},
+				12: function (old_doc) {
+					if (old_doc.vines_sort_by == "LAST_USED") {
+						old_doc.vines_sort_by = "LAST_USED_DESC"
+					}
+					return old_doc;
 				}
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
@@ -188,7 +194,7 @@ if ((await db.settings.count().exec()) == 0) {
 		last_dark_theme: "dark",
 		special_periods: true,
 		special_periods_tip_shown: false,
-		vines_sort_by: 'LAST_USED',
+		vines_sort_by: 'LAST_USED_DESC',
 		tour_completed: false
 	} as SettingsDocType);
 }
