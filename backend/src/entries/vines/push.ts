@@ -60,7 +60,12 @@ export default function (e: core.RequestEvent) {
                 } else {
                     // no conflict -> write the document
                     try {
-                        real_master_state!.load({ ...change_row.newDocumentState, user: e.auth?.id, parent: change_row.newDocumentState?.parent_id });
+                        real_master_state!.load({ 
+                            ...change_row.newDocumentState, 
+                            user: e.auth?.id, 
+                            parent: change_row.newDocumentState?.parent_id,
+                            course: change_row.newDocumentState?.course_id
+                         });
                         tx.save(real_master_state!);
                     } catch (err: any) {
                         throw err;
@@ -72,7 +77,12 @@ export default function (e: core.RequestEvent) {
             } else {
                 // no conflict -> write the document parent: Failed to find all relation records with the provided ids.
                 try {
-                    real_master_state!.load({ ...change_row.newDocumentState, user: e.auth?.id, parent: change_row.newDocumentState?.parent_id });
+                    real_master_state!.load({ 
+                        ...change_row.newDocumentState, 
+                        user: e.auth?.id, 
+                        parent: change_row.newDocumentState?.parent_id,
+                        course: change_row.newDocumentState?.course_id
+                    });
                     tx.save(real_master_state!);
                 } catch (err: any) {
                     if (err.toString() == 'GoError: parent: Failed to find all relation records with the provided ids.') {
