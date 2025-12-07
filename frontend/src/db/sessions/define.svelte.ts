@@ -201,7 +201,9 @@ export const session_doc_methods: SessionDocMethods = {
 			if (this.paused_at) {
 				const pause_duration = Math.floor(Date.now() - this.paused_at);
 
-				await this.incrementalModify((s) => {
+				return await this.incrementalModify((s) => {
+					s.status = SessionStatus.Active;
+					
 					s.pauses = [
 						...(s.pauses ?? []),
 						{
@@ -219,8 +221,9 @@ export const session_doc_methods: SessionDocMethods = {
 				});
 			}
 		} else if (this.status == SessionStatus.Interrupted) {
-			await this.incrementalUpdate({
+			return await this.incrementalUpdate({
 				$set: {
+					status: SessionStatus.Active,
 					updated_at: new Date().toISOString().replace('T', ' '),
 					time_end:
 						Date.now() +
@@ -230,29 +233,14 @@ export const session_doc_methods: SessionDocMethods = {
 				},
 			});
 		} else {
-			await this.incrementalUpdate({
+			return await this.incrementalUpdate({
 				$set: {
+					status: SessionStatus.Active,
 					updated_at: new Date().toISOString().replace('T', ' '),
 					time_end: Date.now() + this.time_target * 1000,
 				},
 			});
 		}
-
-		if (this.pomo_type == PomoType.Pomo && increment_cycle) {
-			await this.incrementalModify((s) => {
-				s.updated_at = new Date().toISOString().replace('T', ' ');
-				return s;
-			});
-		}
-
-		await this.incrementalUpdate({
-			$set: {
-				status: SessionStatus.Active,
-				updated_at: new Date().toISOString().replace('T', ' '),
-			},
-		});
-
-		return this.getLatest();
 	},
 	pause: async function (this: SessionDocument): Promise<SessionDocument> {
 		if (this.status != SessionStatus.Active) {
@@ -381,8 +369,6 @@ export const session_collection_methods: SessionCollectionMethods = {
 				},
 			});
 		}
-
-		await sessions_sync_state?.start();
 
 		const session: SessionDocType = {
 			id: crypto.randomUUID(),
