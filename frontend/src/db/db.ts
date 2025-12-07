@@ -180,7 +180,7 @@ if ((await db.settings.count().exec()) == 0) {
 		long_break_time: 15 * 60,
 		auto_start: false,
 		ui_sounds: true,
-		timer_finish_sound: "clock",
+		timer_finish_sound: "bell",
 		ui_sounds_volume: 100,
 		timer_finish_sound_volume: 100,
 		theme: 'coffee',
