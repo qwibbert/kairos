@@ -32,12 +32,6 @@ export default function (e: core.RequestEvent) {
 
             copy.vine_course = copy.course ?? '';
             delete copy.course;
-
-            copy.vine_title = copy.vine_title ?? '';
-            delete copy.vine_title;
-
-            copy.vine_type = copy.vine_type ?? '';
-            delete copy.vine_type;
         };
 
         return copy;
