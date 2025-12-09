@@ -27,6 +27,7 @@
 	import BookText from 'lucide-svelte/icons/book-text';
 	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
+	import { sessions_sync_state } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
 
@@ -60,6 +61,7 @@
 			// Incase the session was interrupted, we can just resume it
 			// TODO: session locking
 			if (app_state.session?.status == SessionStatus.Active && !app_state.timer_interval) {
+				await sessions_sync_state?.pause();
 				await start_timer();
 			}
 
