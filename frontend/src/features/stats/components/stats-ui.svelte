@@ -193,37 +193,37 @@
 	</div>
 
 	{#if app_state.selected_vine}
-		<div class="flex flex-row items-center justify-between mb-2">
-			<button
-				class="btn btn-xs btn-primary"
-				onclick={() => (view == 'DAY' ? (delta_weeks += 1) : (delta_years += 1))}
-				><ChevronLeft class="size-[1.5em]" /></button
-			>
-			{#if week_start && week_end && view == 'DAY'}
-				<span class="mx-2 text-sm">
-					{week_start.toLocaleString({
-						day: '2-digit',
-						month: 'short',
-						year: 'numeric',
-					})} - {week_end.toLocaleString({
-						day: '2-digit',
-						month: 'short',
-						year: 'numeric',
-					})}
-				</span>
-			{:else if view == 'YEAR'}
-				<span class="mx-2 text-sm">
-					{today.minus({ years: delta_years }).year}
-				</span>
-			{/if}
-			<button
-				class="btn btn-xs btn-primary"
-				disabled={view == 'DAY' ? delta_weeks <= 0 : view == 'YEAR' ? delta_years <= 0 : true}
-				onclick={() => (view == 'DAY' ? (delta_weeks -= 1) : (delta_years -= 1))}
-				><ChevronRight class="size-[1.5em]" /></button
-			>
-		</div>
 		{#if chart_type == 'BAR'}
+			<div class="flex flex-row items-center justify-between mb-2">
+				<button
+					class="btn btn-xs btn-primary"
+					onclick={() => (view == 'DAY' ? (delta_weeks += 1) : (delta_years += 1))}
+					><ChevronLeft class="size-[1.5em]" /></button
+				>
+				{#if week_start && week_end && view == 'DAY'}
+					<span class="mx-2 text-sm">
+						{week_start.toLocaleString({
+							day: '2-digit',
+							month: 'short',
+							year: 'numeric',
+						})} - {week_end.toLocaleString({
+							day: '2-digit',
+							month: 'short',
+							year: 'numeric',
+						})}
+					</span>
+				{:else if view == 'YEAR'}
+					<span class="mx-2 text-sm">
+						{today.minus({ years: delta_years }).year}
+					</span>
+				{/if}
+				<button
+					class="btn btn-xs btn-primary"
+					disabled={view == 'DAY' ? delta_weeks <= 0 : view == 'YEAR' ? delta_years <= 0 : true}
+					onclick={() => (view == 'DAY' ? (delta_weeks -= 1) : (delta_years -= 1))}
+					><ChevronRight class="size-[1.5em]" /></button
+				>
+			</div>
 			<Histogram view="DAY" {delta_weeks} {delta_years} vine={app_state.selected_vine} />
 		{:else}
 			<PieChart />
