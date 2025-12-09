@@ -1,3 +1,10 @@
+## v0.7.4 (2025-12-09)
+
+### Fix
+
+- backend pull handler would delete vine title and vine type from session
+- pause session syncing when resuming an interrupted session
+
 ## v0.7.3 (2025-12-07)
 
 ### Fix
