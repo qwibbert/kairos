@@ -80,16 +80,13 @@
 			<div
 				class={[
 					'flex flex-row items-center gap-2',
-					vine.id == vine_moving?.id ||
-					(vine_moving?.type == VineType.Course && vine.type == VineType.Course)
-						? 'lg:tooltip lg:tooltip-right'
-						: '',
+					'lg:tooltip lg:tooltip-right',
 				]}
 				data-tip={vine.id == vine_moving?.id
 					? i18next.t('vines:err_vine_in_vine')
 					: vine_moving?.type == VineType.Course && vine.type == VineType.Course
 						? i18next.t('vines:err_course_in_course')
-						: ''}
+						: i18next.t('vines:move_into')}
 			>
 				<button
 					disabled={vine.id == vine_moving?.id ||
