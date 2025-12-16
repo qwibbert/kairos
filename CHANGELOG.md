@@ -1,3 +1,14 @@
+## v0.8.0 (2025-12-16)
+
+### Feat
+
+- add tooltip for vine moving
+
+### Fix
+
+- course search not performed when course page number changes
+- week selector visible in pie chart mode
+
 ## v0.7.4 (2025-12-09)
 
 ### Fix
