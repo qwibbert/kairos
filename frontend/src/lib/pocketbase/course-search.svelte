@@ -1,7 +1,7 @@
 <script lang="ts">
+	import i18next from 'i18next';
 	import type { ListResult } from 'pocketbase';
 
-	import i18next from 'i18next';
 	import { client } from './';
 	import type { CoursesResponse } from './pocketbase-types';
 
@@ -22,6 +22,13 @@
 		page_count = $bindable(),
 		item_count = $bindable(),
 	}: Props = $props();
+
+	$effect(() => {
+		if (page) {
+			run_search();
+		}
+	})
+
 	let search_string: string = $state('');
 
 	async function run_search() {
@@ -54,7 +61,10 @@
 	placeholder={i18next.t('vines:search_course')}
 	bind:value={
 		() => search_string,
-		(s) => { search_string = s; run_search() }
+		(s) => {
+			search_string = s;
+			run_search();
+		}
 	}
 	onchange={run_search}
 />
