@@ -11,8 +11,8 @@
 	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
 	import { push_toast } from '$lib/toasts';
 
-	import { db } from '../../../db/db';
-	import { VineType, type VinesDocument } from '../../../db/vines/define';
+	import { db } from '$db/db';
+	import { VineType, type VinesDocument } from '$db/vines/define';
 	import { get_parent_nodes_from_flat_list } from '../db';
 
 	const app_state = get_app_state();

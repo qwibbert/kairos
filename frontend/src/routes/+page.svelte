@@ -1,10 +1,7 @@
 <script lang="ts">
 	// === IMPORTS ===
 	import { dev } from '$app/environment';
-	import KairosLogo from '$components/ui/kairos-logo.svelte';
-	import SettingsModal from '$features/settings/components/settings-modal.svelte';
-	import Statsmodal from '$features/stats/components/stats-modal.svelte';
-	import VineModal from '$features/vines/components/vine-modal.svelte';
+	import KairosLogo from '$lib/components/ui/kairos-logo.svelte';
 	import { shortcut } from '@svelte-put/shortcut';
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
@@ -14,8 +11,11 @@
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
+	import VineModal from 'src/vines/components/vine-modal.svelte';
 	import { onMount } from 'svelte';
 	import { modals } from 'svelte-modals';
+	import SettingsModal from '../settings/components/settings-modal.svelte';
+	import Statsmodal from '../stats/components/stats-modal.svelte';
 
 	import AccountButton from '$lib/components/account-button.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
@@ -25,11 +25,11 @@
 	import { push_toast } from '$lib/toasts';
 
 	import BookText from 'lucide-svelte/icons/book-text';
-	import VinesIcon from '../components/ui/vines-icon.svelte';
 	import { db } from '../db/db';
 	import { sessions_sync_state } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
+	import VinesIcon from '../lib/components/ui/vines-icon.svelte';
 
 	// === STATE VARIABLES ===
 	const app_state = get_app_state();

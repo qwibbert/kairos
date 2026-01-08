@@ -1,12 +1,12 @@
 import { goto } from "$app/navigation";
-import SettingsModal from "$features/settings/components/settings-modal.svelte";
-import StatsModal from "$features/stats/components/stats-modal.svelte";
-import VineModal from "$features/vines/components/vine-modal.svelte";
+import { db } from "$db/db";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
+import SettingsModal from "src/settings/components/settings-modal.svelte";
+import StatsModal from "src/stats/components/stats-modal.svelte";
+import VineModal from "src/vines/components/vine-modal.svelte";
 import { modals } from "svelte-modals";
-import { db } from "../../db/db";
 
 
 i18next.on('initialized', async () => {

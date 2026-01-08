@@ -17,9 +17,9 @@
 	import { category_color, generate_color_palette } from '$lib/colors';
 	import { get_app_state } from '$lib/context';
 
-	import { db } from '../../../db/db';
-	import { PomoType, type SessionDocument } from '../../../db/sessions/define.svelte';
-	import type { VinesDocument } from '../../../db/vines/define';
+	import { db } from '$db/db';
+	import { PomoType, type SessionDocument } from '$db/sessions/define.svelte';
+	import type { VinesDocument } from '$db/vines/define';
 	import { pie_options } from '../graph-options';
 
 	const app_state = get_app_state();

@@ -1,6 +1,6 @@
-import { db } from '../../db/db';
-import type { VinesSortBy } from '../../db/settings/define';
-import type { VinesDocument } from '../../db/vines/define';
+import { db } from '$db/db';
+import type { VinesSortBy } from '$db/settings/define';
+import type { VinesDocument } from '$db/vines/define';
 import { type VineTreeItem } from './types';
 
 /**

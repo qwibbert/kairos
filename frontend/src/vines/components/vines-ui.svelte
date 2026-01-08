@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VinesIcon from '$components/ui/vines-icon.svelte';
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
 	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import Check from 'lucide-svelte/icons/check';
@@ -17,10 +17,10 @@
 	import { get_app_state } from '$lib/context';
 	import { push_toast } from '$lib/toasts';
 
-	import { db } from '../../../db/db';
-	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
-	import type { VinesSortBy } from '../../../db/settings/define';
-	import { type VineTreeItem, VineType, type VinesDocument } from '../../../db/vines/define';
+	import { db } from '$db/db';
+	import { PomoType, SessionStatus } from '$db/sessions/define.svelte';
+	import type { VinesSortBy } from '$db/settings/define';
+	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 	import ImportCourseModal from './import-course-modal.svelte';
 	import VineSelectModal from './vine-select-modal.svelte';

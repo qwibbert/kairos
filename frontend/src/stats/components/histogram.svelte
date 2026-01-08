@@ -18,14 +18,14 @@
 
 	import { generate_color_palette } from '$lib/colors';
 
-	import i18next from 'i18next';
-	import { db } from '../../../db/db';
+	import { db } from '$db/db';
 	import {
 		PomoType,
 		type SessionDocument,
 		SessionStatus,
-	} from '../../../db/sessions/define.svelte';
-	import type { VinesDocument } from '../../../db/vines/define';
+	} from '$db/sessions/define.svelte';
+	import type { VinesDocument } from '$db/vines/define';
+	import i18next from 'i18next';
 	import { day_options, year_options } from '../graph-options';
 	import { get_day_histogram_echarts, get_year_histogram_echarts } from '../graphs/histogram';
 

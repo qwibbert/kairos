@@ -3,6 +3,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import topLevelAwait from "vite-plugin-top-level-await";
 
+import path from 'path';
+
 import pkg from '../package.json' with { type: 'json' };
 
 export default defineConfig({
@@ -27,10 +29,14 @@ export default defineConfig({
 
 			alias: {
 				$lib: 'src/lib',
-				$features: 'src/features',
+				$db: 'src/db',
 				$components: 'src/components',
-
+				src: path.resolve('./src')
 			}
 		}
-		: undefined
+		: {
+			alias: {
+				src: path.resolve('./src')
+			}
+		}
 });

@@ -1,17 +1,17 @@
 <script lang="ts">
-	import VineSelectModal from '$features/vines/components/vine-select-modal.svelte';
 	import i18next from 'i18next';
 	import ChartColumn from 'lucide-svelte/icons/chart-column';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { DateTime } from 'luxon';
+	import VineSelectModal from 'src/vines/components/vine-select-modal.svelte';
 	import { modals } from 'svelte-modals';
 
 	import { get_app_state } from '$lib/context';
 
-	import { db } from '../../../db/db';
-	import { PomoType } from '../../../db/sessions/define.svelte';
-	import type { VinesDocument } from '../../../db/vines/define';
+	import { db } from '$db/db';
+	import { PomoType } from '$db/sessions/define.svelte';
+	import type { VinesDocument } from '$db/vines/define';
 	import Histogram from './histogram.svelte';
 	import PieChart from './pie-chart.svelte';
 

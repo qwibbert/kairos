@@ -1,5 +1,5 @@
-import type { SessionDocument } from "../../../db/sessions/define.svelte";
-import type { VineID, VinesDocument } from "../../../db/vines/define";
+import type { SessionDocument } from "$db/sessions/define.svelte";
+import type { VineID, VinesDocument } from "$db/vines/define";
 
 type PieChartData = { name: string; value: number }[];
 

@@ -11,8 +11,8 @@
 	import { TimerFinishSound, play_button_sound, play_timer_finish_sound } from '$lib/sounds';
 	import { push_toast } from '$lib/toasts';
 
-	import { db, init_db } from '../../../db/db';
-	import { PomoType, SessionStatus } from '../../../db/sessions/define.svelte';
+	import { db, init_db } from '../../db/db';
+	import { PomoType, SessionStatus } from '../../db/sessions/define.svelte';
 	import { DarkThemes, LightThemes, Theme } from '../db';
 	import ThemeSample from './theme-sample.svelte';
 

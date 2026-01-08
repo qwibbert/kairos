@@ -1,5 +1,5 @@
 <script>
-	import VinesUi from "$features/vines/components/vines-ui.svelte";
+	import VinesUi from "src/vines/components/vines-ui.svelte";
 </script>
 
 <VinesUi />

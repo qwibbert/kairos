@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VinesIcon from '$components/ui/vines-icon.svelte';
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
 	import i18next from 'i18next';
 	import Check from 'lucide-svelte/icons/check';
 	import FolderDown from 'lucide-svelte/icons/folder-down';
@@ -8,8 +8,8 @@
 
 	import { get_app_state } from '$lib/context';
 
-	import type { VinesSortBy } from '../../../db/settings/define';
-	import { type VineTreeItem, VineType, type VinesDocument } from '../../../db/vines/define';
+	import type { VinesSortBy } from '$db/settings/define';
+	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 
 	interface Props {

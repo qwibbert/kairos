@@ -1,10 +1,10 @@
 import { DateTime } from 'luxon';
 
+import { db } from '$db/db';
+import { PomoType, type SessionDocument } from '$db/sessions/define.svelte';
+import type { VinesDocument } from '$db/vines/define';
 import { category_color } from '$lib/colors';
 import i18next from 'i18next';
-import { db } from '../../../db/db';
-import { PomoType, type SessionDocument } from '../../../db/sessions/define.svelte';
-import type { VinesDocument } from '../../../db/vines/define';
 
 interface VineTimeCount {
 	vine: VinesDocument,

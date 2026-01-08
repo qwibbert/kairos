@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import '$components/style.css';
-	import VinesIcon from '$components/ui/vines-icon.svelte';
-	import '$features/tour/index';
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
+	import '$lib/style.css';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
@@ -12,6 +11,7 @@
 	import { mode } from 'mode-watcher';
 	import { setContext } from 'svelte';
 	import { Modals, modals } from 'svelte-modals';
+	import '../tour/index';
 
 	import Alert from '$lib/components/alert.svelte';
 	import type { AppState } from '$lib/context';
