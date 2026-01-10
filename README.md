@@ -14,6 +14,9 @@ Kairos is an application that helps you to stay focussed using the Pomodoro tech
 
 We welcome contributions! Please feel free to submit issues or pull requests.
 
+### Add additional courses
+The [course providers](https://github.com/qwibbert/kairos/tree/master/backend/course_providers) module contains the code responsible for scraping university courses and adding them to the database. Take a look at the readme file for instructions on how to add your support for more universities.
+
 ## License
 
 This project is licensed under the MIT License.
