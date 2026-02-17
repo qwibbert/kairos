@@ -24,12 +24,12 @@
 	import { tick } from '$lib/timer';
 	import { push_toast } from '$lib/toasts';
 
+	import { Target } from 'lucide-svelte';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import { db } from '../db/db';
 	import { sessions_sync_state } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
-	import VinesIcon from '../lib/components/ui/vines-icon.svelte';
 
 	// === STATE VARIABLES ===
 	const app_state = get_app_state();
@@ -227,7 +227,7 @@
 				onclick={() => modals.open(VineModal)}
 				id="tour-4"
 			>
-				<VinesIcon styles={['size-[1.2em]']} />
+				<Target class="size-[1.2em]"/>
 				<span class="hidden md:block">{i18next.t('vines:vines')}</span>
 			</button>
 			<button
