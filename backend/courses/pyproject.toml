@@ -1,0 +1,14 @@
+[project]
+name = "courses"
+version = "0.1.0"
+description = "Course manager for the Kairos pomodoro timer."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.3.1",
+    "polars>=1.37.1",
+    "python-dateutil>=2.9.0.post0",
+    "requests>=2.32.5",
+    "rich>=14.3.1",
+    "scrapy>=2.14.1",
+]
