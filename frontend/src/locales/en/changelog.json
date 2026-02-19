@@ -1,0 +1,9 @@
+{
+	"changelog": "Changelog",
+	"version": "Version",
+	"show_logbook": "Show logbook",
+	"latest": "Latest",
+	"updated": "Kairos was updated to a new version. You can read the release notes below.",
+	"disable_autoshow": "Click here to prevent this window from appearing on subsequent updates.",
+	"no_notes": "No information available on this version"
+}

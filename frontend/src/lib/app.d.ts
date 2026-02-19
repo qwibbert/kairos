@@ -10,6 +10,7 @@ declare global {
 	}
 
 	declare const __KAIROS_VERSION__: string;
+	declare const __KAIROS_VERSIONS__: object;
 }
 
 export {};

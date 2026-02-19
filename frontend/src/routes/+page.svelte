@@ -1,9 +1,10 @@
 <script lang="ts">
 	// === IMPORTS ===
 	import { dev } from '$app/environment';
-	import KairosLogo from '$lib/components/ui/kairos-logo.svelte';
 	import { shortcut } from '@svelte-put/shortcut';
 	import i18next from 'i18next';
+	import { Target } from 'lucide-svelte';
+	import BookText from 'lucide-svelte/icons/book-text';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Pause from 'lucide-svelte/icons/pause';
 	import Play from 'lucide-svelte/icons/play';
@@ -14,22 +15,22 @@
 	import VineModal from 'src/vines/components/vine-modal.svelte';
 	import { onMount } from 'svelte';
 	import { modals } from 'svelte-modals';
-	import SettingsModal from '../settings/components/settings-modal.svelte';
-	import Statsmodal from '../stats/components/stats-modal.svelte';
 
 	import AccountButton from '$lib/components/account-button.svelte';
+	import ChangelogModal from '$lib/components/changelog-modal.svelte';
 	import TimerTravel from '$lib/components/timer-travel.svelte';
+	import KairosLogo from '$lib/components/ui/kairos-logo.svelte';
 	import { get_app_state } from '$lib/context';
 	import { play_button_sound } from '$lib/sounds';
 	import { tick } from '$lib/timer';
 	import { push_toast } from '$lib/toasts';
 
-	import { Target } from 'lucide-svelte';
-	import BookText from 'lucide-svelte/icons/book-text';
 	import { db } from '../db/db';
 	import { sessions_sync_state } from '../db/sessions/client';
 	import type { SessionDocument } from '../db/sessions/define.svelte';
 	import { PomoType, SessionStatus } from '../db/sessions/define.svelte';
+	import SettingsModal from '../settings/components/settings-modal.svelte';
+	import Statsmodal from '../stats/components/stats-modal.svelte';
 
 	// === STATE VARIABLES ===
 	const app_state = get_app_state();
@@ -65,7 +66,9 @@
 				await start_timer();
 			}
 
-			const vine = resumeable_session.vine_id ? await db.vines.get_vine(resumeable_session.vine_id) : null;
+			const vine = resumeable_session.vine_id
+				? await db.vines.get_vine(resumeable_session.vine_id)
+				: null;
 
 			if (vine) {
 				app_state.active_vine = vine;
@@ -218,7 +221,6 @@
 		<KairosLogo /><span class="text-[2em] md:text-3xl xl:text-4xl text-primary font-bold"
 			>Kairos</span
 		>
-		<span class="badge hidden md:block">{__KAIROS_VERSION__}</span>
 	</div>
 	{#if app_state.session?.status != SessionStatus.Active}
 		<div class="join hidden md:block">
@@ -227,7 +229,7 @@
 				onclick={() => modals.open(VineModal)}
 				id="tour-4"
 			>
-				<Target class="size-[1.2em]"/>
+				<Target class="size-[1.2em]" />
 				<span class="hidden md:block">{i18next.t('vines:vines')}</span>
 			</button>
 			<button
@@ -252,7 +254,7 @@
 		</div>
 	{/if}
 </header>
-<main id="tour-1" class="flex flex-col justify-around items-center h-[70dvh]">
+<main id="tour-1" class="flex flex-col justify-around items-center h-[70dvh] md:h-[80dvh]">
 	<section class="flex flex-col gap-5 items-center">
 		<div class="flex flex-row justify-center gap-2">
 			{@render type_control(PomoType.Pomo)}
@@ -260,8 +262,14 @@
 			{@render type_control(PomoType.LongBreak)}
 		</div>
 		{#if app_state.session?.vine_title}
-			<button class="btn btn-primary btn-sm tooltip tooltip-right" data-tip={i18next.t("vines:vine_statistics")} onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}>
-				{#if app_state.active_vine?.course_title} <BookText class="size-[1.2em]" />{:else}<SquareCheck class="size-[1.2em]" /> {/if}{app_state.active_vine?.title}
+			<button
+				class="btn btn-primary btn-sm tooltip tooltip-right"
+				data-tip={i18next.t('vines:vine_statistics')}
+				onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}
+			>
+				{#if app_state.active_vine?.course_title}
+					<BookText class="size-[1.2em]" />{:else}<SquareCheck class="size-[1.2em]" />
+				{/if}{app_state.active_vine?.title}
 			</button>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>
@@ -275,7 +283,9 @@
 				>{seconds}</span
 			>
 		</span>
-		<span class="tooltip badge badge-neutral" data-tip={i18next.t("session:cycle_count")}><b>#</b>{app_state?.session?.cycle ?? 1}</span>
+		<span class="tooltip badge badge-neutral" data-tip={i18next.t('session:cycle_count')}
+			><b>#</b>{app_state?.session?.cycle ?? 1}</span
+		>
 	</section>
 
 	<section class="flex flex-row gap-2 justify-center">

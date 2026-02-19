@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 12,
+	version: 13,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -39,7 +39,7 @@ export const settings_schema_literal = {
 			default: 15 * 60,
 		},
 		auto_start: {
-			type: 'boolean'
+			type: 'boolean',
 		},
 		ui_sounds: {
 			type: 'boolean',
@@ -67,33 +67,40 @@ export const settings_schema_literal = {
 			default: 'light',
 		},
 		adapt_system: {
-			type: 'boolean'
+			type: 'boolean',
 		},
 		last_dark_theme: {
 			type: 'string',
 			maxLength: 100,
-			default: 'dark'
+			default: 'dark',
 		},
 		special_periods: {
-			type: 'boolean'
+			type: 'boolean',
 		},
 		special_periods_tip_shown: {
-			type: 'boolean'
+			type: 'boolean',
 		},
 		vines_sort_by: {
 			type: 'string',
-			maxLength: 100
+			maxLength: 100,
 		},
 		vines_sort_dir: {
 			type: 'string',
-			maxLength: 100
+			maxLength: 100,
 		},
 		tour_completed: {
-			type: 'boolean'
+			type: 'boolean',
 		},
 		status: {
 			type: 'string',
 			maxLength: 100,
+		},
+		changelog_autoshow: {
+			type: 'boolean',
+		},
+		changelog_latest_shown: {
+			type: 'string',
+			maxLength: 20,
 		},
 		created_at: {
 			type: 'string',
@@ -107,7 +114,13 @@ export const settings_schema_literal = {
 	required: ['created_at'],
 } as const;
 
-export type VinesSortBy = "LAST_USED_ASC" | "LAST_USED_DESC" | "CREATION_ASC" | "CREATION_DESC" | "NAME_ASC" | "NAME_DESC";
+export type VinesSortBy =
+	| 'LAST_USED_ASC'
+	| 'LAST_USED_DESC'
+	| 'CREATION_ASC'
+	| 'CREATION_DESC'
+	| 'NAME_ASC'
+	| 'NAME_DESC';
 
 const schema_typed = toTypedRxJsonSchema(settings_schema_literal);
 

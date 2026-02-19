@@ -1,16 +1,16 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
+import path from 'node:path';
 import { defineConfig } from 'vite';
-import topLevelAwait from "vite-plugin-top-level-await";
-
-import path from 'path';
+import topLevelAwait from 'vite-plugin-top-level-await';
 
 import pkg from '../package.json' with { type: 'json' };
+import versions from './versions.json' with { type: 'json' };
 
 export default defineConfig({
 	plugins: [topLevelAwait(), sveltekit(), tailwindcss()],
 	build: {
-		sourcemap: true
+		sourcemap: true,
 	},
 	server: {
 		proxy: {
@@ -22,21 +22,22 @@ export default defineConfig({
 	},
 	define: {
 		__KAIROS_VERSION__: `"${pkg.version}"`,
+		__KAIROS_VERSIONS__: versions,
 	},
 	resolve: process.env.VITEST
 		? {
-			conditions: ['browser'],
+				conditions: ['browser'],
 
-			alias: {
-				$lib: 'src/lib',
-				$db: 'src/db',
-				$components: 'src/components',
-				src: path.resolve('./src')
+				alias: {
+					$lib: 'src/lib',
+					$db: 'src/db',
+					$components: 'src/components',
+					src: path.resolve('./src'),
+				},
 			}
-		}
 		: {
-			alias: {
-				src: path.resolve('./src')
-			}
-		}
+				alias: {
+					src: path.resolve('./src'),
+				},
+			},
 });

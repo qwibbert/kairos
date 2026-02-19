@@ -1,0 +1,9 @@
+{
+	"changelog": "Wijzigingenlogboek",
+	"version": "Versie",
+	"show_logbook": "Toon logboek",
+	"latest": "Laatste",
+	"updated": "Kairos werd geüpdated naar een nieuwe versie. De versienotities kan je hieronder lezen.",
+	"disable_autoshow": "Klik hier om dit venster niet meer automatisch te tonen voor volgende updates.",
+	"no_notes": "Geen informatie beschikbaar voor deze versie."
+}

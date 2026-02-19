@@ -5,8 +5,10 @@
 	import Volume1 from 'lucide-svelte/icons/volume-1';
 	import Volume2 from 'lucide-svelte/icons/volume-2';
 	import VolumeX from 'lucide-svelte/icons/volume-x';
+	import { modals } from 'svelte-modals';
 
 	import AccountButton from '$lib/components/account-button.svelte';
+	import ChangelogModal from '$lib/components/changelog-modal.svelte';
 	import { get_app_state } from '$lib/context';
 	import { TimerFinishSound, play_button_sound, play_timer_finish_sound } from '$lib/sounds';
 	import { push_toast } from '$lib/toasts';
@@ -330,7 +332,7 @@
 							await app_state.settings!.modify_setting(
 								'last_dark_theme',
 								(e.target as HTMLSelectElement).value as Theme,
-							)
+							);
 						}
 
 						await app_state.settings!.modify_setting(
@@ -339,7 +341,7 @@
 						);
 					}}
 				>
-					<optgroup class="font-bold" label={i18next.t("settings:light_themes")}>
+					<optgroup class="font-bold" label={i18next.t('settings:light_themes')}>
 						{#each Object.values(LightThemes) as theme (theme)}
 							<option
 								label={app_state.settings.theme == theme ? theme : undefined}
@@ -351,7 +353,7 @@
 						{/each}
 					</optgroup>
 
-					<optgroup class="font-bold" label={i18next.t("settings:dark_themes")}>
+					<optgroup class="font-bold" label={i18next.t('settings:dark_themes')}>
 						{#each Object.values(DarkThemes) as theme (theme)}
 							<option
 								label={app_state.settings.theme == theme ? theme : undefined}
@@ -363,7 +365,7 @@
 						{/each}
 					</optgroup>
 				</select>
-				<label class="label tooltip" data-tip={i18next.t("settings:adapt_system_tooltip")}>
+				<label class="label tooltip" data-tip={i18next.t('settings:adapt_system_tooltip')}>
 					<input
 						type="checkbox"
 						checked={app_state.settings.adapt_system}
@@ -407,4 +409,15 @@
 			/>
 		{/if}
 	</fieldset>
+	<div class="w-full flex flex-row justify-center items-center gap-2 mt-5">
+		<button
+			class="link link-primary text-xs"
+			title={i18next.t('changelog:show_logbook')}
+			onclick={() => modals.open(ChangelogModal)}
+		>
+			{i18next.t('changelog:version')}
+			{__KAIROS_VERSION__}
+		</button>
+		<a class="link link-primary text-xs" href="https://github.com/qwibbert/kairos">Github</a>
+	</div>
 {/if}

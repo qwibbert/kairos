@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
-	import '$lib/style.css';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
@@ -11,16 +9,19 @@
 	import { mode } from 'mode-watcher';
 	import { setContext } from 'svelte';
 	import { Modals, modals } from 'svelte-modals';
-	import '../tour/index';
 
 	import Alert from '$lib/components/alert.svelte';
+	import ChangelogModal from '$lib/components/changelog-modal.svelte';
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
 	import type { AppState } from '$lib/context';
 	import { client } from '$lib/pocketbase';
 	import type { UsersRecord } from '$lib/pocketbase/types';
+	import '$lib/style.css';
 	import { special_period } from '$lib/utils';
 
 	import { db } from '../db/db';
 	import { type VinesDocument } from '../db/vines/define';
+	import '../tour/index';
 
 	let { children } = $props();
 
@@ -93,6 +94,14 @@
 				]),
 			});
 		}
+
+		if (
+			s?.changelog_autoshow &&
+			s?.changelog_latest_shown != undefined &&
+			s?.changelog_latest_shown != __KAIROS_VERSION__
+		) {
+			modals.open(ChangelogModal, { autoshow: true });
+		}
 	});
 
 	db.vines.find().$.subscribe(async (e: VinesDocument[]) => {
@@ -143,16 +152,10 @@
 </Modals>
 <SvelteToast />
 
-<div class="h-[80dvh] m-[5dvh] overflow-auto">
+<div class="h-[80dvh] md:h-[90dvh] my-[5dvh] overflow-auto">
 	{@render children()}
 </div>
 
-<footer class="h-[10dvh] hidden md:flex flex-row w-full items-center justify-center gap-4">
-	<a href="mailto:libert1quinten@gmail.com" target="_blank" class="link link-hover text-sm"
-		>meld problemen</a
-	>
-	<a href="https://github.com/qwibbert/kairos" class="link link-hover text-sm">github</a>
-</footer>
 <footer class="dock md:hidden h-[10dvh]">
 	<button
 		id="home-button"
