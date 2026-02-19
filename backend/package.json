@@ -4,10 +4,11 @@
   "license": "MIT",
   "scripts": {
     "build": "tsup './src/entries/**' -d ./pb_hooks",
-    "dev": "chokidar './src/entries/**' -c 'bun run build' --initial"
+    "dev": "chokidar './src/entries/**' -c 'deno run build' --initial"
   },
   "dependencies": {
     "@swc/core": "^1.13.3",
+    "chokidar": "^5.0.0",
     "chokidar-cli": "^3.0.0",
     "rxdb": "^16.17.2",
     "tsup": "^8.5.0",

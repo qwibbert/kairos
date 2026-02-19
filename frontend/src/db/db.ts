@@ -1,12 +1,16 @@
+import fakeIndexedDB from 'fake-indexeddb';
+import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
 import { type RxDatabase, addRxPlugin, createRxDatabase } from 'rxdb';
+import { RxDBCleanupPlugin } from 'rxdb/plugins/cleanup';
 import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
 import { RxDBJsonDumpPlugin } from 'rxdb/plugins/json-dump';
+import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBStatePlugin } from 'rxdb/plugins/state';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
+import { setup_sessions_sync } from './sessions/client';
 import {
 	type SessionCollection,
 	session_collection_methods,
@@ -37,11 +41,6 @@ export type KairosCollections = {
 
 export type KairosDB = RxDatabase<KairosCollections>;
 
-import fakeIndexedDB from 'fake-indexeddb';
-import fakeIDBKeyRange from 'fake-indexeddb/lib/FDBKeyRange';
-import { RxDBCleanupPlugin } from 'rxdb/plugins/cleanup';
-import { setup_sessions_sync } from './sessions/client';
-
 addRxPlugin(RxDBJsonDumpPlugin);
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBStatePlugin);
@@ -56,10 +55,13 @@ export async function init_db(): Promise<KairosDB> {
 	const db: KairosDB = await createRxDatabase({
 		name: 'kairosdb',
 		storage: wrappedValidateAjvStorage({
-			storage: import.meta.env.MODE == 'test' ? getRxStorageDexie({
-				indexedDB: fakeIndexedDB,
-				IDBKeyRange: fakeIDBKeyRange
-			}) : getRxStorageDexie()
+			storage:
+				import.meta.env.MODE == 'test'
+					? getRxStorageDexie({
+							indexedDB: fakeIndexedDB,
+							IDBKeyRange: fakeIDBKeyRange,
+						})
+					: getRxStorageDexie(),
 		}),
 		eventReduce: true,
 		closeDuplicates: true,
@@ -75,18 +77,18 @@ export async function init_db(): Promise<KairosDB> {
 			migrationStrategies: {
 				1: function (old_doc) {
 					old_doc.tour_completed = false;
-					return old_doc
+					return old_doc;
 				},
 				2: function (old_doc) {
-					old_doc.vines_sort_by = "LAST_USED";
+					old_doc.vines_sort_by = 'LAST_USED';
 					return old_doc;
 				},
 				3: function (old_doc) {
-					old_doc.vines_sort_dir = "DESC";
+					old_doc.vines_sort_dir = 'DESC';
 					return old_doc;
 				},
 				4: function (old_doc) {
-					old_doc.theme = old_doc.theme_inactive ?? "coffee";
+					old_doc.theme = old_doc.theme_inactive ?? 'coffee';
 					delete old_doc.theme_inactive;
 					delete old_doc.theme_active;
 					return old_doc;
@@ -104,13 +106,13 @@ export async function init_db(): Promise<KairosDB> {
 					return old_doc;
 				},
 				8: function (old_doc) {
-					old_doc.timer_finish_sound = "clock";
+					old_doc.timer_finish_sound = 'clock';
 					return old_doc;
 				},
 				9: function (old_doc) {
 					delete old_doc.timer_tick_sound;
 					delete old_doc.timer_tick_sound_volume;
-					old_doc.timer_active_sound = "retro";
+					old_doc.timer_active_sound = 'retro';
 					old_doc.timer_active_sound_volume = 100;
 					return old_doc;
 				},
@@ -122,18 +124,23 @@ export async function init_db(): Promise<KairosDB> {
 				},
 				11: function (old_doc) {
 					old_doc.adapt_system = true;
-					old_doc.last_dark_theme = "dark";
+					old_doc.last_dark_theme = 'dark';
 					return old_doc;
 				},
 				12: function (old_doc) {
-					if (old_doc.vines_sort_by == "LAST_USED") {
-						old_doc.vines_sort_by = "LAST_USED_DESC"
+					if (old_doc.vines_sort_by == 'LAST_USED') {
+						old_doc.vines_sort_by = 'LAST_USED_DESC';
 					}
 					return old_doc;
-				}
+				},
+				13: function (old_doc) {
+					old_doc.changelog_autoshow = true;
+					old_doc.changelog_latest_shown = __KAIROS_VERSION__;
+					return old_doc;
+				},
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
 		},
 		sessions: {
 			schema: session_schema,
@@ -145,10 +152,10 @@ export async function init_db(): Promise<KairosDB> {
 				1: function (old_doc) {
 					old_doc.locked_by = '';
 					return old_doc;
-				}
+				},
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
 		},
 		vines: {
 			schema: vines_schema,
@@ -164,10 +171,10 @@ export async function init_db(): Promise<KairosDB> {
 				2: function (old_doc) {
 					delete old_doc.status;
 					return old_doc;
-				}
+				},
 			},
 			autoMigrate: true, // (optional) [default=true]
-			cacheReplacementPolicy: function () { }, // (optional) custom cache replacement policy
+			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
 		},
 	});
 
@@ -186,16 +193,18 @@ if ((await db.settings.count().exec()) == 0) {
 		long_break_time: 15 * 60,
 		auto_start: false,
 		ui_sounds: true,
-		timer_finish_sound: "bell",
+		timer_finish_sound: 'bell',
 		ui_sounds_volume: 100,
 		timer_finish_sound_volume: 100,
 		theme: 'coffee',
 		adapt_system: false,
-		last_dark_theme: "dark",
+		last_dark_theme: 'dark',
 		special_periods: true,
 		special_periods_tip_shown: false,
 		vines_sort_by: 'LAST_USED_DESC',
-		tour_completed: false
+		changelog_autoshow: true,
+		changelog_latest_shown: undefined,
+		tour_completed: false,
 	} as SettingsDocType);
 }
 
@@ -217,6 +226,3 @@ setTimeout(async () => {
 	await setup_vines_sync();
 	await setup_sessions_sync();
 }, 10);
-
-
-
