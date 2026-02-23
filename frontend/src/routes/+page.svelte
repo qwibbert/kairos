@@ -8,10 +8,11 @@
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Pause from 'lucide-svelte/icons/pause';
 	import Play from 'lucide-svelte/icons/play';
-	import Settings from 'lucide-svelte/icons/settings';
+	import { default as SettingsIcon } from 'lucide-svelte/icons/settings';
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
+	import { Settings } from 'src/settings/settings.svelte';
 	import VineModal from 'src/vines/components/vine-modal.svelte';
 	import { onMount } from 'svelte';
 	import { modals } from 'svelte-modals';
@@ -77,7 +78,7 @@
 		} else {
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
-				time_target: await db.settings.get_setting('pomo_time'),
+				time_target: await Settings.readSetting('pomo_time'),
 				cycle: 1,
 			});
 		}
@@ -193,7 +194,7 @@
 			} else {
 				app_state.session = await db.sessions.new({
 					pomo_type: type,
-					time_target: await db.settings.get_setting(
+					time_target: await Settings.readSetting(
 						type == PomoType.Pomo
 							? 'pomo_time'
 							: type == PomoType.ShortBreak
@@ -245,7 +246,7 @@
 				class="btn btn-soft join-item w-20 md:w-36"
 				onclick={() => modals.open(SettingsModal)}
 			>
-				<Settings class="size-[1.2em]" />
+				<SettingsIcon class="size-[1.2em]" />
 				<span class="hidden md:block">{i18next.t('settings:settings')}</span>
 			</button>
 		</div>

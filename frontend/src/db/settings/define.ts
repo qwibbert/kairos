@@ -128,48 +128,6 @@ export type SettingsDocType = ExtractDocumentTypeFromTypedRxJsonSchema<typeof sc
 
 export const settings_schema: RxJsonSchema<SettingsDocType> = settings_schema_literal;
 
-export type SettingsDocMethods = {
-	modify_setting: <K extends keyof SettingsDocType>(
-		key: K,
-		value: SettingsDocType[K],
-	) => Promise<void>;
-};
+export type SettingsDocument = RxDocument<SettingsDocType>;
 
-export type SettingsDocument = RxDocument<SettingsDocType, SettingsDocMethods>;
-
-export type SettingsCollectionMethods = {
-	get_settings: () => Promise<SettingsDocument | null>;
-	get_setting: <K extends keyof SettingsDocType>(key: K) => Promise<SettingsDocType[K]>;
-};
-
-export type SettingsCollection = RxCollection<
-	SettingsDocType,
-	SettingsDocMethods,
-	SettingsCollectionMethods
->;
-
-export const settings_doc_methods = {
-	modify_setting: async function <K extends keyof SettingsDocType>(
-		this: SettingsDocument,
-		key: K,
-		value: SettingsDocType[K],
-	): Promise<void> {
-		await this.incrementalUpdate({
-			$set: {
-				[key]: value,
-				updated_at: new Date().toISOString().replace('T', ' '),
-			},
-		});
-	},
-};
-
-export const settings_collection_methods: SettingsCollectionMethods = {
-	get_settings: async function (this: SettingsCollection) {
-		return await this.findOne().exec();
-	},
-	get_setting: async function <K extends keyof SettingsDocType>(this: SettingsCollection, key: K) {
-		return await this.findOne()
-			.exec()
-			.then((settings) => settings?.get(key));
-	},
-};
+export type SettingsCollection = RxCollection<SettingsDocType>;

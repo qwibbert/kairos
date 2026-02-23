@@ -1,15 +1,16 @@
 <script lang="ts">
-	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
+	import type { VinesSortBy } from '$db/settings/define';
+	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import i18next from 'i18next';
 	import Check from 'lucide-svelte/icons/check';
 	import FolderDown from 'lucide-svelte/icons/folder-down';
 	import FolderSymlink from 'lucide-svelte/icons/folder-symlink';
 	import Home from 'lucide-svelte/icons/home';
+	import { Settings } from 'src/settings/settings.svelte';
 
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
 	import { get_app_state } from '$lib/context';
 
-	import type { VinesSortBy } from '$db/settings/define';
-	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 
 	interface Props {
@@ -78,10 +79,7 @@
 
 		{#snippet vine_list_item(vine: VineTreeItem)}
 			<div
-				class={[
-					'flex flex-row items-center gap-2',
-					'lg:tooltip lg:tooltip-right',
-				]}
+				class={['flex flex-row items-center gap-2', 'lg:tooltip lg:tooltip-right']}
 				data-tip={vine.id == vine_moving?.id
 					? i18next.t('vines:err_vine_in_vine')
 					: vine_moving?.type == VineType.Course && vine.type == VineType.Course
@@ -143,10 +141,7 @@
 					class="select"
 					bind:value={vines_sort_by}
 					onchange={async (e) =>
-						await app_state.settings?.modify_setting(
-							'vines_sort_by',
-							(e.target as HTMLSelectElement).value,
-						)}
+						await Settings.writeSetting('vines_sort_by', (e.target as HTMLSelectElement).value)}
 				>
 					<option value="LAST_USED_DESC">{i18next.t('vines:last_used')}</option>
 					<option value="LAST_USED_ASC">{i18next.t('vines:first_used')}</option>

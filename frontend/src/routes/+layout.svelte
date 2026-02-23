@@ -5,7 +5,7 @@
 	import i18next from 'i18next';
 	import ChartLine from 'lucide-svelte/icons/chart-line';
 	import Home from 'lucide-svelte/icons/home';
-	import Settings from 'lucide-svelte/icons/settings';
+	import { default as SettingsIcon } from 'lucide-svelte/icons/settings';
 	import { mode } from 'mode-watcher';
 	import { setContext } from 'svelte';
 	import { Modals, modals } from 'svelte-modals';
@@ -17,10 +17,10 @@
 	import { client } from '$lib/pocketbase';
 	import type { UsersRecord } from '$lib/pocketbase/types';
 	import '$lib/style.css';
-	import { special_period } from '$lib/utils';
 
 	import { db } from '../db/db';
 	import { type VinesDocument } from '../db/vines/define';
+	import { Settings } from '../settings/settings.svelte';
 	import '../tour/index';
 
 	let { children } = $props();
@@ -34,7 +34,7 @@
 		user: null,
 		active_vine: null,
 		selected_vine: null,
-		special_period: special_period(),
+		special_period: Settings.is_festive_period(),
 	});
 
 	setContext('app_state', app_state);
@@ -47,61 +47,8 @@
 		app_state.user = model as unknown as UsersRecord;
 	}, true);
 
-	let holiday_alert_showing = $state(false);
-
 	db.settings.findOne('1').$.subscribe((s) => {
 		app_state.settings = s;
-
-		if (
-			!holiday_alert_showing &&
-			app_state.settings &&
-			app_state.special_period &&
-			app_state.settings?.special_periods &&
-			app_state.settings.tour_completed &&
-			!app_state.settings.special_periods_tip_shown
-		) {
-			holiday_alert_showing = true;
-			modals.open(Alert, {
-				type: 'INFO',
-				header:
-					app_state.special_period == 'HALLOWEEN'
-						? i18next.t('settings:halloween_header')
-						: i18next.t('settings:christmas_header'),
-				text: i18next.t('settings:theme_auto_adjust_msg', {
-					theme:
-						app_state.special_period == 'HALLOWEEN'
-							? i18next.t('settings:halloween')
-							: i18next.t('settings:christmas'),
-				}),
-				dismissable: false,
-				actions: new Map([
-					[
-						i18next.t('common:dismiss'),
-						async () => {
-							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
-							holiday_alert_showing = false;
-						},
-					],
-					[
-						i18next.t('common:revert'),
-						async () => {
-							document.documentElement.setAttribute('data-theme', app_state.settings?.theme);
-							await app_state.settings?.modify_setting('special_periods_tip_shown', true);
-							await app_state.settings?.modify_setting('special_periods', false);
-							holiday_alert_showing = false;
-						},
-					],
-				]),
-			});
-		}
-
-		if (
-			s?.changelog_autoshow &&
-			s?.changelog_latest_shown != undefined &&
-			s?.changelog_latest_shown != __KAIROS_VERSION__
-		) {
-			modals.open(ChangelogModal, { autoshow: true });
-		}
 	});
 
 	db.vines.find().$.subscribe(async (e: VinesDocument[]) => {
@@ -200,7 +147,7 @@
 			goto('settings');
 		}}
 	>
-		<Settings class="size-[1.2em]" />
+		<SettingsIcon class="size-[1.2em]" />
 		<span class="dock-label">{i18next.t('settings:settings')}</span>
 	</button>
 </footer>

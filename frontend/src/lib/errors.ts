@@ -2,7 +2,7 @@ export class ErrorBase<T extends string> extends Error {
 	name: T;
 	message: string;
 	context?: {
-		operation: string;
+		operation?: string;
 		entity_id?: string;
 		timestamp: Date;
 		additional_data?: Record<string, unknown>;
@@ -16,7 +16,7 @@ export class ErrorBase<T extends string> extends Error {
 		name: T;
 		message: string;
 		context?: {
-			operation: string;
+			operation?: string;
 			entity_id?: string;
 			timestamp: Date;
 			additional_data?: Record<string, unknown>;
@@ -28,3 +28,5 @@ export class ErrorBase<T extends string> extends Error {
 		this.context = context;
 	}
 }
+
+export type TErrorMessage = string;

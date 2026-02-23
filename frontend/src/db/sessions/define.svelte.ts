@@ -7,6 +7,7 @@ import {
 	type RxJsonSchema,
 	toTypedRxJsonSchema,
 } from 'rxdb';
+import { Settings } from 'src/settings/settings.svelte';
 
 import { db, kairos_state } from '../db';
 import type { VinesDocument } from '../vines/define';
@@ -96,8 +97,8 @@ export const session_schema_literal = {
 			type: 'string',
 		},
 		locked_by: {
-			type: 'string'
-		}
+			type: 'string',
+		},
 	},
 	required: ['id', 'time_target', 'status', 'created_at', 'pomo_type', 'cycle'],
 	indexes: ['status', 'pomo_type', 'created_at'],
@@ -170,9 +171,11 @@ export interface Pauses {
 	duration: number;
 }
 
-
 export const session_doc_methods: SessionDocMethods = {
-	start: async function (this: SessionDocument, increment_cycle: boolean): Promise<SessionDocument> {
+	start: async function (
+		this: SessionDocument,
+		increment_cycle: boolean,
+	): Promise<SessionDocument> {
 		if (
 			this.status == SessionStatus.Ready ||
 			this.status == SessionStatus.Active ||
@@ -203,7 +206,7 @@ export const session_doc_methods: SessionDocMethods = {
 
 				return await this.incrementalModify((s) => {
 					s.status = SessionStatus.Active;
-					
+
 					s.pauses = [
 						...(s.pauses ?? []),
 						{
@@ -225,11 +228,7 @@ export const session_doc_methods: SessionDocMethods = {
 				$set: {
 					status: SessionStatus.Active,
 					updated_at: new Date().toISOString().replace('T', ' '),
-					time_end:
-						Date.now() +
-						(this.time_target -
-							this.get_time_elapsed()) *
-							1000,
+					time_end: Date.now() + (this.time_target - this.get_time_elapsed()) * 1000,
 				},
 			});
 		} else {
@@ -269,7 +268,11 @@ export const session_doc_methods: SessionDocMethods = {
 			},
 		});
 	},
-	skip: async function (this: SessionDocument, override_type?: PomoType, vine?: VinesDocument): Promise<SessionDocument | null> {
+	skip: async function (
+		this: SessionDocument,
+		override_type?: PomoType,
+		vine?: VinesDocument,
+	): Promise<SessionDocument | null> {
 		if (this.status == SessionStatus.Ready) {
 			throw SessionErrorFactory.invalid_state(
 				'cannot skip an already finished session',
@@ -310,7 +313,11 @@ export const session_doc_methods: SessionDocMethods = {
 
 		return await this.next(override_type, vine);
 	},
-	next: async function (this: SessionDocument, override_type?: PomoType, vine?: VinesDocument): Promise<SessionDocument | null> {
+	next: async function (
+		this: SessionDocument,
+		override_type?: PomoType,
+		vine?: VinesDocument,
+	): Promise<SessionDocument | null> {
 		// Determine what the next session type should be
 		const next_type = override_type ?? get_next_session_type(this.pomo_type, this.cycle);
 
@@ -386,7 +393,7 @@ export const session_collection_methods: SessionCollectionMethods = {
 			vine_title: opts.vine?.title,
 			vine_type: opts.vine?.type,
 			vine_course: opts.vine?.course_id,
-			locked_by: kairos_state.get('client_id')
+			locked_by: kairos_state.get('client_id'),
 		};
 
 		// TODO: normalize RxDB errors
@@ -413,12 +420,12 @@ export const session_collection_methods: SessionCollectionMethods = {
 						],
 					},
 					{ updated_at: { $gt: DateTime.now().minus({ hours: 8 }).toISO().replace('T', ' ') } },
-					{ locked_by: {$eq: kairos_state.get("client_id")  } }
+					{ locked_by: { $eq: kairos_state.get('client_id') } },
 				],
 			},
 			sort: [{ created_at: 'desc' }],
 		}).exec();
-	}
+	},
 };
 
 function get_next_session_type(current_type: PomoType, cycle: number): PomoType {
@@ -438,17 +445,17 @@ async function get_session_config(
 	switch (type) {
 		case PomoType.Pomo:
 			return {
-				time: (await db.settings.get_setting('pomo_time')) ?? 25 * 60,
+				time: (await Settings.readSetting('pomo_time')) ?? 25 * 60,
 				cycle: current_cycle + 1,
 			}; // TODO: read from settings
 		case PomoType.ShortBreak:
 			return {
-				time: (await db.settings.get_setting('short_break_time')) ?? 5 * 60,
+				time: (await Settings.readSetting('short_break_time')) ?? 5 * 60,
 				cycle: current_cycle,
 			}; // TODO: read from settings
 		case PomoType.LongBreak:
 			return {
-				time: (await db.settings.get_setting('long_break_time')) ?? 15 * 60,
+				time: (await Settings.readSetting('long_break_time')) ?? 15 * 60,
 				cycle: current_cycle,
 			}; // TODO: read from settings
 		default:

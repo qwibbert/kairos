@@ -18,13 +18,7 @@ import {
 	session_schema,
 } from './sessions/define.svelte';
 import { setup_settings_sync } from './settings/client';
-import {
-	type SettingsCollection,
-	type SettingsDocType,
-	settings_collection_methods,
-	settings_doc_methods,
-	settings_schema,
-} from './settings/define';
+import { type SettingsCollection, type SettingsDocType, settings_schema } from './settings/define';
 import { setup_vines_sync } from './vines/client';
 import {
 	type VinesCollection,
@@ -70,8 +64,6 @@ export async function init_db(): Promise<KairosDB> {
 	await db.addCollections({
 		settings: {
 			schema: settings_schema,
-			statics: settings_collection_methods, // (optional) ORM-functions for this collection
-			methods: settings_doc_methods, // (optional) ORM-functions for documents
 			attachments: {}, // (optional) ORM-functions for attachments
 			options: {}, // (optional) Custom parameters that might be used in plugins
 			migrationStrategies: {

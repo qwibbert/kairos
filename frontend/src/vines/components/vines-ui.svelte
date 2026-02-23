@@ -1,5 +1,8 @@
 <script lang="ts">
-	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
+	import { db } from '$db/db';
+	import { PomoType, SessionStatus } from '$db/sessions/define.svelte';
+	import type { VinesSortBy } from '$db/settings/define';
+	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import Check from 'lucide-svelte/icons/check';
@@ -11,16 +14,14 @@
 	import Plus from 'lucide-svelte/icons/plus';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
 	import Trash from 'lucide-svelte/icons/trash';
+	import { Settings } from 'src/settings/settings.svelte';
 	import { modals } from 'svelte-modals';
 
 	import Alert from '$lib/components/alert.svelte';
+	import VinesIcon from '$lib/components/ui/vines-icon.svelte';
 	import { get_app_state } from '$lib/context';
 	import { push_toast } from '$lib/toasts';
 
-	import { db } from '$db/db';
-	import { PomoType, SessionStatus } from '$db/sessions/define.svelte';
-	import type { VinesSortBy } from '$db/settings/define';
-	import { type VineTreeItem, VineType, type VinesDocument } from '$db/vines/define';
 	import { build_vine_subtree, get_parent_nodes_from_flat_list } from '../db';
 	import ImportCourseModal from './import-course-modal.svelte';
 	import VineSelectModal from './vine-select-modal.svelte';
@@ -301,10 +302,7 @@
 		class="select"
 		bind:value={vines_sort_by}
 		onchange={async (e) =>
-			await app_state.settings?.modify_setting(
-				'vines_sort_by',
-				(e.target as HTMLSelectElement).value,
-			)}
+			await Settings.writeSetting('vines_sort_by', (e.target as HTMLSelectElement).value)}
 	>
 		<option value="LAST_USED_DESC">{i18next.t('vines:last_used')}</option>
 		<option value="LAST_USED_ASC">{i18next.t('vines:first_used')}</option>

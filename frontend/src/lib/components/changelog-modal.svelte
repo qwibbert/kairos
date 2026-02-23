@@ -1,6 +1,7 @@
 <script lang="ts">
 	import i18next from 'i18next';
 	import ScrollText from 'lucide-svelte/icons/scroll-text';
+	import { Settings } from 'src/settings/settings.svelte';
 
 	import { get_app_state } from '$lib/context';
 
@@ -33,10 +34,10 @@
 <dialog
 	bind:this={dialog_el}
 	class="modal"
-	onclose={(e) => {
+	onclose={async (e) => {
 		e.preventDefault();
 		if (autoshow) {
-			app_state.settings?.modify_setting('changelog_latest_shown', __KAIROS_VERSION__);
+			await Settings.writeSetting('changelog_latest_shown', __KAIROS_VERSION__);
 		}
 		close();
 	}}
@@ -49,9 +50,9 @@
 			</h3>
 			<button
 				class="btn btn-sm btn-circle btn-ghost"
-				onclick={() => {
+				onclick={async () => {
 					if (autoshow) {
-						app_state.settings?.modify_setting('changelog_latest_shown', __KAIROS_VERSION__);
+						await Settings.writeSetting('changelog_latest_shown', __KAIROS_VERSION__);
 					}
 					close();
 				}}>✕</button
@@ -60,9 +61,9 @@
 		{#if autoshow}
 			{i18next.t('changelog:updated')}
 			<button
-				onclick={() => {
-					app_state.settings?.modify_setting('changelog_autoshow', false);
-					app_state.settings?.modify_setting('changelog_latest_shown', __KAIROS_VERSION__);
+				onclick={async () => {
+					await Settings.writeSetting('changelog_autoshow', false);
+					await Settings.writeSetting('changelog_latest_shown', __KAIROS_VERSION__);
 					close();
 				}}
 				class="link">{i18next.t('changelog:disable_autoshow')}</button

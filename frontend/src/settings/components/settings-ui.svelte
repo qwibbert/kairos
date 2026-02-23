@@ -16,6 +16,7 @@
 	import { db, init_db } from '../../db/db';
 	import { PomoType, SessionStatus } from '../../db/sessions/define.svelte';
 	import { DarkThemes, LightThemes, Theme } from '../db';
+	import { Settings } from '../settings.svelte';
 	import ThemeSample from './theme-sample.svelte';
 
 	const { mobile }: { mobile: boolean } = $props();
@@ -131,7 +132,7 @@
 					placeholder="25"
 					value={app_state.settings.pomo_time! / 60}
 					onchange={async (e) => {
-						await app_state.settings!.modify_setting(
+						await Settings.writeSetting(
 							'pomo_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						);
@@ -158,7 +159,7 @@
 					placeholder="5"
 					value={app_state.settings.short_break_time! / 60}
 					onchange={async (e) => {
-						await app_state.settings!.modify_setting(
+						await Settings.writeSetting(
 							'short_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						);
@@ -184,7 +185,7 @@
 					placeholder="15"
 					value={app_state.settings.long_break_time! / 60}
 					onchange={async (e) => {
-						await app_state.settings!.modify_setting(
+						await Settings.writeSetting(
 							'long_break_time',
 							parseInt((e.target as HTMLInputElement).value) * 60,
 						);
@@ -208,7 +209,7 @@
 				checked={app_state.settings.auto_start}
 				class="checkbox"
 				onchange={async (e) => {
-					await app_state.settings!.modify_setting('auto_start', e.currentTarget.checked);
+					await Settings.writeSetting('auto_start', e.currentTarget.checked);
 				}}
 			/>
 			{i18next.t('settings:auto_start')}
@@ -222,10 +223,7 @@
 				type="checkbox"
 				checked={app_state.settings.ui_sounds}
 				onchange={async (e) =>
-					await app_state.settings!.modify_setting(
-						'ui_sounds',
-						(e.target as HTMLInputElement).checked,
-					)}
+					await Settings.writeSetting('ui_sounds', (e.target as HTMLInputElement).checked)}
 				class="toggle"
 			/>
 
@@ -253,7 +251,7 @@
 					min="0"
 					max="100"
 					onchange={async (e) =>
-						await app_state.settings!.modify_setting(
+						await Settings.writeSetting(
 							'ui_sounds_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
@@ -267,7 +265,7 @@
 			<select
 				class="select w-1/4"
 				onchange={async (e) => {
-					app_state.settings?.modify_setting('timer_finish_sound', e.currentTarget.value);
+					await Settings.writeSetting('timer_finish_sound', e.currentTarget.value);
 				}}
 			>
 				{#each Object.values(TimerFinishSound) as sound}
@@ -298,7 +296,7 @@
 					max="100"
 					value={app_state.settings.timer_finish_sound_volume}
 					onchange={async (e) =>
-						await app_state.settings!.modify_setting(
+						await Settings.writeSetting(
 							'timer_finish_sound_volume',
 							parseInt((e.target as HTMLInputElement).value),
 						)}
@@ -329,16 +327,13 @@
 						}
 
 						if (Object.values(DarkThemes).includes((e.target as HTMLSelectElement).value)) {
-							await app_state.settings!.modify_setting(
+							await Settings.writeSetting(
 								'last_dark_theme',
 								(e.target as HTMLSelectElement).value as Theme,
 							);
 						}
 
-						await app_state.settings!.modify_setting(
-							'theme',
-							(e.target as HTMLSelectElement).value as Theme,
-						);
+						await Settings.writeSetting('theme', (e.target as HTMLSelectElement).value as Theme);
 					}}
 				>
 					<optgroup class="font-bold" label={i18next.t('settings:light_themes')}>
@@ -371,7 +366,7 @@
 						checked={app_state.settings.adapt_system}
 						class="checkbox"
 						onchange={async (e) => {
-							await app_state.settings!.modify_setting('adapt_system', e.currentTarget.checked);
+							await Settings.writeSetting('adapt_system', e.currentTarget.checked);
 						}}
 					/>
 					{i18next.t('settings:adapt_system')}
@@ -386,7 +381,7 @@
 						checked={app_state.settings.special_periods}
 						class="checkbox"
 						onchange={async (e) => {
-							await app_state.settings!.modify_setting('special_periods', e.currentTarget.checked);
+							await Settings.writeSetting('special_periods', e.currentTarget.checked);
 						}}
 					/>
 					{i18next.t('settings:adjust_theme')}
