@@ -7,7 +7,7 @@ import {
 } from 'rxdb';
 
 export const settings_schema_literal = {
-	version: 13,
+	version: 14,
 	title: 'settings',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -101,6 +101,9 @@ export const settings_schema_literal = {
 		changelog_latest_shown: {
 			type: 'string',
 			maxLength: 20,
+		},
+		session_goals: {
+			type: 'boolean',
 		},
 		created_at: {
 			type: 'string',

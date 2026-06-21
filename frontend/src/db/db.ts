@@ -125,6 +125,10 @@ export async function init_db(): Promise<KairosDB> {
 					old_doc.changelog_latest_shown = __KAIROS_VERSION__;
 					return old_doc;
 				},
+				14: function (old_doc) {
+					old_doc.session_goals = false;
+					return old_doc;
+				},
 			}, // (optional)
 			autoMigrate: true, // (optional) [default=true]
 			cacheReplacementPolicy: function () {}, // (optional) custom cache replacement policy
@@ -138,6 +142,10 @@ export async function init_db(): Promise<KairosDB> {
 			migrationStrategies: {
 				1: function (old_doc) {
 					old_doc.locked_by = '';
+					return old_doc;
+				},
+				2: function (old_doc) {
+					old_doc.goal = '';
 					return old_doc;
 				},
 			}, // (optional)

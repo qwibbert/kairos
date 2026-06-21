@@ -1,6 +1,6 @@
 {
-    "settings": "Instellingen",
-    "focus_times": "Focustijden",
+	"settings": "Instellingen",
+	"focus_times": "Focustijden",
 	"auto_start": "Automatisch overgaan naar volgende sessie",
 	"sound": "Geluid",
 	"ui_sounds": "UI geluiden",
@@ -14,6 +14,7 @@
 	"adapt_system_tooltip": "Gebruik het laatst geselecteerde donkere thema bij donker modus van systeem",
 	"theme_locked_hint": "Zet 'Pas thema aan' uit onder Feestdagen om deze instelling te wijzigen",
 	"adjust_theme": "Pas thema aan",
+	"session_goals": "Zet sessiedoelen aan",
 	"hollydays": "Feestdagen",
 	"halloween": "Halloween",
 	"christmas": "Kerstmis",

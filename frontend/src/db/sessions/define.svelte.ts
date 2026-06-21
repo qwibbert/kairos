@@ -16,7 +16,7 @@ import { sessions_sync_state } from './client';
 import { SessionError, SessionErrorFactory, SessionErrorType } from './errors';
 
 export const session_schema_literal = {
-	version: 1,
+	version: 2,
 	title: 'session',
 	keyCompression: false,
 	primaryKey: 'id',
@@ -95,6 +95,9 @@ export const session_schema_literal = {
 			type: 'string',
 		},
 		vine_course: {
+			type: 'string',
+		},
+		goal: {
 			type: 'string',
 		},
 		locked_by: {

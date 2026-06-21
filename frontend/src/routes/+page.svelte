@@ -39,16 +39,14 @@
 
 	// === STATE VARIABLES ===
 	const app_state = get_app_state();
-
 	let sessions: SessionDocument[] | null = $state(null);
-
 	const remaining_time = $derived(
 		app_state.session ? app_state.session.time_target - app_state.session.get_time_elapsed() : 0,
 	);
 	const minutes = $derived(Math.floor(remaining_time / 60));
 	const seconds = $derived(remaining_time % 60);
-
 	let start_button = $state<HTMLButtonElement>();
+	let block_keyboard_shortcuts = $state(false);
 
 	// === DATABASE QUERIES ===
 	const settings_query = db.settings.findOne('1');
@@ -194,7 +192,8 @@
 		trigger: {
 			key: ' ',
 			modifier: false,
-			callback: () => (modals.stack.length != 0 ? null : start_button?.click()),
+			callback: () =>
+				modals.stack.length != 0 || block_keyboard_shortcuts ? null : start_button?.click(),
 		},
 	}}
 />
@@ -319,6 +318,23 @@
 			><b>#</b>{app_state?.session?.cycle ?? 1}</span
 		>
 	</section>
+
+	{#if app_state.settings?.session_goals && app_state.session?.status != SessionStatus.Active}
+		<textarea
+			value={app_state.session?.goal}
+			onchange={async (e) => {
+				await app_state.session?.incrementalUpdate({ $set: { goal: e.target?.value ?? '' } });
+			}}
+			onfocus={() => {
+				block_keyboard_shortcuts = true;
+			}}
+			onfocusout={() => {
+				block_keyboard_shortcuts = false;
+			}}
+			class="textarea resize-none field-sizing-content min-h-1 max-h-[20%]"
+			placeholder={i18next.t('session:goal_placeholder')}
+		></textarea>
+	{/if}
 
 	<section class="flex flex-row gap-2 justify-center">
 		{#if app_state.session}

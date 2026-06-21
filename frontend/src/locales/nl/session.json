@@ -1,5 +1,5 @@
 {
-    "pomodoro": "Pomodoro",
+	"pomodoro": "Pomodoro",
 	"break": "Korte Pauze",
 	"long_break": "Lange Pauze",
 	"start": "Start",
@@ -9,5 +9,6 @@
 	"travel_5_seconds_until_end": "Spring naar 5 seconden voor eindtijd",
 	"cycle_count": "Aantal cycli",
 	"wakelock": "Wakelock",
-	"err_wakelock": "Verkrijgen van wakelock mislukt"
+	"err_wakelock": "Verkrijgen van wakelock mislukt",
+	"goal_placeholder": "Typ hier je doel voor deze sessie..."
 }

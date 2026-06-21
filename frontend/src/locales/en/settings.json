@@ -1,6 +1,6 @@
 {
-    "settings": "Settings",
-    "focus_times": "Focus times",
+	"settings": "Settings",
+	"focus_times": "Focus times",
 	"auto_start": "Start next session automatically",
 	"sound": "Sound",
 	"ui_sounds": "UI sounds",
@@ -11,6 +11,7 @@
 	"dark_themes": "Dark Themes",
 	"light_themes": "Light Themes",
 	"adapt_system": "Respect system dark mode",
+	"session_goals": "Enable session goals",
 	"adapt_system_tooltip": "Use last selected dark theme during system dark mode",
 	"theme_locked_hint": "Disable 'Adjust theme' under Hollydays to modify this settings",
 	"adjust_theme": "Adjust theme",

@@ -214,6 +214,17 @@
 			/>
 			{i18next.t('settings:auto_start')}
 		</label>
+		<label class="label mx-auto">
+			<input
+				type="checkbox"
+				checked={app_state.settings.session_goals}
+				class="checkbox"
+				onchange={async (e) => {
+					await Settings.writeSetting('session_goals', e.currentTarget.checked);
+				}}
+			/>
+			{i18next.t('settings:session_goals')}
+		</label>
 	</fieldset>
 	<fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
 		<legend class="fieldset-legend">{i18next.t('settings:sound')}</legend>

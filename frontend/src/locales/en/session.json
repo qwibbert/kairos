@@ -1,5 +1,5 @@
 {
-    "pomodoro": "Pomodoro",
+	"pomodoro": "Pomodoro",
 	"break": "Break",
 	"long_break": "Long Break",
 	"start": "Start",
@@ -9,5 +9,6 @@
 	"travel_5_seconds_until_end": "Jump to 5 seconds before endtime",
 	"cycle_count": "Cycle count",
 	"wakelock": "Wakelock",
-	"err_wakelock": "Failed to acquire wackelock"
+	"err_wakelock": "Failed to acquire wackelock",
+	"goal_placeholder": "Type your goal for this session here..."
 }
