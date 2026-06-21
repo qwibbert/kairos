@@ -10,9 +10,12 @@
     "@swc/core": "^1.13.3",
     "chokidar": "^5.0.0",
     "chokidar-cli": "^3.0.0",
-    "rxdb": "^16.17.2",
+    "rxdb": "^17.3.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^6.0.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.62.2"
   },
   "description": "Pocketbase backend for kairos",
   "devDependencies": {},

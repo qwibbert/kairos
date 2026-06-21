@@ -8,7 +8,7 @@ import pkg from '../package.json' with { type: 'json' };
 import versions from './versions.json' with { type: 'json' };
 
 export default defineConfig({
-	plugins: [topLevelAwait(), sveltekit(), tailwindcss()],
+	plugins: [sveltekit(), tailwindcss()],
 	build: {
 		sourcemap: true,
 	},

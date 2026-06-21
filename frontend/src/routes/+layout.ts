@@ -1,19 +1,13 @@
-import universalLanguageDetect from '@unly/universal-language-detector';
 import i18next from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from '../locales/en';
 import nl from '../locales/nl';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = async () => {
-	const lang = universalLanguageDetect({
-		supportedLanguages: ['nl', 'en'],
-		fallbackLanguage: 'en',
-	});
-
-	await i18next.init({
+	await i18next.use(LanguageDetector).init({
 		debug: true,
-		lng: lang,
 		ns: [
 			'account',
 			'changelog',

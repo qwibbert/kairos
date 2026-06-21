@@ -6,5 +6,6 @@
 	"updated": "Kairos werd geüpdated naar een nieuwe versie. De versienotities kan je hieronder lezen.",
 	"disable_autoshow": "Klik hier om dit venster niet meer automatisch te tonen voor volgende updates.",
 	"no_notes": "Geen informatie beschikbaar voor deze versie.",
-	"0.9.0_notes": "Het is weer tijd voor een nieuwe versie! In deze release vind je ondersteuning voor het toevoegen van sessiedoelen om vlot bij te houden wat je wil bereiken tijdens een bepaalde sessie. Deze functionaliteit staat standaard uit maar kan aangezet worden via het instellingen menu. Verder vind je informatie over vroegere en huidige versies van Kairos voortaan via het wijzigingslogboek onderaan het instellingen menu. Veel plezier!"
+	"0.9.0_notes": "Het is weer tijd voor een nieuwe versie! In deze release vind je ondersteuning voor het toevoegen van sessiedoelen om vlot bij te houden wat je wil bereiken tijdens een bepaalde sessie. Deze functionaliteit staat standaard uit maar kan aangezet worden via het instellingen menu. Verder vind je informatie over vroegere en huidige versies van Kairos voortaan via het wijzigingslogboek onderaan het instellingen menu. Veel plezier!",
+	"0.9.1_notes": "Deze versie lost een probleem op tijdens het bouwen van de applicatie."
 }

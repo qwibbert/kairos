@@ -1,10 +1,11 @@
-FROM node:23-alpine AS frontend
+FROM denoland/deno AS frontend
 WORKDIR /app
 COPY frontend/package.json ./
-RUN npm install
+RUN deno install
 COPY frontend ./
 COPY package.json ../
-RUN npm run build
+RUN deno task prepare
+RUN deno task build
 
 FROM golang:1.24-alpine AS backend
 WORKDIR /app
@@ -13,7 +14,7 @@ ENV CGO_ENABLED=0
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend ./
-RUN npm i
+RUN npm install
 COPY --from=frontend /app/build /app/pb_public
 COPY package.json ../
 RUN npm run build

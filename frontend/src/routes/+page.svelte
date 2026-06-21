@@ -163,7 +163,7 @@
 		}
 	}
 
-	async function skip_session(override_type?: PomoType) {
+	async function skip_session(override_type: PomoType) {
 		if (app_state.session) {
 			app_state.session = await app_state.session.skip(
 				override_type,
