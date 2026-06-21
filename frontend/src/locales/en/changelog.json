@@ -5,5 +5,6 @@
 	"latest": "Latest",
 	"updated": "Kairos was updated to a new version. You can read the release notes below.",
 	"disable_autoshow": "Click here to prevent this window from appearing on subsequent updates.",
-	"no_notes": "No information available on this version"
+	"no_notes": "No information available on this version",
+	"0.9.0_notes": "It's time for a new version! In this release you will find support for adding session goals which help you to track what you want to achieve during a specific session. This functionality is disabled by default but can be enabled using the settings menu. Additionally, you will now find information about earlier and current releases of Kairos via the new changelog modal at the bottom of the settings menu. Enjoy!"
 }
