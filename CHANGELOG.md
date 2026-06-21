@@ -1,3 +1,9 @@
+## v0.9.1 (2026-06-21)
+
+## Hotfix 
+
+- Fix build issue
+
 ## v0.9.0 (2026-06-21)
 
 This release includes support for specifying a goal before starting a session which is handy if you want to encourage yourself to think about what you want to achieve before starting a session. Additionally, a changelog modal has been added to the app which will show you the changes made in each release. The backend course manager has also been rewritten in Python which should make it easier to maintain and extend in the future. Finally, several dependencies have been updated and some code has been refactored to make it more maintainable. 
