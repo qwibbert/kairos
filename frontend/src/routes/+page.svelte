@@ -12,8 +12,12 @@
 	import SkipForward from 'lucide-svelte/icons/skip-forward';
 	import Square from 'lucide-svelte/icons/square';
 	import SquareCheck from 'lucide-svelte/icons/square-check';
+	import { SettingsError } from 'src/settings/errors';
 	import { Settings } from 'src/settings/settings.svelte';
 	import VineModal from 'src/vines/components/vine-modal.svelte';
+	import { VineError } from 'src/vines/errors';
+	import { Vine } from 'src/vines/vine';
+	import { VineTreeNode } from 'src/vines/vine-tree.svelte';
 	import { onMount } from 'svelte';
 	import { modals } from 'svelte-modals';
 
@@ -67,18 +71,40 @@
 				await start_timer();
 			}
 
-			const vine = resumeable_session.vine_id
-				? await db.vines.get_vine(resumeable_session.vine_id)
-				: null;
+			let vine = null;
+			if (resumeable_session.vine_id) {
+				const db_vine = await Vine.getVine(resumeable_session.vine_id);
+
+				if (db_vine instanceof VineError) {
+					// TODO: error handling
+					return;
+				}
+
+				const db_vine_node = new VineTreeNode(db_vine);
+
+				if (db_vine instanceof VineError) {
+					// TODO: error handling
+					return;
+				} else {
+					vine = db_vine_node;
+				}
+			}
 
 			if (vine) {
 				app_state.active_vine = vine;
 				app_state.selected_vine = vine;
 			}
 		} else {
+			const time_target = await Settings.readSetting('pomo_time');
+
+			if (time_target instanceof SettingsError) {
+				// TODO: error handling
+				return;
+			}
+
 			app_state.session = await db.sessions.new({
 				pomo_type: PomoType.Pomo,
-				time_target: await Settings.readSetting('pomo_time'),
+				time_target: time_target ?? 25,
 				cycle: 1,
 			});
 		}
@@ -106,7 +132,7 @@
 
 		app_state.timer_interval = setInterval(async () => {
 			if (!app_state.session || app_state.session.status !== SessionStatus.Active) {
-				clearInterval(app_state.timer_interval);
+				clearInterval(app_state.timer_interval ?? undefined);
 				app_state.timer_interval == null;
 
 				if (app_state.wake_lock) {
@@ -131,7 +157,7 @@
 	async function pause_session() {
 		if (app_state.session) {
 			app_state.session = await app_state.session.pause();
-			clearInterval(app_state.timer_interval);
+			clearInterval(app_state.timer_interval ?? undefined);
 			app_state.timer_interval = null;
 			if (app_state.wake_lock) {
 				await app_state.wake_lock.release();
@@ -149,7 +175,7 @@
 			if (app_state.settings?.auto_start) {
 				await start_session();
 			} else {
-				clearInterval(app_state.timer_interval);
+				clearInterval(app_state.timer_interval ?? undefined);
 				app_state.timer_interval = null;
 				if (app_state.wake_lock) {
 					await app_state.wake_lock.release();
@@ -183,7 +209,7 @@
 			},
 			{ 'btn-neutral': app_state.session?.pomo_type != type },
 			{
-				'disabled:!bg-primary disabled:text-neutral': app_state.session?.pomo_type == type,
+				'disabled:bg-primary! disabled:text-neutral': app_state.session?.pomo_type == type,
 			},
 		]}
 		onclick={async () => {
@@ -192,15 +218,20 @@
 			if (app_state.session && app_state.session.get_time_elapsed() != 0) {
 				app_state.session = await app_state.session.skip(type, app_state.active_vine ?? undefined);
 			} else {
+				const time_target = await Settings.readSetting(
+					type == PomoType.Pomo
+						? 'pomo_time'
+						: type == PomoType.ShortBreak
+							? 'short_break_time'
+							: 'long_break_time',
+				);
+
+				if (time_target instanceof SettingsError) {
+					return;
+				}
 				app_state.session = await db.sessions.new({
 					pomo_type: type,
-					time_target: await Settings.readSetting(
-						type == PomoType.Pomo
-							? 'pomo_time'
-							: type == PomoType.ShortBreak
-								? 'short_break_time'
-								: 'long_break_time',
-					),
+					time_target: time_target ?? 25,
 					cycle: 1,
 					vine: app_state.active_vine ?? undefined,
 				});
@@ -218,7 +249,7 @@
 {/snippet}
 
 <header class="h-[10dvh] flex justify-between items-center">
-	<div class="grow-1 basis-0 flex items-center gap-2 justify-center">
+	<div class="grow basis-0 flex items-center gap-2 justify-center">
 		<KairosLogo /><span class="text-[2em] md:text-3xl xl:text-4xl text-primary font-bold"
 			>Kairos</span
 		>
@@ -250,7 +281,7 @@
 				<span class="hidden md:block">{i18next.t('settings:settings')}</span>
 			</button>
 		</div>
-		<div class="hidden md:flex grow-1 basis-0 justify-center">
+		<div class="hidden md:flex grow basis-0 justify-center">
 			<AccountButton />
 		</div>
 	{/if}
@@ -268,9 +299,9 @@
 				data-tip={i18next.t('vines:vine_statistics')}
 				onclick={() => modals.open(Statsmodal, { mode: 'VINE' })}
 			>
-				{#if app_state.active_vine?.course_title}
+				{#if app_state.active_vine?.getDocProp('course_id')}
 					<BookText class="size-[1.2em]" />{:else}<SquareCheck class="size-[1.2em]" />
-				{/if}{app_state.active_vine?.title}
+				{/if}{app_state.active_vine?.getDocProp('title')}
 			</button>
 		{:else}
 			<span class="btn btn-primary btn-sm"> <Square class="size-[1.2em]" />Geen taak</span>

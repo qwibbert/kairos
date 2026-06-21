@@ -1,18 +1,27 @@
 import type { EChartsOption } from 'echarts';
+import type {
+	CallbackDataParams,
+	LegendOption,
+	TooltipOption,
+	TopLevelFormatterParams,
+	XAXisOption,
+	YAXisOption,
+} from 'echarts/types/dist/shared';
+import i18next from 'i18next';
 import { DateTime } from 'luxon';
 
-import type { LegendOption, TooltipOption, XAXisOption, YAXisOption } from 'echarts/types/dist/shared';
-import i18next from 'i18next';
-import type { SeriesType, SourceType } from './graphs/histogram';
+import type { HistogramSeriesType, HistogramSourceType } from './graphs/histogram';
 
-export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS' = 'WEEKS') => {
-
+export const tooltip_formatter = (
+	params: CallbackDataParams[],
+	mode: 'WEEKS' | 'MONTHS' = 'WEEKS',
+) => {
 	let htmlString = '';
 	if (params.length > 1) {
 		if (mode == 'WEEKS') {
-			htmlString += `<div><strong>${params[0].axisValue}</strong></div>`;
+			htmlString += `<div><strong>${params[0].data[0]}</strong></div>`;
 		} else if (mode == 'MONTHS') {
-			htmlString += `<div><strong>${DateTime.fromISO(params[0].axisValue).toLocaleString({ month: 'long', year: 'numeric' })}</strong></div>`;
+			htmlString += `<div><strong>${DateTime.fromISO(params[0].data[0] as string).toLocaleString({ month: 'long', year: 'numeric' })}</strong></div>`;
 		}
 	}
 
@@ -32,8 +41,8 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 			htmlString += `
                                 <div class="flex justify-between gap-2">
                         <span>${param.marker} ${param.seriesName}</span> <span class="font-bold">${Math.floor(
-				focusTime * 60,
-			)} min</span>
+													focusTime * 60,
+												)} min</span>
                                 </div>
                             `;
 			return;
@@ -41,8 +50,8 @@ export const tooltip_formatter = (params: Array<object>, mode: 'WEEKS' | 'MONTHS
 			htmlString += `
                                 <div class="flex justify-between gap-2">
                                    <span>${param.marker} ${param.seriesName}</span> ${Math.floor(
-				focusTime,
-			)} h ${Math.floor((focusTime % 1) * 60)} min
+																			focusTime,
+																		)} h ${Math.floor((focusTime % 1) * 60)} min
                                 </div>
                             `;
 		}
@@ -66,8 +75,8 @@ export const day_options = {
 	legend: {
 		padding: [0, 0, 0, 0],
 		type: 'scroll',
-		pageIconColor: "#333",
-		pageIconInactiveColor: "#333",
+		pageIconColor: '#333',
+		pageIconInactiveColor: '#333',
 		textStyle: {
 			color: '#333' as string,
 		},
@@ -96,7 +105,7 @@ export const day_options = {
 		},
 	} as XAXisOption,
 	dataset: {
-		source: [] as SourceType,
+		source: [] as HistogramSourceType,
 	},
 	yAxis: {
 		type: 'value',
@@ -128,12 +137,12 @@ export const day_options = {
 			},
 		},
 	} as YAXisOption,
-	series: [] as SeriesType,
+	series: [] as HistogramSeriesType,
 	tooltip: {
 		trigger: 'axis',
 		confine: true,
 		backgroundColor: '',
-		formatter: (params) => tooltip_formatter(params, "WEEKS"),
+		formatter: (params) => tooltip_formatter(params as CallbackDataParams[], 'WEEKS'),
 		borderColor: '',
 		textStyle: {
 			color: '',
@@ -155,7 +164,7 @@ export const year_options = {
 	} as XAXisOption,
 	tooltip: {
 		...day_options.tooltip,
-		formatter: (params) => tooltip_formatter(params, 'MONTHS'),
+		formatter: (params) => tooltip_formatter(params as CallbackDataParams[], 'MONTHS'),
 	} as TooltipOption,
 };
 
@@ -182,6 +191,10 @@ export const pie_options = {
 				},
 				formatter: (data) => {
 					const value = data.value;
+
+					if (!value || typeof value !== 'number') {
+						return `<div class="flex gap-2 items-center"><span>${data.marker} ${data.name}</span> <span class="font-bold">? min</span></div>`;
+					}
 
 					if (value >= 3600) {
 						return `<div class="flex gap-2 items-center"><span>${data.marker} ${data.name}</span> <span class="font-bold">${Math.floor(value / 3600)} h ${Math.floor((value % 3600) / 60)}</span></div>`;

@@ -1,91 +1,92 @@
-import type { SessionDocument } from "$db/sessions/define.svelte";
-import type { VineID, VinesDocument } from "$db/vines/define";
+import type { SessionDocument } from '$db/sessions/define.svelte';
+import type { VineID, VinesDocument } from '$db/vines/define';
+import type { VineTree } from 'src/vines/vine-tree.svelte';
 
 type PieChartData = { name: string; value: number }[];
 
 export function vines_pie_chart(
-    vine_id: VineID | undefined,
-    entries: SessionDocument[],
-    vine_map: Map<string, VinesDocument>,
-    children_map: Map<string, VinesDocument[]>,
+	focus_vine_id: string | undefined,
+	entries: SessionDocument[],
+	vine_tree: VineTree,
 ): PieChartData {
-    const data: PieChartData = [];
-    const parent_vine = vine_map.get(vine_id ?? '');
+	const data: PieChartData = [];
+	const focus_vine = focus_vine_id ? vine_tree.findVine(focus_vine_id) : null;
 
-    for (const entry of entries) {
-        // Only include children of the specified vine if vine_id is provided
-        if (vine_id && !children_map.get(vine_id)?.find(child => child.id == entry?.vine_id)) {
-            continue;
-        }
+	for (const entry of entries) {
+		const entry_vine = entry.vine_id ? vine_tree.findVine(entry.vine_id) : null;
+		const entry_vine_parent_id = entry_vine?.getDocProp('parent_id') ?? null;
+		const entry_vine_parent = entry_vine_parent_id
+			? vine_tree.findVine(entry_vine_parent_id)
+			: null;
+		const entry_vine_children = entry_vine ? entry_vine.getChildren() : [];
 
-        const entry_vine = vine_map.get(entry.vine_id ?? '');
-        const entry_parent_vine = vine_map.get(entry_vine?.parent_id ?? '');
+		// Only include children of the specified vine if vine_id is provided
+		if (
+			focus_vine_id &&
+			!entry_vine_children?.find((child) => child.getDocProp('id') == entry?.vine_id)
+		) {
+			continue;
+		}
 
-        // Determine the label for this pie slice
-        let slice_name: string = '';
-        if (vine_id || !entry_parent_vine) {
-            slice_name = entry_vine?.title ?? '';
-        } else {
-            slice_name = entry_parent_vine?.title ?? '';
-        }
+		// Determine the label for this pie slice
+		let slice_name: string = '';
+		if (focus_vine_id || !entry_vine_parent) {
+			slice_name = entry_vine?.getDocProp('title') ?? '';
+		} else {
+			slice_name = entry_vine_parent?.getDocProp('title') ?? '';
+		}
 
-        // Find if this slice already exists
-        const data_index = data.findIndex((dataEntry) => dataEntry.name === slice_name);
+		// Find if this slice already exists
+		const data_index = data.findIndex((dataEntry) => dataEntry.name === slice_name);
 
-        if (data_index === -1) {
-            // Calculate elapsed time for all child tasks
-            const children = children_map.get(entry?.vine_id ?? '');
-            let children_elapsed_time = 0;
+		if (data_index === -1) {
+			// Calculate elapsed time for all child tasks
+			let children_elapsed_time = 0;
 
-            if (children) {
-                for (const child_id of children) {
-                    const child = vine_map.get(child_id);
+			if (entry_vine_children) {
+				for (const child of entry_vine_children) {
+					const entries_with_child = entries.filter((e) => e.vine_id == child.getDocProp('id'));
 
-                    if (child) {
-                        const entries_with_child = entries.filter((e) => e.vine_id == child.id);
+					for (const child_entry of entries_with_child) {
+						children_elapsed_time += child_entry.get_time_elapsed();
+					}
+				}
+			}
 
-                        for (const child_entry of entries_with_child) {
-                            children_elapsed_time += child_entry.get_time_elapsed();
-                        }
-                    }
-                }
-            }
+			data.push({
+				name: slice_name,
+				value: children_elapsed_time + entry.get_time_elapsed(),
+			});
+		} else {
+			// Aggregate time if slice already exists
+			data[data_index] = {
+				...data[data_index],
+				value: data[data_index].value + entry.get_time_elapsed(),
+			};
+		}
+	}
 
-            data.push({
-                name: slice_name,
-                value: children_elapsed_time + entry.get_time_elapsed(),
-            });
-        } else {
-            // Aggregate time if slice already exists
-            data[data_index] = {
-                ...data[data_index],
-                value: data[data_index].value + entry.get_time_elapsed(),
-            };
-        }
-    }
+	// No data was found, we need to distribute the pie chart evenly
+	if (data.length == 0) {
+		if (focus_vine_id) {
+			for (const child of focus_vine?.getChildren() ?? []) {
+				data.push({
+					name: child?.getDocProp('title') ?? 'Unknown Task',
+					value: 0,
+				});
+			}
+		} else {
+			for (const root of vine_tree
+				.getRoots()
+				.values()
+				.filter((root) => (root.getDocProp('parent_id') ? false : true))) {
+				data.push({
+					name: root.getDocProp('title'),
+					value: 0,
+				});
+			}
+		}
+	}
 
-    // No data was found, we need to distribute the pie chart evenly
-    if (data.length == 0) {
-        if (parent_vine) {
-            for (const child_id of children_map.get(parent_vine.id) ?? []) {
-                const child = vine_map.get(child_id);
-
-                data.push({
-                    name: child?.title ?? 'Unknown Task',
-                    value: 0,
-                });
-            }
-        } else {
-            for (const parentless_vine of vine_map
-                .values()
-                .filter((entry) => (entry.parent_id ? false : true))) {
-                data.push({
-                    name: parentless_vine.title,
-                    value: 0,
-                });
-            }
-        }
-    }
-
-    return data;
+	return data;
 }

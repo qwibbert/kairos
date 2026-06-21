@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { db } from '$db/db';
+	import { VineType, type VinesDocument } from '$db/vines/define';
 	import i18next from 'i18next';
 	import BookText from 'lucide-svelte/icons/book-text';
 	import Check from 'lucide-svelte/icons/check';
@@ -8,19 +10,19 @@
 	import { get_app_state } from '$lib/context';
 	import CourseSearch from '$lib/pocketbase/course-search.svelte';
 	import InstitutionSelector from '$lib/pocketbase/institution-selector.svelte';
-	import type { CoursesResponse } from '$lib/pocketbase/pocketbase-types';
+	import type { CoursesResponse } from '$lib/pocketbase/types';
 	import { push_toast } from '$lib/toasts';
 
-	import { db } from '$db/db';
-	import { VineType, type VinesDocument } from '$db/vines/define';
-	import { get_parent_nodes_from_flat_list } from '../db';
+	import { VineError } from '../errors';
+	import { Vine } from '../vine';
+	import type { VineTreeNode } from '../vine-tree.svelte';
 
 	const app_state = get_app_state();
 
 	interface Props {
 		isOpen: boolean;
 		close: () => {};
-		parent: VinesDocument | undefined;
+		parent: VineTreeNode | undefined;
 	}
 	const {
 		// provided by <Modals />
@@ -48,19 +50,28 @@
 	let selected_institution: string | undefined = $state(undefined);
 
 	async function import_course(course: CoursesResponse) {
-		const parents = parent ? get_parent_nodes_from_flat_list(app_state.vines ?? [], parent.id) : [];
+		const parents = parent ? await parent.getParents() : [];
 
-		if (parent?.type == VineType.Course || parents?.find(p => p.type == VineType.Course)) {
+		if (parents instanceof VineError) {
+			// TODO: error handling
+			return;
+		}
+
+		if (
+			parent?.getDocProp('type') == VineType.Course ||
+			parents?.find((p) => p.getDocProp('type') == VineType.Course)
+		) {
 			push_toast('error', {
 				type: 'headed',
 				header: i18next.t('vines:err_invalid_move'),
 				text: i18next.t('vines:err_course_in_course'),
 			});
 		} else {
-			await db.vines.add_vine({
+			console.log(parent?.getDocProp('id') ?? 'no parent');
+			const vine = await Vine.createVine({
 				type: VineType.Course,
 				title: course.title,
-				parent_id: parent?.id ?? '',
+				parent_id: parent?.getDocProp('id') ?? undefined,
 				public: true,
 				course_id: course.id,
 				course_title: course.title,
@@ -69,6 +80,11 @@
 				course_instructor: course.instructor,
 				session_aim: 0,
 			});
+
+			if (vine instanceof VineError) {
+				// TODO: error handling
+				console.log('error!');
+			}
 		}
 
 		close();
@@ -132,16 +148,16 @@
 										{course.instructor}
 									</div>
 								</div>
-								{#if app_state.vines?.findIndex((vine) => vine.course_id == course.id) == -1}
+								{#if app_state.vine_tree.findVineWithPropValue('course_id', course.id)}
+									<button class="btn btn-square btn-success">
+										<Check class="size-[1.2em]" />
+									</button>
+								{:else}
 									<button
 										class="btn btn-square btn-ghost"
 										onclick={async () => await import_course(course)}
 										><Import class="size-[1.2em]" /></button
 									>
-								{:else}
-									<button class="btn btn-square btn-success">
-										<Check class="size-[1.2em]" />
-									</button>
 								{/if}
 							</li>
 						{:else}

@@ -1,17 +1,20 @@
 <script lang="ts">
+	import { db } from '$db/db';
+	import { PomoType } from '$db/sessions/define.svelte';
+	import type { VinesDocument } from '$db/vines/define';
 	import i18next from 'i18next';
 	import ChartColumn from 'lucide-svelte/icons/chart-column';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { DateTime } from 'luxon';
 	import VineSelectModal from 'src/vines/components/vine-select-modal.svelte';
+	import { VineError } from 'src/vines/errors';
+	import { Vine } from 'src/vines/vine';
+	import { VineTreeNode } from 'src/vines/vine-tree.svelte';
 	import { modals } from 'svelte-modals';
 
 	import { get_app_state } from '$lib/context';
 
-	import { db } from '$db/db';
-	import { PomoType } from '$db/sessions/define.svelte';
-	import type { VinesDocument } from '$db/vines/define';
 	import Histogram from './histogram.svelte';
 	import PieChart from './pie-chart.svelte';
 
@@ -56,17 +59,19 @@
 		n_sessions_today = sessions_today.length;
 	}
 
-	async function load_vine_stats(vine: VinesDocument | null): Promise<number> {
+	async function load_vine_stats(vine: VineTreeNode | null): Promise<number> {
 		if (vine && (app_state.session || !app_state.session)) {
-			const vine_map = new Map(app_state.vines?.map((v) => [v.id, v]));
-			const vine_children_cache = new Map<string, VinesDocument[]>();
+			const vines = await db.vines.find().exec();
+			const vine_map = new Map(vines.map((v) => [v.id, v]));
+			const vine_children_cache = new Map<string, VineTreeNode[]>();
 
 			// Precompute vine children for all vine_ids
-			for (const vine of app_state.vines) {
-				vine_children_cache.set(
-					vine.id,
-					await db.vines.get_vine(vine.id).then((v) => v?.get_all_children(vine.id)),
-				);
+			for (const vine of vines) {
+				const vine_instance = new VineTreeNode(Vine.fromDoc(vine));
+
+				await vine_instance.retreiveChildren();
+
+				vine_children_cache.set(vine.id, vine_instance.getChildren());
 			}
 
 			const all_entries = await db.sessions
@@ -80,9 +85,13 @@
 					results
 						.filter((res) => {
 							if (vine) {
-								if (res.vine_id == vine.id) {
+								if (res.vine_id == vine.getDocProp('id')) {
 									return true;
-								} else if (vine_children_cache.get(vine.id)?.find((r) => r.id == res.vine_id)) {
+								} else if (
+									vine_children_cache
+										.get(vine.getDocProp('id'))
+										?.find((r) => r.getDocProp('id') == res.vine_id)
+								) {
 									return true;
 								} else {
 									return false;
@@ -104,15 +113,15 @@
 </script>
 
 <div role="tablist" class="tabs tabs-lift w-full">
-	<a
+	<button
 		role="tab"
 		class={['tab w-[50%]', mode == 'GENERAL' ? 'tab-active' : '']}
-		onclick={() => (mode = 'GENERAL')}>Algemeen</a
+		onclick={() => (mode = 'GENERAL')}>Algemeen</button
 	>
-	<a
+	<button
 		role="tab"
 		class={['tab w-[50%]', mode == 'VINE' ? 'tab-active' : '']}
-		onclick={() => (mode = 'VINE')}>Tros</a
+		onclick={() => (mode = 'VINE')}>Tros</button
 	>
 </div>
 
@@ -181,10 +190,12 @@
 			class="select w-[40%]"
 			onclick={async (e) => {
 				e.preventDefault();
-				app_state.selected_vine = await modals.open(VineSelectModal, { vine_moving: null });
+				app_state.selected_vine = await modals.open(VineSelectModal as any, { vine_moving: null });
 			}}
 		>
-			<option>{app_state.selected_vine?.title ?? i18next.t('vines:select_vine')}</option>
+			<option
+				>{app_state.selected_vine?.getDocProp('title') ?? i18next.t('vines:select_vine')}</option
+			>
 		</select>
 		<select class="select w-[40%]" bind:value={chart_type}>
 			<option value="BAR">{i18next.t('statistics:bar_chart')}</option>

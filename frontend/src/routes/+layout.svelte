@@ -7,6 +7,8 @@
 	import Home from 'lucide-svelte/icons/home';
 	import { default as SettingsIcon } from 'lucide-svelte/icons/settings';
 	import { mode } from 'mode-watcher';
+	import { VineError } from 'src/vines/errors';
+	import { VineTree } from 'src/vines/vine-tree.svelte';
 	import { setContext } from 'svelte';
 	import { Modals, modals } from 'svelte-modals';
 
@@ -29,7 +31,7 @@
 		session: null,
 		timer_interval: null,
 		settings: null,
-		vines: null,
+		vine_tree: null,
 		wake_lock: null,
 		user: null,
 		active_vine: null,
@@ -51,9 +53,27 @@
 		app_state.settings = s;
 	});
 
-	db.vines.find().$.subscribe(async (e: VinesDocument[]) => {
-		if (e) {
-			app_state.vines = e;
+	const vine_tree = await VineTree.buildTree();
+
+	if (vine_tree instanceof VineError) {
+		// TODO: error handling
+		console.log(vine_tree.context);
+	} else {
+		app_state.vine_tree = vine_tree;
+	}
+
+	db.vines.$.subscribe(async () => {
+		const vine_tree = await VineTree.buildTree();
+
+		if (vine_tree instanceof VineError) {
+			// TODO: error handling
+			console.log(vine_tree.context);
+		} else {
+			if (app_state.vine_tree && app_state.vine_tree.getParentNode()) {
+				vine_tree.setParentNode(app_state.vine_tree.getParentNode());
+			}
+
+			app_state.vine_tree = vine_tree;
 		}
 	});
 

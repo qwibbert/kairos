@@ -8,6 +8,7 @@ import {
 	toTypedRxJsonSchema,
 } from 'rxdb';
 import { Settings } from 'src/settings/settings.svelte';
+import type { VineTreeNode } from 'src/vines/vine-tree.svelte';
 
 import { db, kairos_state } from '../db';
 import type { VinesDocument } from '../vines/define';
@@ -113,8 +114,8 @@ export const session_schema: RxJsonSchema<SessionDocType> = session_schema_liter
 export type SessionDocMethods = {
 	start: (increment_cycle: boolean) => Promise<SessionDocument>;
 	pause: () => Promise<SessionDocument>;
-	skip: (override_type?: PomoType, vine?: VinesDocument) => Promise<SessionDocument | null>;
-	next: (override_type?: PomoType, vine?: VinesDocument) => Promise<SessionDocument | null>;
+	skip: (override_type?: PomoType, vine?: VineTreeNode) => Promise<SessionDocument | null>;
+	next: (override_type?: PomoType, vine?: VineTreeNode) => Promise<SessionDocument | null>;
 	get_time_elapsed: () => number;
 	upload: () => Promise<void>;
 };
@@ -146,7 +147,7 @@ export type SessionNewOpts = {
 	time_target: number;
 	pomo_type: PomoType;
 	cycle: number;
-	vine?: VinesDocument;
+	vine?: VineTreeNode;
 };
 
 type TimerInterval = string;
@@ -271,7 +272,7 @@ export const session_doc_methods: SessionDocMethods = {
 	skip: async function (
 		this: SessionDocument,
 		override_type?: PomoType,
-		vine?: VinesDocument,
+		vine?: VineTreeNode,
 	): Promise<SessionDocument | null> {
 		if (this.status == SessionStatus.Ready) {
 			throw SessionErrorFactory.invalid_state(
@@ -316,7 +317,7 @@ export const session_doc_methods: SessionDocMethods = {
 	next: async function (
 		this: SessionDocument,
 		override_type?: PomoType,
-		vine?: VinesDocument,
+		vine?: VineTreeNode,
 	): Promise<SessionDocument | null> {
 		// Determine what the next session type should be
 		const next_type = override_type ?? get_next_session_type(this.pomo_type, this.cycle);
@@ -389,10 +390,10 @@ export const session_collection_methods: SessionCollectionMethods = {
 			pomo_type: opts.pomo_type,
 			cycle: opts.cycle,
 			paused_at: undefined,
-			vine_id: opts.vine?.id,
-			vine_title: opts.vine?.title,
-			vine_type: opts.vine?.type,
-			vine_course: opts.vine?.course_id,
+			vine_id: opts.vine?.getDocProp('id'),
+			vine_title: opts.vine?.getDocProp('title'),
+			vine_type: opts.vine?.getDocProp('type'),
+			vine_course: opts.vine?.getDocProp('course_id'),
 			locked_by: kairos_state.get('client_id'),
 		};
 

@@ -1,11 +1,13 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
+import { VineError } from 'src/vines/errors';
+import { Vine } from 'src/vines/vine';
+import { modals } from 'svelte-modals';
 
+import Alert from '$lib/components/alert.svelte';
 import { client } from '$lib/pocketbase/';
 import { push_toast } from '$lib/toasts';
 
-import Alert from '$lib/components/alert.svelte';
-import { modals } from 'svelte-modals';
 import { db } from '../db';
 import { VineType, type VinesDocType } from './define';
 
@@ -60,17 +62,22 @@ export async function setup_vines_sync() {
 						// This error implies that the user tried to link a course that has been deleted from upstream.
 						// We should inform the user and reset the affected vine to a task type
 						modals.open(Alert, {
-							type: 'ERROR', header: 'Sync Error', text: `Failed to link course with ${affected_vine?.newDocumentState.course_title
+							type: 'ERROR',
+							header: 'Sync Error',
+							text: `Failed to link course with ${
+								affected_vine?.newDocumentState.course_title
 									? 'title of ' + affected_vine.newDocumentState.course_title
 									: 'id of ' + err.context.additional_data.course
-								}. The course has probably been deleted since you last tried to add it.`, actions: new Map()
-						})
+							}. The course has probably been deleted since you last tried to add it.`,
+							actions: new Map(),
+						});
 
+						const db_vine = await Vine.getVine(err.entity_id);
 
-						const db_vine = db.vines.findOne(err.entity_id);
-
-						if (db_vine) {
-							await db.vines.update_vine(err.entity_id, {
+						if (db_vine instanceof VineError) {
+							// TODO: error handling
+						} else {
+							await db_vine.update({
 								type: VineType.Task,
 								course_id: undefined,
 								course_code: undefined,
@@ -108,18 +115,20 @@ export async function setup_vines_sync() {
 
 						async function try_upload(parent_id: string) {
 							// Check if the parent exists in the local database
-							const local = await db.vines.get_vine(parent_id);
+							const local = await Vine.getVine(parent_id);
 
-							if (local) {
+							if (local instanceof VineError) {
+								// TODO: error handling
+							} else {
 								// Try to upload the parent to upstream
 								try {
 									await client
 										.collection('vines')
-										.create({ ...local.toJSON(), user: client.authStore.record?.id });
+										.create({ ...local.doc!.toJSON(), user: client.authStore.record?.id });
 								} catch (err_) {
 									if (err_.code == 404) {
 										// Recursive parent uploading
-										await try_upload(local.parent_id!);
+										await try_upload(local.doc!.parent_id!);
 									}
 								}
 							}
@@ -141,10 +150,12 @@ export async function setup_vines_sync() {
 							return raw_response;
 						} catch {
 							// Trying to upload the parents did not work, remove the parent relation and inform the user
-							const db_vine = db.vines.findOne(err.entity_id);
+							const db_vine = await Vine.getVine(err.entity_id);
 
-							if (db_vine) {
-								await db.vines.update_vine(err.entity_id, {
+							if (db_vine instanceof VineError) {
+								// TODO: error handling
+							} else {
+								await db_vine.update({
 									parent_id: undefined,
 								});
 							}

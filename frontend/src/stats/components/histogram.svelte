@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { db } from '$db/db';
+	import { PomoType, type SessionDocument, SessionStatus } from '$db/sessions/define.svelte';
+	import type { VinesDocument } from '$db/vines/define';
 	import { formatHex } from 'culori';
 	import { BarChart, PieChart } from 'echarts/charts';
 	import {
@@ -12,20 +15,15 @@
 	import * as echarts from 'echarts/core';
 	import { LabelLayout, UniversalTransition } from 'echarts/features';
 	import { CanvasRenderer } from 'echarts/renderers';
+	import i18next from 'i18next';
 	import ClockAlert from 'lucide-svelte/icons/clock-alert';
 	import { DateTime } from 'luxon';
+	import type { Vine } from 'src/vines/vine';
+	import type { VineTreeNode } from 'src/vines/vine-tree.svelte';
 	import { onMount } from 'svelte';
 
 	import { generate_color_palette } from '$lib/colors';
 
-	import { db } from '$db/db';
-	import {
-		PomoType,
-		type SessionDocument,
-		SessionStatus,
-	} from '$db/sessions/define.svelte';
-	import type { VinesDocument } from '$db/vines/define';
-	import i18next from 'i18next';
 	import { day_options, year_options } from '../graph-options';
 	import { get_day_histogram_echarts, get_year_histogram_echarts } from '../graphs/histogram';
 
@@ -54,7 +52,7 @@
 		delta_weeks: number;
 		delta_years: number;
 		time_today?: number;
-		vine: VinesDocument | null;
+		vine: VineTreeNode | null;
 	} = $props();
 
 	let histogram = $state<echarts.EChartsType | undefined>(undefined);
@@ -175,9 +173,8 @@
 		if (view == 'DAY') {
 			[day_options.dataset.source, day_options.series] = await get_day_histogram_echarts(
 				DateTime.now().minus({ weeks: delta_weeks }),
-				PomoType.Pomo,
 				vine,
-				computed_colors
+				computed_colors,
 			);
 
 			if (day_options.series.length == 0) {
@@ -189,9 +186,8 @@
 			[year_options.dataset.source, year_options.series, year_options.legend.data] =
 				await get_year_histogram_echarts(
 					DateTime.now().startOf('year').minus({ years: delta_years }),
-					PomoType.Pomo,
 					vine,
-					computed_colors
+					computed_colors,
 				);
 
 			if (day_options.series.length == 0) {
@@ -219,5 +215,5 @@
 
 {#if no_data}
 	<ClockAlert class="size-[5em] mx-auto" />
-	<p class="text-center text-lg font-bold">{i18next.t("statistics:no_data")}</p>
+	<p class="text-center text-lg font-bold">{i18next.t('statistics:no_data')}</p>
 {/if}

@@ -20,12 +20,7 @@ import {
 import { setup_settings_sync } from './settings/client';
 import { type SettingsCollection, type SettingsDocType, settings_schema } from './settings/define';
 import { setup_vines_sync } from './vines/client';
-import {
-	type VinesCollection,
-	vines_collection_methods,
-	vines_doc_methods,
-	vines_schema,
-} from './vines/define';
+import { type VinesCollection, vines_schema } from './vines/define';
 
 export type KairosCollections = {
 	settings: SettingsCollection;
@@ -151,8 +146,6 @@ export async function init_db(): Promise<KairosDB> {
 		},
 		vines: {
 			schema: vines_schema,
-			statics: vines_collection_methods, // (optional) ORM-functions for this collection
-			methods: vines_doc_methods, // (optional) ORM-functions for documents
 			attachments: {}, // (optional) ORM-functions for attachments
 			options: {}, // (optional) Custom parameters that might be used in plugins
 			migrationStrategies: {

@@ -1,8 +1,9 @@
 import { RxReplicationState, replicateRxCollection } from 'rxdb/plugins/replication';
 import { Subject } from 'rxjs';
+import { VineError } from 'src/vines/errors';
+import { Vine } from 'src/vines/vine';
 
 import { client } from '../../lib/pocketbase/';
-
 import { db } from '../db';
 import { VineType } from '../vines/define';
 import type { SessionDocType } from './define.svelte';
@@ -59,10 +60,12 @@ export async function setup_sessions_sync() {
 							// This error implies that the user tried to link a course that has been deleted from upstream.
 							// We should inform the user and reset the affected vine to a task type
 
-							const db_vine = db.vines.findOne(err.entity_id);
+							const db_vine = await Vine.getVine(err.entity_id);
 
-							if (db_vine) {
-								await db.vines.update_vine(err.entity_id, {
+							if (db_vine instanceof VineError) {
+								// TODO: error handling
+							} else {
+								await db_vine.update({
 									type: VineType.Task,
 									course_id: undefined,
 									course_code: undefined,
@@ -79,7 +82,7 @@ export async function setup_sessions_sync() {
 									row.newDocumentState.course_id,
 							);
 
-							const raw_response = await client.send('/api/vines/push', {
+							const raw_response = await client?.send('/api/vines/push', {
 								method: 'POST',
 								headers: {
 									Accept: 'application/json',
@@ -100,18 +103,19 @@ export async function setup_sessions_sync() {
 
 							async function try_upload(parent_id: string) {
 								// Check if the parent exists in the local database
-								const local = await db.vines.get_vine(parent_id);
+								const local = await Vine.getVine(parent_id);
 
-								if (local) {
+								if (local instanceof VineError) {
+								} else {
 									// Try to upload the parent to upstream
 									try {
 										await client
 											.collection('vines')
-											.create({ ...local.toJSON(), user: client.authStore.record?.id });
+											.create({ ...local.doc!.toJSON(), user: client?.authStore.record?.id });
 									} catch (err_) {
 										if (err_.code == 404) {
 											// Recursive parent uploading
-											await try_upload(local.parent_id!);
+											await try_upload(local.doc!.parent_id!);
 										}
 									}
 								}
@@ -133,10 +137,12 @@ export async function setup_sessions_sync() {
 								return raw_response;
 							} catch {
 								// Trying to upload the parents did not work, remove the parent relation and inform the user
-								const db_vine = db.vines.findOne(err.entity_id);
+								const db_vine = await Vine.getVine(err.entity_id);
 
-								if (db_vine) {
-									await db.vines.update_vine(err.entity_id, {
+								if (db_vine instanceof VineError) {
+									// TODO: error handling
+								} else {
+									await db_vine.update({
 										parent_id: undefined,
 									});
 								}
@@ -146,7 +152,7 @@ export async function setup_sessions_sync() {
 									(row) => row.newDocumentState.id != affected_vine?.newDocumentState.id,
 								);
 
-								const raw_response = await client.send('/api/vines/push', {
+								const raw_response = await client?.send('/api/vines/push', {
 									method: 'POST',
 									headers: {
 										Accept: 'application/json',
@@ -172,7 +178,7 @@ export async function setup_sessions_sync() {
 				const updated_at = new Date(checkpoint_or_null?.updated_at ?? 0).getTime();
 				const id = checkpoint_or_null ? checkpoint_or_null.id : '';
 
-				const response = await client.send('/api/sessions/pull', {
+				const response = await client?.send('/api/sessions/pull', {
 					query: { updated_at, batch_size, id },
 					headers: { Version: __KAIROS_VERSION__ },
 				});
