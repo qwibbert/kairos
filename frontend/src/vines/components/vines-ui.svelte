@@ -139,6 +139,7 @@
 															vine_title: undefined,
 															vine_course: undefined,
 															vine_type: undefined,
+															updated_at: new Date().toISOString().replace('T', ' '),
 														},
 													});
 
@@ -152,6 +153,7 @@
 															vine_title: node.getDocProp('title'),
 															vine_course: node.getDocProp('course_id'),
 															vine_type: node.getDocProp('type'),
+															updated_at: new Date().toISOString().replace('T', ' '),
 														},
 													});
 
@@ -172,6 +174,7 @@
 										vine_title: undefined,
 										vine_course: undefined,
 										vine_type: undefined,
+										updated_at: new Date().toISOString().replace('T', ' '),
 									},
 								});
 
@@ -183,6 +186,7 @@
 										vine_title: checked ? node.getDocProp('title') : undefined,
 										vine_course: checked ? node.getDocProp('course_id') : undefined,
 										vine_type: checked ? node.getDocProp('type') : undefined,
+										updated_at: new Date().toISOString().replace('T', ' '),
 									},
 								});
 

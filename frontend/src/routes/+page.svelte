@@ -323,7 +323,12 @@
 		<textarea
 			value={app_state.session?.goal}
 			onchange={async (e) => {
-				await app_state.session?.incrementalUpdate({ $set: { goal: e.target?.value ?? '' } });
+				await app_state.session?.incrementalUpdate({
+					$set: {
+						goal: e.target?.value ?? '',
+						updated_at: new Date().toISOString().replace('T', ' '),
+					},
+				});
 			}}
 			onfocus={() => {
 				block_keyboard_shortcuts = true;

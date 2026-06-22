@@ -144,6 +144,7 @@
 							app_state.session = await app_state.session.incrementalUpdate({
 								$set: {
 									time_target: (e.target as HTMLInputElement).value * 60,
+									updated_at: new Date().toISOString().replace('T', ' '),
 								},
 							});
 						}
@@ -170,6 +171,7 @@
 							app_state.session = await app_state.session.incrementalUpdate({
 								$set: {
 									time_target: (e.target as HTMLInputElement).value * 60,
+									updated_at: new Date().toISOString().replace('T', ' '),
 								},
 							});
 						}
@@ -196,6 +198,7 @@
 							app_state.session = await app_state.session.incrementalUpdate({
 								$set: {
 									time_target: (e.target as HTMLInputElement).value * 60,
+									updated_at: new Date().toISOString().replace('T', ' '),
 								},
 							});
 						}
