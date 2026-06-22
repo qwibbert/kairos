@@ -39,6 +39,7 @@ export class VineTree {
 		tree.#roots = root_vines;
 
 		console.timeLog('building vine tree');
+		console.timeEnd('building vine tree');
 
 		return tree;
 	}
