@@ -1,3 +1,9 @@
+## v0.9.2 (2026-06-22)
+
+## Hotfix 
+
+- Fix vine children not showing if depth is larger than 2
+
 ## v0.9.1 (2026-06-21)
 
 ## Hotfix 
