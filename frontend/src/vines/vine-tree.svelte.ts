@@ -50,7 +50,6 @@ export class VineTree {
 	getNodesAtLevel(): VineTreeNode[] {
 		if (this.#parent_node) {
 			for (const root of this.#roots) {
-				console.log(this.#parent_node.getDocProp('id'), root.getDocProp('id'));
 				if (root.getDocProp('id') == this.#parent_node.getDocProp('id')) {
 					return root.getChildren();
 				} else {
@@ -156,7 +155,7 @@ export class VineTreeNode {
 		let root_vines: VinesDocument[] | null;
 
 		try {
-			root_vines = await db.vines.find({ selector: { parent_id: { $exists: false } } }).exec();
+			root_vines = await db.vines.find({ selector: { parent_id: { $eq: '' } } }).exec();
 		} catch (e) {
 			return VineErrorFactory.other(e);
 		}
@@ -191,7 +190,10 @@ export class VineTreeNode {
 			if (child.getDocProp('id') == parent_id) {
 				return child.getChildren();
 			} else {
-				return child.getChildrenOnParentMatch(parent_id);
+				const result = child.getChildrenOnParentMatch(parent_id);
+				if (result.length > 0) {
+					return result;
+				}
 			}
 		}
 
@@ -223,7 +225,10 @@ export class VineTreeNode {
 			if (child.getDocProp(prop) == value) {
 				return child;
 			} else {
-				return child.findNode(prop, value);
+				const found = child.findNodeWithPropValue(prop, value);
+				if (found) {
+					return found;
+				}
 			}
 		}
 
