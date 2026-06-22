@@ -81,7 +81,7 @@
 			public: true,
 			session_aim: 0,
 			type: VineType.Task,
-			parent_id: parent_node ? parent_node.getDocProp('id') : undefined,
+			parent_id: parent_node ? parent_node.getDocProp('id') : '',
 		});
 
 		if (vine instanceof VineError) {
