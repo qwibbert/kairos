@@ -1,3 +1,10 @@
+## v0.9.3 (2026-06-23)
+
+## Fix
+
+- Fix bug where vine could not be created at the root level of the vine tree
+- Fix bug where session goals would be overwritten when a session was paused and the user was logged in
+
 ## v0.9.2 (2026-06-22)
 
 ## Hotfix 
