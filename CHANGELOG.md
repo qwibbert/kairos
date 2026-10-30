@@ -1,3 +1,9 @@
+## v0.9.4 (2026-10-30)
+
+### Fix
+
+- **docs**: update course providers README link
+
 ## v0.9.3 (2026-06-23)
 
 ## Fix
