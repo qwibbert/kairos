@@ -1,3 +1,13 @@
+## v0.10.0 (2026-11-03)
+
+### Feat
+
+- **skills**: add relevant skills to project
+
+### Refactor
+
+- **toasts**: refactor toasts code
+
 ## v0.9.3 (2026-06-23)
 
 ## Fix
